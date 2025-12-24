@@ -1,9 +1,8 @@
 # 🚀 Website Blog Tích hợp Trí tuệ Nhân tạo (AI Integrated Blog Platform)
 
-> Đồ án Tốt nghiệp: Xây dựng hệ thống quản trị nội dung Blog hiện đại với kiến trúc Decoupled, tích hợp Gemini AI và thông báo thời gian thực.
+Xây dựng hệ thống quản trị nội dung Blog hiện đại với kiến trúc Decoupled, tích hợp Gemini AI và thông báo thời gian thực.
 
 ![Banner Dự án](link-to-your-banner-image.png)
-*(Bạn có thể thay thế dòng này bằng ảnh chụp màn hình Trang chủ hoặc Dashboard)*
 
 ## 📖 Giới thiệu (Overview)
 
@@ -119,16 +118,6 @@ Dự án này là một nền tảng **Website Blog Full-stack** được xây d
     yarn start
     ```
     Truy cập tại: `http://localhost:3000`
-
-## 📸 Ảnh chụp màn hình (Screenshots)
-
-| Trang chủ | Dashboard Tác giả |
-|:---:|:---:|
-| ![Home](link-anh-home) | ![Dashboard](link-anh-dashboard) |
-
-| Chat với AI | Thông báo Real-time |
-|:---:|:---:|
-| ![AI Chat](link-anh-ai) | ![Notify](link-anh-notify) |
 
 ## 🤝 Đóng góp (Contributing)
 Mọi đóng góp đều được hoan nghênh. Vui lòng mở Pull Request hoặc tạo Issue để thảo luận.
