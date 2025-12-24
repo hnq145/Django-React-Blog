@@ -2,8 +2,6 @@
 
 Xây dựng hệ thống quản trị nội dung Blog hiện đại với kiến trúc Decoupled, tích hợp Gemini AI và thông báo thời gian thực.
 
-![Banner Dự án](link-to-your-banner-image.png)
-
 ## 📖 Giới thiệu (Overview)
 
 Dự án này là một nền tảng **Website Blog Full-stack** được xây dựng dựa trên kiến trúc tách biệt (**Decoupled Architecture**) giữa Backend và Frontend. Hệ thống không chỉ cung cấp các chức năng quản lý nội dung (CMS) tiêu chuẩn mà còn tích hợp sâu **Generative AI (Google Gemini)** để hỗ trợ tác giả sáng tạo nội dung và công nghệ **WebSocket** để tương tác thời gian thực.
@@ -123,4 +121,4 @@ Dự án này là một nền tảng **Website Blog Full-stack** được xây d
 Mọi đóng góp đều được hoan nghênh. Vui lòng mở Pull Request hoặc tạo Issue để thảo luận.
 
 ## 📄 Bản quyền (License)
-Dự án này được thực hiện bởi **[Tên Bạn]** như một phần của Đồ án Tốt nghiệp.
+Dự án này được thực hiện bởi **Hoàng Ngọc Quý** 
