@@ -121,4 +121,7 @@ Dự án này là một nền tảng **Website Blog Full-stack** được xây d
 Mọi đóng góp đều được hoan nghênh. Vui lòng mở Pull Request hoặc tạo Issue để thảo luận.
 
 ## 📄 Bản quyền (License)
-Dự án này được thực hiện bởi **Hoàng Ngọc Quý** 
+Dự án này được thực hiện bởi **Hoàng Ngọc Quý**. 
+
+Lời tạm biệt, có lẽ đây là dự án cuối cùng của mình với cương vị là một Full-stack Web Developer trước khi một chuyển sang làm BA/PM, còn làm SE thì mk chỉ làm Freelance thôi. Vì mk cảm thấy 
+chuyển sang một role mới trong IT là 1 bước ngoặt của con đường sự nghiệp của mk, nó sẽ mở ra cho mk nhiều cơ hội đúng với chuyên môn hơn. 
