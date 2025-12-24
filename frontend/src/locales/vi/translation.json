@@ -1,0 +1,78 @@
+{
+    "search_placeholder": "Tìm kiếm...",
+    "home": "Trang chủ",
+    "header": {
+        "search": "Tìm kiếm...",
+        "english": "Tiếng Anh",
+        "vietnamese": "Tiếng Việt"
+    },
+    "dashboard": {
+        "allBlogPosts": "Tất cả bài viết",
+        "addNew": "Thêm bài viết",
+        "sortBy": "Sắp xếp theo",
+        "newest": "Mới nhất",
+        "oldest": "Cũ nhất",
+        "a-z": "A-Z",
+        "z-a": "Z-A",
+        "image": "Hình ảnh",
+        "articleName": "Tên bài viết",
+        "author": "Tác giả",
+        "publishedDate": "Ngày đăng",
+        "category": "Danh mục",
+        "status": "Trạng thái",
+        "action": "Hành động",
+        "views": "Lượt xem",
+        "edit": "Chỉnh sửa",
+        "delete": "Xóa",
+        "allStatuses": "Tất cả trạng thái"
+    },
+    "status": {
+        "active": "Hoạt động",
+        "draft": "Bản nháp",
+        "disabled": "Vô hiệu hóa"
+    },
+    "category": {
+        "technology": "Công nghệ",
+        "travel": "Du lịch",
+        "food": "Ẩm thực",
+        "fashion": "Thời trang",
+        "gaming": "Trò chơi",
+        "music": "Âm nhạc",
+        "sports": "Thể thao",
+        "world": "Thế giới",
+        "lifestyle": "Phong cách sống"
+    },
+    "notifications": {
+        "notifications": "Thông báo",
+        "manageNotifications": "Quản lý tất cả thông báo của bạn từ đây",
+        "newLike": "Lượt thích mới",
+        "likedPost": "Ai đó vừa thích bài viết của bạn",
+        "newComment": "Bình luận mới",
+        "commentedPost": "Ai đó vừa bình luận bài viết của bạn",
+        "newBookmark": "Dấu trang mới",
+        "bookmarkedPost": "Ai đó vừa đánh dấu bài viết của bạn",
+        "date": "Ngày",
+        "markAsSeen": "Đánh dấu là đã xem",
+        "noNotifications": "Chưa có thông báo nào"
+    },
+    "detail": {
+        "likes": "Lượt thích",
+        "views": "Lượt xem",
+        "comments": "Bình luận",
+        "sortBy": "Sắp xếp theo",
+        "newest": "Mới nhất",
+        "oldest": "Cũ nhất",
+        "leaveReply": "Để lại bình luận",
+        "emailNotPublished": "Địa chỉ email của bạn sẽ không được công bố. Các trường bắt buộc được đánh dấu *",
+        "name": "Tên *",
+        "email": "Email *",
+        "writeComment": "Viết bình luận của bạn ở đây *",
+        "postComment": "Gửi bình luận",
+        "commentPosted": "Bình luận đã được gửi và đang chờ duyệt.",
+        "commentFailed": "Gửi bình luận thất bại."
+    },
+    "pagination": {
+        "previous": "Trước",
+        "next": "Tiếp theo"
+    }
+}

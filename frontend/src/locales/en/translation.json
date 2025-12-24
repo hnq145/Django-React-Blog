@@ -1,0 +1,78 @@
+{
+    "search_placeholder": "Search...",
+    "home": "Home",
+    "header": {
+        "search": "Search...",
+        "english": "English",
+        "vietnamese": "Vietnamese"
+    },
+    "dashboard": {
+        "allBlogPosts": "All Blog Posts",
+        "addNew": "Add New Post",
+        "sortBy": "Sort By",
+        "newest": "Newest",
+        "oldest": "Oldest",
+        "a-z": "A-Z",
+        "z-a": "Z-A",
+        "image": "Image",
+        "articleName": "Article Name",
+        "author": "Author",
+        "publishedDate": "Published Date",
+        "category": "Category",
+        "status": "Status",
+        "action": "Action",
+        "views": "Views",
+        "edit": "Edit",
+        "delete": "Delete",
+        "allStatuses": "All Statuses"
+    },
+    "status": {
+        "active": "Active",
+        "draft": "Draft",
+        "disabled": "Disabled"
+    },
+    "category": {
+        "technology": "Technology",
+        "travel": "Travel",
+        "food": "Food",
+        "fashion": "Fashion",
+        "gaming": "Gaming",
+        "music": "Music",
+        "sports": "Sports",
+        "world": "World",
+        "lifestyle": "Lifestyle"
+    },
+    "notifications": {
+        "notifications": "Notifications",
+        "manageNotifications": "Manage all your notifications from here",
+        "newLike": "New Like",
+        "likedPost": "Someone just liked your post",
+        "newComment": "New Comment",
+        "commentedPost": "Someone just commented your post",
+        "newBookmark": "New Bookmark",
+        "bookmarkedPost": "Someone just bookmarked your post",
+        "date": "Date",
+        "markAsSeen": "Mark as Seen",
+        "noNotifications": "No notifications yet"
+    },
+    "detail": {
+        "likes": "Likes",
+        "views": "Views",
+        "comments": "Comments",
+        "sortBy": "Sort by",
+        "newest": "Newest",
+        "oldest": "Oldest",
+        "leaveReply": "Leave a Reply",
+        "emailNotPublished": "Your email address will not be published. Required fields are marked *",
+        "name": "Name *",
+        "email": "Email *",
+        "writeComment": "Write your comment here *",
+        "postComment": "Post Comment",
+        "commentPosted": "Comment posted successfully and is awaiting approval.",
+        "commentFailed": "Failed to post comment."
+    },
+    "pagination": {
+        "previous": "Previous",
+        "next": "Next"
+    }
+}

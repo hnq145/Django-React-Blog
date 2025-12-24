@@ -1,0 +1,75 @@
+import os
+import logging
+from google import genai
+from google.genai import types
+
+logger = logging.getLogger(__name__)
+
+class AIServiceClient:
+    def __init__(self):
+        
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            logger.error("GEMINI_API_KEY was not found in the environment variables.")
+            raise ValueError("GEMINI_API_KEY is missing.")
+        
+        self.client = genai.Client(api_key=api_key)
+
+    def generate_content(self, prompt: str, type: str, context: str):
+        
+        if type == 'text':
+            system_instruction = (
+                "You are a Creative Assistant and Content Analyst for a professional Blog. "
+                "Your role is to analyze and critique the content provided. "
+                "Please respond to user requests IN VIETNAMESE, based on the following context:\n\n"
+                f"--- NỘI DUNG BỐI CẢNH ---\n{context}"
+            )
+            
+            try:
+                # NFR-02: Sử dụng mô hình nhanh (flash) cho độ trễ thấp
+                response = self.client.models.generate_content(
+                    model='gemini-2.5-flash', 
+                    contents=[
+                        {"role": "user", "parts": [{"text": system_instruction}]},
+                        {"role": "user", "parts": [{"text": prompt}]} # Yêu cầu cụ thể của người dùng
+                    ],
+                    config=types.GenerateContentConfig(
+                        temperature=0.7, # Cho phép sự sáng tạo (gợi ý)
+                    )
+                )
+                return {'type': 'text', 'content': response.text}
+
+            except Exception as e:
+                logger.error(f"Lỗi gọi Gemini API (Text): {e}")
+                raise Exception("Lỗi dịch vụ AI khi tạo văn bản.")
+
+        # --- 2. Xử lý Yêu cầu Hình ảnh (Text-to-Image) ---
+        elif type == 'image':
+            # Kỹ thuật Prompt: Gộp bối cảnh (context) và yêu cầu (prompt) để tạo hình ảnh
+            image_prompt = f"Tạo ảnh đại diện cho chủ đề blog sau: {prompt}. Bối cảnh: {context}. Phong cách: Tối giản, chuyên nghiệp, tỷ lệ 16:9."
+            
+            try:
+                # Sử dụng mô hình Imagen cho việc tạo ảnh
+                image_result = self.client.models.generate_images(
+                    model='imagen-3.0-generate-001',
+                    prompt=image_prompt,
+                    config=types.GenerateImagesConfig(
+                        number_of_images=1,
+                        output_mime_type="image/jpeg",
+                        aspect_ratio="16:9"
+                    )
+                )
+                
+                # Trích xuất Base64 và trả về
+                if image_result.generated_images:
+                    base64_image = image_result.generated_images[0].image.image_bytes
+                    # Trả về chuỗi base64 đã decode (dễ xử lý hơn trong JSON)
+                    return {'type': 'image', 'content': base64_image.decode('utf-8')}
+                else:
+                    raise Exception("Không thể tạo hình ảnh từ AI.")
+
+            except Exception as e:
+                logger.error(f"Lỗi gọi Imagen API (Image): {e}")
+                raise Exception("Lỗi dịch vụ AI khi tạo hình ảnh.")
+
+        raise ValueError("Loại yêu cầu không hợp lệ.")

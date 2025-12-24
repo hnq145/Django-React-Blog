@@ -1,0 +1,58 @@
+import React, { useState } from 'react';
+import useAxios from './useAxios'; 
+
+export const useAIService = () => {
+    
+    const api = useAxios(); 
+    
+    const [summary, setSummary] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    /**
+     * 
+     * @param {number} postId 
+     */
+    const getSummary = async (postId) => {
+        if (!postId) {
+            setError("Error: Post ID not found.");
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        const url = `/posts/${postId}/summarize/`; 
+        
+        try {
+            const response = await api.post(url);
+
+            if (response.data && response.data.summary) {
+                setSummary(response.data.summary);
+            } else {
+                setError("The AI ​​service was unable to generate a summary for this article.");
+            }
+        } catch (err) {
+            console.error("Lỗi gọi API AI:", err);
+
+            let errorMessage = "Đã xảy ra lỗi hệ thống khi yêu cầu AI.";
+            if (err.response?.status === 503) {
+                 errorMessage = "Dịch vụ AI tạm thời không khả dụng (Lỗi 503). Vui lòng thử lại sau.";
+            } else if (err.response?.status === 400) {
+                errorMessage = "Dữ liệu bài viết không hợp lệ.";
+            }
+            setError(errorMessage);
+            setSummary(null);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const resetSummary = () => {
+        setSummary(null);
+        setError(null);
+        setIsLoading(false);
+    }
+
+    return { summary, isLoading, error, getSummary, resetSummary };
+};
