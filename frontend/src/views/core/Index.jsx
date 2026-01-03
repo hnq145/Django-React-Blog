@@ -131,7 +131,10 @@ function Index() {
   const indexOfLastLatestItem = latestCurrentPage * latestItemsPerPage;
   const indexOfFirstLatestItem = indexOfLastLatestItem - latestItemsPerPage;
 
-  const latestPostItems = sortedPosts?.slice(indexOfFirstLatestItem, indexOfLastLatestItem);
+  const latestPostItems = sortedPosts?.slice(
+    indexOfFirstLatestItem,
+    indexOfLastLatestItem
+  );
 
   const totalLatestPages = Math.ceil(sortedPosts?.length / latestItemsPerPage);
   const latestPageNumbers = Array.from(
@@ -149,7 +152,7 @@ function Index() {
               <a href="#" className="d-block card-img-flash">
                 <img src="assets/images/adv-3.png" alt="" />
               </a>
-              <h2 className="text-start d-block mt-1">{t('index.trending')}</h2>
+              <h2 className="text-start d-block mt-1">{t("index.trending")}</h2>
             </div>
           </div>
         </div>
@@ -158,9 +161,11 @@ function Index() {
       <section className="pt-4 pb-0">
         <div className="container">
           <div className="row">
-            {postItems?.map((post) => (
+            {postItems?.map((post, index) => (
               <div className="col-sm-6 col-lg-3" key={post?.id}>
-                <div className="card mb-4">
+                <div
+                  className={`card mb-4 animate-fade-in-up delay-${(index % 3) * 100}`}
+                >
                   <div className="card-fold position-relative">
                     <img
                       className="card-img"
@@ -172,7 +177,7 @@ function Index() {
                       src={post.image}
                     />
                   </div>
-                  <div 
+                  <div
                     className="card-body px-3 pt-3"
                     style={{
                       height: "250px",
@@ -196,14 +201,15 @@ function Index() {
                       <li>
                         <a href="#" className="text-dark text-decoration-none">
                           <i className="fas fa-user"></i>{" "}
-                          {post?.user?.username || t('index.defaultAuthor')}
+                          {post?.user?.username || t("index.defaultAuthor")}
                         </a>
                       </li>
                       <li className="mt-2">
                         <i className="fas fa-calendar"></i> {Moment(post.date)}
                       </li>
                       <li className="mt-2">
-                        <i className="fas fa-eye"></i> {post?.view} {t('index.views')}
+                        <i className="fas fa-eye"></i> {post?.view}{" "}
+                        {t("index.views")}
                       </li>
                     </ul>
                   </div>
@@ -212,45 +218,62 @@ function Index() {
             ))}
           </div>
 
-          <nav className="d-flex mt-2">
+          <nav className="d-flex justify-content-center mt-4">
             <ul className="pagination">
               <li
                 className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark fw-bold me-1 rounded"
+                  className="page-link text-dark fw-bold me-1 rounded-circle"
                   onClick={() => setCurrentPage(currentPage - 1)}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <i className="fas fa-arrow-left me-2" />
-                  {t('index.previous')}
+                  <i className="fas fa-arrow-left" />
                 </button>
               </li>
-            </ul>
-            <ul className="pagination">
+
               {pageNumbers.map((number) => (
                 <li
                   key={number}
-                  className={`page-item ${currentPage === number ? "active text-white" : ""}`}
+                  className={`page-item ${currentPage === number ? "active" : ""}`}
                 >
                   <button
-                    className="page-link text-dark fw-bold rounded"
+                    className={`page-link fw-bold rounded-circle mx-1 ${currentPage === number ? "text-white bg-primary border-primary" : "text-dark"}`}
                     onClick={() => setCurrentPage(number)}
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
                     {number}
                   </button>
                 </li>
               ))}
-            </ul>
-            <ul className="pagination">
+
               <li
                 className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark fw-bold ms-1 rounded"
+                  className="page-link text-dark fw-bold ms-1 rounded-circle"
                   onClick={() => setCurrentPage(currentPage + 1)}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  {t('index.next')}
-                  <i className="fas fa-arrow-right ms-3 " />
+                  <i className="fas fa-arrow-right" />
                 </button>
               </li>
             </ul>
@@ -263,7 +286,7 @@ function Index() {
           <div className="row g-0">
             <div className="col-12 ">
               <div className="mb-4">
-                <h2>{t('index.categories')}</h2>
+                <h2>{t("index.categories")}</h2>
               </div>
               <div className="d-flex flex-wrap justify-content-between">
                 {category?.map((c) => (
@@ -280,8 +303,16 @@ function Index() {
                         alt="card image"
                       />
                       <div className="d-flex flex-column align-items-center mt-3 pb-2">
-                        <h5 className="mb-0">{t(`category.${c.title.toLowerCase()}`)}</h5>
-                        <small>{c.post_count || "0"} {t('index.articles')}</small>
+                        <h5 className="mb-0">
+                          {c?.title
+                            ? t(`category.${c.title.toLowerCase()}`, {
+                                defaultValue: c.title,
+                              })
+                            : "Untitled"}
+                        </h5>
+                        <small>
+                          {c.post_count || "0"} {t("index.articles")}
+                        </small>
                       </div>
                     </div>
                   </div>
@@ -295,13 +326,13 @@ function Index() {
       <section className="p-0">
         <div className="container">
           <div className="d-flex justify-content-between align-items-center">
-            <h2 className="text-start d-block mt-1">{t('index.latest')}</h2>
+            <h2 className="text-start d-block mt-1">{t("index.latest")}</h2>
             <div className="col-md-3">
               <select className="form-select" onChange={handleSortChange}>
-                <option value="newest">{t('dashboard.newest')}</option>
-                <option value="oldest">{t('dashboard.oldest')}</option>
-                <option value="a-z">{t('dashboard.a-z')}</option>
-                <option value="z-a">{t('dashboard.z-a')}</option>
+                <option value="newest">{t("dashboard.newest")}</option>
+                <option value="oldest">{t("dashboard.oldest")}</option>
+                <option value="a-z">{t("dashboard.a-z")}</option>
+                <option value="z-a">{t("dashboard.z-a")}</option>
               </select>
             </div>
           </div>
@@ -325,7 +356,7 @@ function Index() {
                       src={post.image}
                     />
                   </div>
-                  <div 
+                  <div
                     className="card-body px-3 pt-3"
                     style={{
                       height: "250px",
@@ -349,14 +380,15 @@ function Index() {
                       <li>
                         <a href="#" className="text-dark text-decoration-none">
                           <i className="fas fa-user"></i>{" "}
-                          {post?.user?.username || t('index.defaultAuthor')}
+                          {post?.user?.username || t("index.defaultAuthor")}
                         </a>
                       </li>
                       <li className="mt-2">
                         <i className="fas fa-calendar"></i> {Moment(post.date)}
                       </li>
                       <li className="mt-2">
-                        <i className="fas fa-eye"></i> {post?.view} {t('index.views')}
+                        <i className="fas fa-eye"></i> {post?.view}{" "}
+                        {t("index.views")}
                       </li>
                     </ul>
                   </div>
@@ -364,45 +396,62 @@ function Index() {
               </div>
             ))}
           </div>
-          <nav className="d-flex mt-2">
+          <nav className="d-flex justify-content-center mt-4">
             <ul className="pagination">
               <li
                 className={`page-item ${latestCurrentPage === 1 ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark fw-bold me-1 rounded"
+                  className="page-link text-dark fw-bold me-1 rounded-circle"
                   onClick={() => setLatestCurrentPage(latestCurrentPage - 1)}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <i className="fas fa-arrow-left me-2" />
-                  {t('index.previous')}
+                  <i className="fas fa-arrow-left" />
                 </button>
               </li>
-            </ul>
-            <ul className="pagination">
+
               {latestPageNumbers.map((number) => (
                 <li
                   key={number}
-                  className={`page-item ${latestCurrentPage === number ? "active text-white" : ""}`}
+                  className={`page-item ${latestCurrentPage === number ? "active" : ""}`}
                 >
                   <button
-                    className="page-link text-dark fw-bold rounded"
+                    className={`page-link fw-bold rounded-circle mx-1 ${latestCurrentPage === number ? "text-white bg-primary border-primary" : "text-dark"}`}
                     onClick={() => setLatestCurrentPage(number)}
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
                     {number}
                   </button>
                 </li>
               ))}
-            </ul>
-            <ul className="pagination">
+
               <li
                 className={`page-item ${latestCurrentPage === totalLatestPages ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark fw-bold ms-1 rounded"
+                  className="page-link text-dark fw-bold ms-1 rounded-circle"
                   onClick={() => setLatestCurrentPage(latestCurrentPage + 1)}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  {t('index.next')}
-                  <i className="fas fa-arrow-right ms-3 " />
+                  <i className="fas fa-arrow-right" />
                 </button>
               </li>
             </ul>
@@ -416,5 +465,3 @@ function Index() {
 }
 
 export default Index;
-
-

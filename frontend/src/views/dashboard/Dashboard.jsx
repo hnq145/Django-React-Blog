@@ -8,6 +8,7 @@ import apiInstance from "../../utils/axios";
 import useUserData from "../../plugin/useUserData";
 import moment from "moment";
 import Toast from "../../plugin/Toast";
+import Swal from "sweetalert2";
 
 // const baseURL = apiInstance.defaults.baseURL.replace('/api/v1', '');
 
@@ -25,24 +26,16 @@ function Dashboard() {
   const fetchDashboardData = useCallback(async () => {
     if (!userId) return;
 
-    const stats_res = await apiInstance.get(
-      `author/dashboard/stats/`
-    );
+    const stats_res = await apiInstance.get(`author/dashboard/stats/`);
     setStats(stats_res.data[0]);
 
-    const post_res = await apiInstance.get(
-      `author/dashboard/post-list/`
-    );
+    const post_res = await apiInstance.get(`author/dashboard/post-list/`);
     setPosts(post_res.data);
 
-    const comment_res = await apiInstance.get(
-      `author/dashboard/comment-list/`
-    );
+    const comment_res = await apiInstance.get(`author/dashboard/comment-list/`);
     setComments(comment_res.data);
 
-    const noti_res = await apiInstance.get(
-      `author/dashboard/noti-list/`
-    );
+    const noti_res = await apiInstance.get(`author/dashboard/noti-list/`);
     setNoti(noti_res.data);
   }, [userId]);
 
@@ -57,7 +50,7 @@ function Dashboard() {
     );
     console.log(response.data);
     fetchDashboardData();
-    Toast("success", t('dashboard.notiSeen'), "");
+    Toast("success", t("dashboard.notiSeen"), "");
   };
 
   const indexOfLastPost = currentPage * postsPerPage;
@@ -68,7 +61,6 @@ function Dashboard() {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
-
 
   return (
     <>
@@ -86,7 +78,7 @@ function Dashboard() {
                       </div>
                       <div className="ms-3">
                         <h3>{stats.views}</h3>
-                        <h6 className="mb-0">{t('dashboard.totalViews')}</h6>
+                        <h6 className="mb-0">{t("dashboard.totalViews")}</h6>
                       </div>
                     </div>
                   </div>
@@ -99,7 +91,7 @@ function Dashboard() {
                       </div>
                       <div className="ms-3">
                         <h3>{stats.posts}</h3>
-                        <h6 className="mb-0">{t('dashboard.posts')}</h6>
+                        <h6 className="mb-0">{t("dashboard.posts")}</h6>
                       </div>
                     </div>
                   </div>
@@ -112,7 +104,7 @@ function Dashboard() {
                       </div>
                       <div className="ms-3">
                         <h3>{stats.likes}</h3>
-                        <h6 className="mb-0">{t('dashboard.likes')}</h6>
+                        <h6 className="mb-0">{t("dashboard.likes")}</h6>
                       </div>
                     </div>
                   </div>
@@ -125,7 +117,7 @@ function Dashboard() {
                       </div>
                       <div className="ms-3">
                         <h3>{stats.bookmarks}</h3>
-                        <h6 className="mb-0">{t('dashboard.bookmarks')}</h6>
+                        <h6 className="mb-0">{t("dashboard.bookmarks")}</h6>
                       </div>
                     </div>
                   </div>
@@ -137,7 +129,7 @@ function Dashboard() {
               <div className="card border h-100">
                 <div className="card-header border-bottom d-flex justify-content-between align-items-center  p-3">
                   <h5 className="card-header-title mb-0">
-                    {t('dashboard.allPosts')} ({posts?.length})
+                    {t("dashboard.allPosts")} ({posts?.length})
                   </h5>
                   <div className="dropdown text-end">
                     <a
@@ -158,17 +150,18 @@ function Dashboard() {
                       <div key={p.id}>
                         <div className="col-12">
                           <div className="d-flex position-relative">
-                                                          <img
-                                                            className="w-60 rounded"
-                                                            src={p.image}
-                                                            style={{
-                                                              width: "100px",
-                                                              height: "110px",
-                                                              objectFit: "cover",
-                                                              borderRadius: "10px",
-                                                            }}
-                                                            alt="product"
-                                                          />                            <div className="ms-3">
+                            <img
+                              className="w-60 rounded"
+                              src={p.image}
+                              style={{
+                                width: "100px",
+                                height: "110px",
+                                objectFit: "cover",
+                                borderRadius: "10px",
+                              }}
+                              alt="product"
+                            />{" "}
+                            <div className="ms-3">
                               <a
                                 href="#"
                                 className="h6 stretched-link text-decoration-none text-dark"
@@ -181,11 +174,11 @@ function Dashboard() {
                               </p>
                               <p className="small mb-0">
                                 <i className="fas fa-eye me-2"></i>
-                                {p.view} {t('dashboard.views')}
+                                {p.view} {t("dashboard.views")}
                               </p>
                               <p className="small mb-0">
                                 <i className="fas fa-thumbs-up me-2"></i>
-                                {p.likes?.length} {t('dashboard.likes')}
+                                {p.likes?.length} {t("dashboard.likes")}
                               </p>
                             </div>
                           </div>
@@ -200,7 +193,7 @@ function Dashboard() {
                     to="/posts/"
                     className="fw-bold text-decoration-none text-dark"
                   >
-                    {t('dashboard.viewAllPosts')}
+                    {t("dashboard.viewAllPosts")}
                   </Link>
                 </div>
               </div>
@@ -209,7 +202,7 @@ function Dashboard() {
               <div className="card border h-100">
                 <div className="card-header border-bottom d-flex justify-content-between align-items-center  p-3">
                   <h5 className="card-header-title mb-0">
-                    {t('dashboard.comments')} ({comments?.length})
+                    {t("dashboard.comments")} ({comments?.length})
                   </h5>
                   <div className="dropdown text-end">
                     <a
@@ -254,8 +247,8 @@ function Dashboard() {
                               </p>
                               <div className="d-flex justify-content-between">
                                 <p className="small mb-0">
-                                  <i>{t('dashboard.by')}</i> {c.name} <br />
-                                  <i>{t('dashboard.date')}</i>{" "}
+                                  <i>{t("dashboard.by")}</i> {c.name} <br />
+                                  <i>{t("dashboard.date")}</i>{" "}
                                   {moment(c.date).format("DD MMM, YYYY")}
                                 </p>
                               </div>
@@ -273,7 +266,7 @@ function Dashboard() {
                     to="/comments/"
                     className="fw-bold text-decoration-none text-dark"
                   >
-                    {t('dashboard.viewAllComments')}
+                    {t("dashboard.viewAllComments")}
                   </Link>
                 </div>
               </div>
@@ -281,7 +274,9 @@ function Dashboard() {
             <div className="col-md-6 col-xxl-4">
               <div className="card border h-100">
                 <div className="card-header border-bottom d-flex justify-content-between align-items-center  p-3">
-                  <h5 className="card-header-title mb-0">{t('dashboard.notifications')} ({noti?.length})</h5>
+                  <h5 className="card-header-title mb-0">
+                    {t("dashboard.notifications")} ({noti?.length})
+                  </h5>
                   <div className="dropdown text-end">
                     <a
                       href="#"
@@ -322,16 +317,33 @@ function Dashboard() {
                                   <h6 className="mb-0">{n.type}</h6>
                                   <div className="mb-0">
                                     {n.type === "Like" && (
-                                      <span>{t('dashboard.someoneLiked')} <b>{n.post?.title?.slice(0, 30) + "..."}</b></span>
+                                      <span>
+                                        {t("dashboard.someoneLiked")}{" "}
+                                        <b>
+                                          {n.post?.title?.slice(0, 30) + "..."}
+                                        </b>
+                                      </span>
                                     )}
                                     {n.type === "Comment" && (
-                                      <span>{t('dashboard.newComment')} <b>{n.post?.title?.slice(0, 30) + "..."}</b></span>
+                                      <span>
+                                        {t("dashboard.newComment")}{" "}
+                                        <b>
+                                          {n.post?.title?.slice(0, 30) + "..."}
+                                        </b>
+                                      </span>
                                     )}
                                     {n.type === "Bookmark" && (
-                                      <span>{t('dashboard.someoneBookmarked')} <b>{n.post?.title?.slice(0, 30) + "..."}</b></span>
+                                      <span>
+                                        {t("dashboard.someoneBookmarked")}{" "}
+                                        <b>
+                                          {n.post?.title?.slice(0, 30) + "..."}
+                                        </b>
+                                      </span>
                                     )}
                                   </div>
-                                  <span className="small">{t('dashboard.fiveMinAgo')}</span>
+                                  <span className="small">
+                                    {t("dashboard.fiveMinAgo")}
+                                  </span>
                                   <br />
                                   <button
                                     onClick={() => handleMarkNotiAsSeen(n.id)}
@@ -354,7 +366,7 @@ function Dashboard() {
                     to="/notifications/"
                     className="fw-bold text-decoration-none text-dark"
                   >
-                    {t('dashboard.viewAllNotifications')}
+                    {t("dashboard.viewAllNotifications")}
                   </Link>
                 </div>
               </div>
@@ -365,13 +377,13 @@ function Dashboard() {
                 <div className="card-header bg-transparent border-bottom p-3">
                   <div className="d-sm-flex justify-content-between align-items-center">
                     <h5 className="mb-2 mb-sm-0">
-                      {t('dashboard.allBlogPosts')}{" "}
+                      {t("dashboard.allBlogPosts")}{" "}
                       <span className="badge bg-primary bg-opacity-10 text-primary">
                         {posts?.length}
                       </span>
                     </h5>
                     <a href="#" className="btn btn-sm btn-primary mb-0">
-                      {t('dashboard.addNew')} <i className="fas fa-plus"></i>
+                      {t("dashboard.addNew")} <i className="fas fa-plus"></i>
                     </a>
                   </div>
                 </div>
@@ -384,22 +396,22 @@ function Dashboard() {
                       <thead className="table-dark">
                         <tr>
                           <th scope="col" className="border-0 rounded-start">
-                            {t('dashboard.articleName')}
+                            {t("dashboard.articleName")}
                           </th>
                           <th scope="col" className="border-0">
-                            {t('dashboard.views')}
+                            {t("dashboard.views")}
                           </th>
                           <th scope="col" className="border-0">
-                            {t('dashboard.publishedDate')}
+                            {t("dashboard.publishedDate")}
                           </th>
                           <th scope="col" className="border-0">
-                            {t('dashboard.category')}
+                            {t("dashboard.category")}
                           </th>
                           <th scope="col" className="border-0">
-                            {t('dashboard.status')}
+                            {t("dashboard.status")}
                           </th>
                           <th scope="col" className="border-0 rounded-end">
-                            {t('dashboard.action')}
+                            {t("dashboard.action")}
                           </th>
                         </tr>
                       </thead>
@@ -422,28 +434,124 @@ function Dashboard() {
                                   href="#"
                                   className="text-dark text-decoration-none"
                                 >
-                                  {p.view} {t('dashboard.views')}
+                                  {p.view} {t("dashboard.views")}
                                 </a>
                               </h6>
                             </td>
-                            <td>{moment(p.date).locale(i18n.language).format("DD MMM, YYYY")}</td>
-                            <td>{t(`category.${p.category?.title?.toLowerCase()}`)}</td>
+                            <td>
+                              {moment(p.date)
+                                .locale(i18n.language)
+                                .format("DD MMM, YYYY")}
+                            </td>
+                            <td>
+                              {t(
+                                `category.${p.category?.title?.toLowerCase()}`
+                              )}
+                            </td>
                             <td>
                               <span className="badge bg-dark bg-opacity-10 text-dark mb-2">
-                                {t(`status.${p.status.toLowerCase().replace(" ", "_")}`)}
+                                {t(
+                                  `status.${p.status.toLowerCase().replace(" ", "_")}`
+                                )}
                               </span>
                             </td>
                             <td>
                               <div className="d-flex gap-2">
-                                <a
-                                  href="#"
+                                <button
+                                  type="button"
                                   className="btn-round mb-0 btn btn-danger"
                                   data-bs-toggle="tooltip"
                                   data-bs-placement="top"
                                   title="Delete"
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+
+                                    // Fallback translation logic
+                                    const lang = i18n.language;
+                                    const txt = {
+                                      title:
+                                        t("dashboard.confirmDelete") !==
+                                        "dashboard.confirmDelete"
+                                          ? t("dashboard.confirmDelete")
+                                          : lang === "vi"
+                                            ? "Bạn có chắc chắn không?"
+                                            : "Are you sure?",
+                                      text:
+                                        t("dashboard.deleteWarning") !==
+                                        "dashboard.deleteWarning"
+                                          ? t("dashboard.deleteWarning")
+                                          : lang === "vi"
+                                            ? "Hành động này không thể hoàn tác!"
+                                            : "You won't be able to revert this!",
+                                      confirm:
+                                        t("dashboard.deleteConfirm") !==
+                                        "dashboard.deleteConfirm"
+                                          ? t("dashboard.deleteConfirm")
+                                          : lang === "vi"
+                                            ? "Vâng, xóa nó!"
+                                            : "Yes, delete it!",
+                                      cancel:
+                                        t("dashboard.cancel") !==
+                                        "dashboard.cancel"
+                                          ? t("dashboard.cancel")
+                                          : lang === "vi"
+                                            ? "Hủy bỏ"
+                                            : "Cancel",
+                                      deletedTitle:
+                                        lang === "vi" ? "Đã xóa!" : "Deleted!",
+                                      deletedText:
+                                        t("dashboard.postDeleted") !==
+                                        "dashboard.postDeleted"
+                                          ? t("dashboard.postDeleted")
+                                          : lang === "vi"
+                                            ? "Bài viết đã được xóa thành công."
+                                            : "Post deleted successfully.",
+                                      errorTitle:
+                                        lang === "vi" ? "Lỗi!" : "Error!",
+                                      errorText:
+                                        t("dashboard.deleteFailed") !==
+                                        "dashboard.deleteFailed"
+                                          ? t("dashboard.deleteFailed")
+                                          : lang === "vi"
+                                            ? "Xóa bài viết thất bại."
+                                            : "Failed to delete post.",
+                                    };
+
+                                    const result = await Swal.fire({
+                                      title: txt.title,
+                                      text: txt.text,
+                                      icon: "warning",
+                                      showCancelButton: true,
+                                      confirmButtonColor: "#d33",
+                                      cancelButtonColor: "#3085d6",
+                                      confirmButtonText: txt.confirm,
+                                      cancelButtonText: txt.cancel,
+                                    });
+
+                                    if (result.isConfirmed) {
+                                      try {
+                                        await apiInstance.delete(
+                                          `author/dashboard/post-detail/${p.id}/`
+                                        );
+                                        Swal.fire(
+                                          txt.deletedTitle,
+                                          txt.deletedText,
+                                          "success"
+                                        );
+                                        fetchDashboardData();
+                                      } catch (err) {
+                                        console.error(err);
+                                        Swal.fire(
+                                          txt.errorTitle,
+                                          txt.errorText,
+                                          "error"
+                                        );
+                                      }
+                                    }
+                                  }}
                                 >
                                   <i className="bi bi-trash" />
-                                </a>
+                                </button>
                                 <Link
                                   to={`/edit-post/${p.id}/`}
                                   className="btn btn-primary btn-round mb-0"
@@ -464,16 +572,38 @@ function Dashboard() {
                     <div className="d-flex justify-content-center mt-3">
                       <nav>
                         <ul className="pagination">
-                          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                            <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>{t('pagination.previous')}</button>
+                          <li
+                            className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() => handlePageChange(currentPage - 1)}
+                            >
+                              {t("pagination.previous")}
+                            </button>
                           </li>
                           {Array.from({ length: totalPages }, (_, i) => (
-                            <li key={i} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
-                              <button className="page-link" onClick={() => handlePageChange(i + 1)}>{i + 1}</button>
+                            <li
+                              key={i}
+                              className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                            >
+                              <button
+                                className="page-link"
+                                onClick={() => handlePageChange(i + 1)}
+                              >
+                                {i + 1}
+                              </button>
                             </li>
                           ))}
-                          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                            <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>{t('pagination.next')}</button>
+                          <li
+                            className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+                          >
+                            <button
+                              className="page-link"
+                              onClick={() => handlePageChange(currentPage + 1)}
+                            >
+                              {t("pagination.next")}
+                            </button>
                           </li>
                         </ul>
                       </nav>

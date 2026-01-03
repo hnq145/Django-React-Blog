@@ -8,6 +8,7 @@ import Toast from "../../plugin/Toast";
 import Swal from "sweetalert2";
 import AIChatAssistant from "../partials/AIChatAssistant";
 import { useTranslation } from "react-i18next";
+import { useAIService } from "../../utils/useAIService";
 
 function AddPost() {
   const [post, setCreatePost] = useState({
@@ -22,6 +23,7 @@ function AddPost() {
   const [imagePreview, setImagePreview] = useState("");
   const [categoryList, setCategoryList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { generateContent } = useAIService();
   const userData = useUserData();
   const userId = userData?.user_id;
   const navigate = useNavigate();
@@ -115,7 +117,10 @@ function AddPost() {
     } catch (error) {
       console.log(error);
       setIsLoading(false);
-      Toast("error", error.response?.data?.detail || t("addPost.errorCreating"));
+      Toast(
+        "error",
+        error.response?.data?.detail || t("addPost.errorCreating")
+      );
     }
   };
 
@@ -147,7 +152,8 @@ function AddPost() {
                               style={{ backgroundColor: "white" }}
                             >
                               {" "}
-                              <i className="fas fa-arrow-left"></i> {t("addPost.backToPosts")}
+                              <i className="fas fa-arrow-left"></i>{" "}
+                              {t("addPost.backToPosts")}
                             </Link>
                             <a
                               href="instructor-posts.html"
@@ -200,7 +206,9 @@ function AddPost() {
                       </div>
 
                       <div className="mb-3">
-                        <label className="form-label">{t("addPost.title")}</label>
+                        <label className="form-label">
+                          {t("addPost.title")}
+                        </label>
                         <input
                           onChange={handleCreatePostChange}
                           name="title"
@@ -211,7 +219,9 @@ function AddPost() {
                         <small>{t("addPost.titleHelp")}</small>
                       </div>
                       <div className="mb-3">
-                        <label className="form-label">{t("addPost.category")}</label>
+                        <label className="form-label">
+                          {t("addPost.category")}
+                        </label>
                         <select
                           name="category"
                           onChange={handleCreatePostChange}
@@ -224,13 +234,13 @@ function AddPost() {
                             </option>
                           ))}
                         </select>
-                        <small>
-                          {t("addPost.categoryHelp")}
-                        </small>
+                        <small>{t("addPost.categoryHelp")}</small>
                       </div>
 
                       <div className="mb-3">
-                        <label className="form-label">{t("addPost.description")}</label>
+                        <label className="form-label">
+                          {t("addPost.description")}
+                        </label>
                         <AIChatAssistant />
                         <textarea
                           onChange={handleCreatePostChange}
@@ -240,6 +250,56 @@ function AddPost() {
                           cols="30"
                           rows="10"
                         ></textarea>
+
+                        <div className="d-flex gap-2 mt-2">
+                          <button
+                            type="button"
+                            disabled={isLoading}
+                            className="btn btn-sm btn-outline-primary rounded-pill"
+                            onClick={async () => {
+                              if (!post.description) {
+                                Toast(
+                                  "error",
+                                  t("addPost.enterTextFirst") ||
+                                    "Please enter text"
+                                );
+                                return;
+                              }
+                              setIsLoading(true);
+                              try {
+                                const prompt =
+                                  "Rewrite the following text to be more professional and engaging in Vietnamese:";
+                                const result = await generateContent(
+                                  prompt,
+                                  "text",
+                                  post.description
+                                );
+
+                                if (result && result.content) {
+                                  setCreatePost({
+                                    ...post,
+                                    description: result.content,
+                                  });
+                                  Toast(
+                                    "success",
+                                    "Content rewritten successfully!"
+                                  );
+                                }
+                              } catch (error) {
+                                Toast("error", "AI Error: " + error.message);
+                              } finally {
+                                setIsLoading(false);
+                              }
+                            }}
+                          >
+                            <i className="fas fa-magic me-1"></i>{" "}
+                            {t("addPost.rewrite") || "Rewrite with AI"}
+                          </button>
+                          <small className="text-muted ms-auto">
+                            Use the <b>AI Assistant</b> above to generate
+                            content!
+                          </small>
+                        </div>
                         <small>{t("addPost.descriptionHelp")}</small>
                       </div>
                       <label className="form-label">{t("addPost.tags")}</label>
@@ -252,7 +312,9 @@ function AddPost() {
                       />
 
                       <div className="mb-3">
-                        <label className="form-label">{t("addPost.status")}</label>
+                        <label className="form-label">
+                          {t("addPost.status")}
+                        </label>
                         <select
                           onChange={handleCreatePostChange}
                           name="status"
@@ -262,9 +324,7 @@ function AddPost() {
                           <option value="Draft">Draft</option>
                           <option value="Disabled">Disabled</option>
                         </select>
-                        <small>
-                          {t("addPost.categoryHelp")}
-                        </small>
+                        <small>{t("addPost.categoryHelp")}</small>
                       </div>
                     </div>
                   </div>
@@ -281,7 +341,8 @@ function AddPost() {
                       className="btn btn-lg btn-success w-100 mt-2"
                       type="submit"
                     >
-                      {t("addPost.createPostButton")} <i className="fas fa-check-circle"></i>
+                      {t("addPost.createPostButton")}{" "}
+                      <i className="fas fa-check-circle"></i>
                     </button>
                   )}
                 </form>

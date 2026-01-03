@@ -7,10 +7,10 @@ import Moment from "./../../plugin/Moment";
 import Toast from "./../../plugin/Toast";
 import AIChatAssistant from "../partials/AIChatAssistant";
 import { useTranslation } from "react-i18next";
-import 'moment/locale/vi';
-import 'moment/locale/en-gb';
+import "moment/locale/vi";
+import "moment/locale/en-gb";
 
-const baseURL = apiInstance.defaults.baseURL.replace('/api/v1', '');
+const baseURL = apiInstance.defaults.baseURL.replace("/api/v1", "");
 
 function Detail() {
   const [post, setPost] = useState({});
@@ -36,26 +36,31 @@ function Detail() {
     setCommentSortOrder(newSortOrder);
   };
 
-  const fetchPost = useCallback(async (sortOrder, page = 1) => {
-    try {
-      const response = await apiInstance.get(`post/detail/${param.slug}/?comment_sort=${sortOrder}&page=${page}`);
-      setPost(response.data);
-      if (response.data.comments) {
-        setAllComments(response.data.comments.results);
-        setCommentPagination({
+  const fetchPost = useCallback(
+    async (sortOrder, page = 1) => {
+      try {
+        const response = await apiInstance.get(
+          `post/detail/${param.slug}/?comment_sort=${sortOrder}&page=${page}`
+        );
+        setPost(response.data);
+        if (response.data.comments) {
+          setAllComments(response.data.comments.results);
+          setCommentPagination({
             count: response.data.comments.count,
             next: response.data.comments.next,
             previous: response.data.comments.previous,
-        })
+          });
+        }
+        if (response.data.tags) {
+          const tagArray = response.data.tags.split(",");
+          setTags(tagArray);
+        }
+      } catch (error) {
+        console.error("Error fetching post:", error);
       }
-      if (response.data.tags) {
-        const tagArray = response.data.tags.split(",");
-        setTags(tagArray);
-      }
-    } catch (error) {
-      console.error("Error fetching post:", error);
-    }
-  }, [param.slug]);
+    },
+    [param.slug]
+  );
 
   useEffect(() => {
     fetchPost(commentSortOrder);
@@ -63,7 +68,7 @@ function Detail() {
 
   useEffect(() => {
     if (!post.id) {
-      return; 
+      return;
     }
 
     const commentSocket = new WebSocket(
@@ -90,11 +95,10 @@ function Detail() {
       console.error("Comment WebSocket error:", error);
     };
 
-    
     return () => {
       commentSocket.close();
     };
-  }, [post.id, commentSortOrder, fetchPost]); 
+  }, [post.id, commentSortOrder, fetchPost]);
 
   const handleCreateCommentChange = (event) => {
     setCreateComment({
@@ -114,18 +118,17 @@ function Detail() {
     };
 
     try {
-        await apiInstance.post("post/comment-post/", json);
-        Toast("success", t("detail.commentPosted"));
+      await apiInstance.post("post/comment-post/", json);
+      Toast("success", t("detail.commentPosted"));
 
-        setCreateComment({
-            full_name: "",
-            email: "",
-            comment: "",
-        });
-       
+      setCreateComment({
+        full_name: "",
+        email: "",
+        comment: "",
+      });
     } catch (error) {
-        console.error("Error posting comment:", error);
-        Toast("error", t("detail.commentFailed"));
+      console.error("Error posting comment:", error);
+      Toast("error", t("detail.commentFailed"));
     }
   };
 
@@ -136,33 +139,32 @@ function Detail() {
     };
 
     try {
-        const response = await apiInstance.post(`post/like-post/`, json);
-        Toast("success", response.data.message);
-        
-        fetchPost(commentSortOrder); 
+      const response = await apiInstance.post(`post/like-post/`, json);
+      Toast("success", response.data.message);
+
+      fetchPost(commentSortOrder);
     } catch (error) {
-        console.error("Error liking post:", error);
+      console.error("Error liking post:", error);
     }
   };
 
   const handleBookmarkPost = async () => {
     const json = {
-      user_id: 1, 
+      user_id: 1,
       post_id: post?.id,
     };
 
     try {
-        const response = await apiInstance.post(`post/bookmark-post/`, json);
-        Toast("success", response.data.message);
-        
+      const response = await apiInstance.post(`post/bookmark-post/`, json);
+      Toast("success", response.data.message);
     } catch (error) {
-        console.error("Error bookmarking post:", error);
+      console.error("Error bookmarking post:", error);
     }
   };
 
   const handlePageChange = (page) => {
     fetchPost(commentSortOrder, page);
-  }
+  };
 
   return (
     <>
@@ -173,7 +175,9 @@ function Detail() {
             <div className="col-12">
               <a href="#" className="badge bg-info mb-2 text-decoration-none">
                 <i className="small fw-bold " />
-                {t(`category.${post.category?.title?.toLowerCase()}`, { defaultValue: post.category?.title })}
+                {t(`category.${post.category?.title?.toLowerCase()}`, {
+                  defaultValue: post.category?.title,
+                })}
               </a>
               <h1 className="text-center">{post.title}</h1>
             </div>
@@ -192,21 +196,21 @@ function Detail() {
                 data-sticky-for={991}
               >
                 <div className="position-relative">
-                  {post?.profile?.image &&
-                  <div className="avatar avatar-xl">
-                    <img
-                      className="avatar-img"
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        objectFit: "cover",
-                        borderRadius: "50%",
-                      }}
-                      src={`${baseURL}${post?.profile?.image}`}
-                      alt="avatar"
-                    />
-                  </div>
-                  }
+                  {post?.profile?.image && (
+                    <div className="avatar avatar-xl">
+                      <img
+                        className="avatar-img"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          objectFit: "cover",
+                          borderRadius: "50%",
+                        }}
+                        src={`${baseURL}${post?.profile?.image}`}
+                        alt="avatar"
+                      />
+                    </div>
+                  )}
                   <a
                     href="#"
                     className="h5 fw-bold text-dark text-decoration-none mt-2 mb-0 d-block"
@@ -220,7 +224,8 @@ function Detail() {
 
                 <ul className="list-inline list-unstyled">
                   <li className="list-inline-item d-lg-block my-lg-2 text-start">
-                    <i className="fas fa-calendar"></i> {Moment(post.date, i18n.language)}
+                    <i className="fas fa-calendar"></i>{" "}
+                    {Moment(post.date, i18n.language)}
                   </li>
                   <li className="list-inline-item d-lg-block my-lg-2 text-start">
                     <a href="#" className="text-body">
@@ -273,6 +278,25 @@ function Detail() {
                 </div>
               )}
               <p>{post.description}</p>
+
+              {/* AI Summary Section */}
+              {post.ai_summary && post.ai_summary.status === "Success" && (
+                <div className="alert border-0 ai-summary-box shadow-sm rounded-3 p-4 my-4">
+                  <h5 className="text-primary fw-bold mb-3 d-flex align-items-center">
+                    <span style={{ fontSize: "24px", marginRight: "10px" }}>
+                      ✨
+                    </span>
+                    {t("detail.aiSummary") || "AI Summary"}
+                  </h5>
+                  <p
+                    className="mb-0 text-dark"
+                    style={{ lineHeight: "1.6", fontSize: "1.05rem" }}
+                  >
+                    {post.ai_summary.summarized_content}
+                  </p>
+                </div>
+              )}
+
               <hr />
               <AIChatAssistant />
               <div className="d-flex py-4">
@@ -300,21 +324,36 @@ function Detail() {
                 <hr />
                 <div className="mt-5"></div>
                 <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h3>{commentPagination.count} {t("detail.comments")}</h3>
-                    <div>
-                        <label htmlFor="sort" className="me-2">{t('detail.sortBy')}:</label>
-                        <select id="sort" className="form-select" value={commentSortOrder} onChange={handleSortChange} style={{width: "auto", display: "inline-block"}}>
-                            <option value="newest">{t('detail.newest')}</option>
-                            <option value="oldest">{t('detail.oldest')}</option>
-                        </select>
-                    </div>
+                  <h3>
+                    {commentPagination.count} {t("detail.comments")}
+                  </h3>
+                  <div>
+                    <label htmlFor="sort" className="me-2">
+                      {t("detail.sortBy")}:
+                    </label>
+                    <select
+                      id="sort"
+                      className="form-select"
+                      value={commentSortOrder}
+                      onChange={handleSortChange}
+                      style={{ width: "auto", display: "inline-block" }}
+                    >
+                      <option value="newest">{t("detail.newest")}</option>
+                      <option value="oldest">{t("detail.oldest")}</option>
+                    </select>
+                  </div>
                 </div>
                 {allComments?.map((c) => (
-                  <div className="my-4 d-flex bg-light p-3 mb-3 rounded" key={c.id}>
+                  <div
+                    className="my-4 d-flex bg-light p-3 mb-3 rounded"
+                    key={c.id}
+                  >
                     <div>
                       <div className="mb-2">
                         <h5 className="m-0">{c?.name}</h5>
-                        <span className="me-3 small">{Moment(c?.date, i18n.language)}</span>
+                        <span className="me-3 small">
+                          {Moment(c?.date, i18n.language)}
+                        </span>
                       </div>
                       <p className="fw-bold">{c?.comment}</p>
                     </div>
@@ -322,36 +361,63 @@ function Detail() {
                 ))}
               </div>
               {/* Comments END */}
-              {commentPagination.count > 10 &&
+              {commentPagination.count > 10 && (
                 <nav>
-                    <ul className="pagination">
-                        {commentPagination.previous &&
-                            <li className="page-item">
-                                <button className="page-link" onClick={() => handlePageChange(new URL(commentPagination.previous).searchParams.get("page"))}>{t('pagination.previous')}</button>
-                            </li>
-                        }
+                  <ul className="pagination">
+                    {commentPagination.previous && (
+                      <li className="page-item">
+                        <button
+                          className="page-link"
+                          onClick={() =>
+                            handlePageChange(
+                              new URL(
+                                commentPagination.previous
+                              ).searchParams.get("page")
+                            )
+                          }
+                        >
+                          {t("pagination.previous")}
+                        </button>
+                      </li>
+                    )}
 
-                        {Array.from({ length: Math.ceil(commentPagination.count / 10) }, (_, i) => i + 1).map(page => (
-                            <li className="page-item" key={page}>
-                                <button className="page-link" onClick={() => handlePageChange(page)}>{page}</button>
-                            </li>
-                        ))}
-                        
+                    {Array.from(
+                      { length: Math.ceil(commentPagination.count / 10) },
+                      (_, i) => i + 1
+                    ).map((page) => (
+                      <li className="page-item" key={page}>
+                        <button
+                          className="page-link"
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </button>
+                      </li>
+                    ))}
 
-                        {commentPagination.next &&
-                            <li className="page-item">
-                                <button className="page-link" onClick={() => handlePageChange(new URL(commentPagination.next).searchParams.get("page"))}>{t('pagination.next')}</button>
-                            </li>
-                        }
-                    </ul>
+                    {commentPagination.next && (
+                      <li className="page-item">
+                        <button
+                          className="page-link"
+                          onClick={() =>
+                            handlePageChange(
+                              new URL(commentPagination.next).searchParams.get(
+                                "page"
+                              )
+                            )
+                          }
+                        >
+                          {t("pagination.next")}
+                        </button>
+                      </li>
+                    )}
+                  </ul>
                 </nav>
-              }
+              )}
               {/* Reply START */}
               <div className="bg-light p-3 rounded mb-5">
                 <h3 className="fw-bold">{t("detail.leaveReply")}</h3>
-                <small>
-                  {t("detail.emailNotPublished")}
-                </small>
+                <small>{t("detail.emailNotPublished")}</small>
                 <form
                   className="row g-3 mt-2"
                   onSubmit={handleCreateCommentSubmit}
@@ -378,7 +444,9 @@ function Detail() {
                     />
                   </div>
                   <div className="col-12">
-                    <label className="form-label">{t("detail.writeComment")}</label>
+                    <label className="form-label">
+                      {t("detail.writeComment")}
+                    </label>
                     <textarea
                       name="comment"
                       value={createComment.comment}
@@ -389,7 +457,8 @@ function Detail() {
                   </div>
                   <div className="col-12">
                     <button type="submit" className="btn btn-primary">
-                      {t("detail.postComment")} <i className="fas fa-paper-plane"></i>
+                      {t("detail.postComment")}{" "}
+                      <i className="fas fa-paper-plane"></i>
                     </button>
                   </div>
                 </form>

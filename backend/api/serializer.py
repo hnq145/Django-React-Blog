@@ -86,17 +86,23 @@ class CommentSerializer(serializers.ModelSerializer):
         depth = 1
 
 
+class AI_SummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.AI_Summary
+        fields = ['summarized_content', 'status', 'created_at']
+
 class PostSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     profile = ProfileSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
     comments = serializers.SerializerMethodField()
+    ai_summary = AI_SummarySerializer(read_only=True)
     
     class Meta:
         model = api_models.Post
         fields = [
             'id', 'user', 'profile', 'category', 'title', 'tags', 'description', 
-            'image', 'status', 'view', 'likes', 'slug', 'date', 'comments'
+            'image', 'status', 'view', 'likes', 'slug', 'date', 'comments', 'ai_summary'
         ]
 
     def get_comments(self, obj):

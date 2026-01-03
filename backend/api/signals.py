@@ -32,3 +32,29 @@ def notification_created_handler(sender, instance, created, **kwargs):
         except Exception as e:
             
             print(f"Error in notification signal: {e}")
+
+from .models import Post, AI_Summary
+from .ai_services import AIServiceClient
+
+@receiver(post_save, sender=Post)
+def post_ai_summary_handler(sender, instance, created, **kwargs):
+    """
+    Automatically generates a summary for the post using using Gemini AI.
+    """
+    if created or not hasattr(instance, 'ai_summary'):
+        try:
+            # Only summarize if it's active and has description
+            if instance.status == "Active" and instance.description:
+                ai_client = AIServiceClient()
+                prompt = "Summarize the following blog post in Vietnamese (approx 3-4 sentences):"
+                result = ai_client.generate_content(prompt, type='text', context=instance.description)
+                
+                if result and 'content' in result:
+                    AI_Summary.objects.create(
+                        post=instance,
+                        summarized_content=result['content'],
+                        status='Success'
+                    )
+                    print(f"AI Summary generated for Post: {instance.title}")
+        except Exception as e:
+            print(f"Error generating AI Summary: {e}")

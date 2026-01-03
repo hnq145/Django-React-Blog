@@ -24,6 +24,13 @@
         "views": "Lượt xem",
         "edit": "Chỉnh sửa",
         "delete": "Xóa",
+        "confirmDelete": "Bạn có chắc chắn không?",
+        "deleteWarning": "Hành động này không thể hoàn tác!",
+        "deleteConfirm": "Vâng, xóa nó!",
+        "postDeleted": "Bài viết đã được xóa thành công.",
+        "deleteFailed": "Xóa bài viết thất bại. Vui lòng thử lại.",
+        "cancel": "Hủy bỏ",
+
         "allStatuses": "Tất cả trạng thái"
     },
     "status": {
