@@ -178,6 +178,69 @@ function AddPost() {
                       <label htmlFor="postTHumbnail" className="form-label">
                         {t("addPost.preview")}
                       </label>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const { value: prompt } = await Swal.fire({
+                            title:
+                              t("addPost.generateImageTitle") ||
+                              "Generate Thumbnail",
+                            input: "text",
+                            inputLabel:
+                              t("addPost.generateImageLabel") ||
+                              "Enter image description",
+                            inputPlaceholder:
+                              t("addPost.generateImagePlaceholder") ||
+                              "A futuristic city...",
+                            showCancelButton: true,
+                          });
+
+                          if (prompt) {
+                            setIsLoading(true);
+                            try {
+                              const result = await generateContent(
+                                prompt,
+                                "image",
+                                ""
+                              );
+                              if (result && result.content) {
+                                const base64Response = `data:image/jpeg;base64,${result.content}`;
+                                setImagePreview(base64Response);
+
+                                // Convert base64 to File object
+                                const res = await fetch(base64Response);
+                                const blob = await res.blob();
+                                const file = new File(
+                                  [blob],
+                                  "ai_generated_thumbnail.jpg",
+                                  { type: "image/jpeg" }
+                                );
+
+                                setCreatePost({
+                                  ...post,
+                                  image: {
+                                    file: file,
+                                    preview: base64Response,
+                                  },
+                                });
+                                Toast(
+                                  "success",
+                                  "Thumbnail generated successfully!"
+                                );
+                              }
+                            } catch (error) {
+                              Toast("error", "Failed to generate image");
+                            } finally {
+                              setIsLoading(false);
+                            }
+                          }
+                        }}
+                        className="btn btn-sm btn-outline-success ms-2 mb-2"
+                      >
+                        <i className="fas fa-paint-brush me-1"></i>{" "}
+                        {t("addPost.generateAI") || "Generate with AI"}
+                      </button>
+                      <br />
                       <img
                         style={{
                           width: "100%",
@@ -241,7 +304,7 @@ function AddPost() {
                         <label className="form-label">
                           {t("addPost.description")}
                         </label>
-                        <AIChatAssistant />
+                        <AIChatAssistant imageContext={imagePreview} />
                         <textarea
                           onChange={handleCreatePostChange}
                           name="description"
@@ -296,8 +359,7 @@ function AddPost() {
                             {t("addPost.rewrite") || "Rewrite with AI"}
                           </button>
                           <small className="text-muted ms-auto">
-                            Use the <b>AI Assistant</b> above to generate
-                            content!
+                            {t("addPost.useAiHint")}
                           </small>
                         </div>
                         <small>{t("addPost.descriptionHelp")}</small>

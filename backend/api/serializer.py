@@ -79,11 +79,16 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'full_name']
 
 class CommentSerializer(serializers.ModelSerializer):
-    
+    reply_set = serializers.SerializerMethodField()
+
     class Meta:
         model = api_models.Comment
         fields = "__all__"
         depth = 1
+
+    def get_reply_set(self, obj):
+        serializer = CommentSerializer(obj.reply_set.all(), many=True)
+        return serializer.data
 
 
 class AI_SummarySerializer(serializers.ModelSerializer):
@@ -110,9 +115,9 @@ class PostSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
 
         if comment_sort == 'oldest':
-            comments = obj.comments.all().order_by('date')
+            comments = obj.comments.filter(parent__isnull=True).order_by('date')
         else:
-            comments = obj.comments.all().order_by('-date')
+            comments = obj.comments.filter(parent__isnull=True).order_by('-date')
         
         paginator = CommentPagination()
         paginated_comments = paginator.paginate_queryset(comments, request)

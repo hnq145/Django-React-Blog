@@ -377,13 +377,14 @@ class ContentGenerateView(View):
             prompt = data.get('prompt')
             type = data.get('type', 'text') 
             context = data.get('context', '')
+            image_base64 = data.get('image_base64', None)
 
             if not prompt:
                 return JsonResponse({"error": "Lack of prompt from user."}, status=400)
             
             ai_client = AIServiceClient()
             
-            result = ai_client.generate_content(prompt, type, context)
+            result = ai_client.generate_content(prompt, type, context, image_base64)
             
             return JsonResponse(result, status=200)
 
@@ -391,7 +392,7 @@ class ContentGenerateView(View):
             return JsonResponse({"error": str(e)}, status=400)
         except Exception as e:
             logger.error(f"Error processing ContentGenerateView: {e}")
-            return JsonResponse({"error": "AI Service Error: Unable to process request."}, status=503)
+            return JsonResponse({"error": f"AI Service Error: {str(e)}"}, status=503)
 
 from django.http import HttpResponse
 from api.models import Category

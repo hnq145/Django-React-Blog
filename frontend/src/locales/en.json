@@ -101,6 +101,12 @@
     "delete": "Delete"
   },
   "addPost": {
+    "rewrite": "Rewrite with AI",
+    "useAiHint": "Use the AI Assistant above to generate content!",
+    "generateImageTitle": "Generate Thumbnail",
+    "generateImageLabel": "Enter image description",
+    "generateImagePlaceholder": "A futuristic city...",
+    "generateAI": "Generate with AI",
     "createPost": "Create Blog Post",
     "useBuilder": "Use the article builder below to write your article.",
     "backToPosts": "Back to Posts",
@@ -258,5 +264,8 @@
     "lifestyle": "Lifestyle",
     "technology": "Technology",
     "culture": "Culture"
+  },
+  "ai": {
+    "imageContext": "AI is viewing your selected image"
   }
 }

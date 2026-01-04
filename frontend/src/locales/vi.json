@@ -101,6 +101,12 @@
     "delete": "Xóa"
   },
   "addPost": {
+    "rewrite": "Viết lại bằng AI",
+    "useAiHint": "Sử dụng Trợ lý AI ở trên để tạo nội dung!",
+    "generateImageTitle": "Tạo ảnh thu nhỏ",
+    "generateImageLabel": "Nhập mô tả hình ảnh",
+    "generateImagePlaceholder": "Một thành phố tương lai, cyberpunk...",
+    "generateAI": "Tạo ảnh bằng AI",
     "createPost": "Tạo bài viết Blog",
     "useBuilder": "Sử dụng trình tạo bài viết bên dưới để viết bài viết của bạn.",
     "backToPosts": "Quay lại danh sách bài viết",
@@ -258,5 +264,8 @@
     "lifestyle": "Lối sống",
     "technology": "Công nghệ",
     "culture": "Văn hóa"
+  },
+  "ai": {
+    "imageContext": "AI đang xem hình ảnh bạn chọn"
   }
 }

@@ -13,6 +13,7 @@ import "moment/locale/en-gb";
 const baseURL = apiInstance.defaults.baseURL.replace("/api/v1", "");
 
 function Detail() {
+  const { t, i18n } = useTranslation();
   const [post, setPost] = useState({});
   const [tags, setTags] = useState([]);
   const [allComments, setAllComments] = useState([]);
@@ -28,7 +29,12 @@ function Detail() {
   });
   const [commentSortOrder, setCommentSortOrder] = useState("newest");
 
-  const { t, i18n } = useTranslation();
+  const tSafe = (key, valVi, valEn) => {
+    const tVal = t(key);
+    if (tVal !== key) return tVal;
+    return i18n.language === "vi" ? valVi : valEn;
+  };
+
   const param = useParams();
 
   const handleSortChange = (e) => {
@@ -107,6 +113,67 @@ function Detail() {
     });
   };
 
+  // Reading Progress Logic
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [showAiChat, setShowAiChat] = useState(false);
+
+  const scrollListener = () => {
+    const totalHeight =
+      document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (window.scrollY / totalHeight) * 100;
+    setReadingProgress(progress);
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", scrollListener);
+    return () => window.removeEventListener("scroll", scrollListener);
+  }, []);
+
+  const handleReply = (commentId, name) => {
+    setCreateComment({
+      ...createComment,
+      parent: commentId,
+      comment: `@${name} `,
+    });
+    // Scroll to comment form
+    const form = document.querySelector("form");
+    if (form) form.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const CommentItem = ({ comment }) => {
+    return (
+      <div
+        className={`d-flex ${comment.parent ? "ms-5 border-start ps-3" : ""} bg-light p-3 mb-3 rounded flex-column`}
+      >
+        <div className="d-flex justify-content-between">
+          <div className="mb-2">
+            <h5 className="m-0">{comment?.name}</h5>
+            <span className="me-3 small text-muted">
+              {Moment(comment?.date, i18n.language)}
+            </span>
+          </div>
+          <button
+            onClick={() => handleReply(comment.id, comment.name)}
+            className="btn btn-sm btn-link text-decoration-none small"
+          >
+            <i className="fas fa-reply me-1"></i>{" "}
+            {t("detail.reply", { defaultValue: "Reply" })}
+          </button>
+        </div>
+        <p className="fw-bold mb-2">{comment?.comment}</p>
+
+        {/* Nested Replies */}
+        {comment.reply_set && comment.reply_set.length > 0 && (
+          <div className="mt-3">
+            {comment.reply_set.map((reply) => (
+              <CommentItem key={reply.id} comment={reply} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const handleCreateCommentSubmit = async (event) => {
     event.preventDefault();
 
@@ -115,6 +182,7 @@ function Detail() {
       name: createComment.full_name,
       email: createComment.email,
       comment: createComment.comment,
+      parent: createComment.parent || null, // Send parent ID
     };
 
     try {
@@ -125,7 +193,9 @@ function Detail() {
         full_name: "",
         email: "",
         comment: "",
+        parent: null,
       });
+      fetchPost(commentSortOrder); // Refresh to show new comment
     } catch (error) {
       console.error("Error posting comment:", error);
       Toast("error", t("detail.commentFailed"));
@@ -140,7 +210,27 @@ function Detail() {
 
     try {
       const response = await apiInstance.post(`post/like-post/`, json);
-      Toast("success", response.data.message);
+      // Determine message based on backend response
+      const message = response.data.message;
+      let toastMessage = message;
+      if (
+        message.includes("Unliked") ||
+        message.includes("unliked") ||
+        message.includes("Disliked")
+      ) {
+        toastMessage = tSafe(
+          "detail.postUnliked",
+          "Đã bỏ thích bài viết",
+          "Post unliked successfully"
+        );
+      } else if (message.includes("Liked") || message.includes("liked")) {
+        toastMessage = tSafe(
+          "detail.postLiked",
+          "Đã thích bài viết",
+          "Post liked successfully"
+        );
+      }
+      Toast("success", toastMessage);
 
       fetchPost(commentSortOrder);
     } catch (error) {
@@ -156,7 +246,25 @@ function Detail() {
 
     try {
       const response = await apiInstance.post(`post/bookmark-post/`, json);
-      Toast("success", response.data.message);
+      const message = response.data.message;
+      let toastMessage = message;
+      if (message.includes("Un") || message.includes("Remove")) {
+        toastMessage = tSafe(
+          "detail.postUnbookmarked",
+          "Đã bỏ lưu bài viết",
+          "Post unbookmarked successfully"
+        );
+      } else if (
+        message.includes("Bookmarked") ||
+        message.includes("bookmarked")
+      ) {
+        toastMessage = tSafe(
+          "detail.postBookmarked",
+          "Đã lưu bài viết",
+          "Post bookmarked successfully"
+        );
+      }
+      Toast("success", toastMessage);
     } catch (error) {
       console.error("Error bookmarking post:", error);
     }
@@ -169,6 +277,20 @@ function Detail() {
   return (
     <>
       <Header />
+      {/* Reading Progress Bar */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "4px",
+          background: "linear-gradient(to right, #4f46e5, #0ea5e9)",
+          width: `${readingProgress}%`,
+          zIndex: 9999,
+          transition: "width 0.1s",
+        }}
+      ></div>
+
       <section className=" mt-5">
         <div className="container">
           <div className="row">
@@ -188,7 +310,7 @@ function Detail() {
       <section className="pt-0 mb-5">
         <div className="container position-relative" data-sticky-container="">
           <div className="row">
-            <div className="col-lg-2">
+            <div className="col-lg-3">
               <div
                 className="text-start text-lg-center mb-5"
                 data-sticky=""
@@ -263,11 +385,27 @@ function Detail() {
                 >
                   <i className="fas fa-bookmark"></i>
                 </button>
+
+                {/* AI Assistant Trigger Button */}
+                <button
+                  onClick={() => setShowAiChat(!showAiChat)}
+                  className="btn btn-ai-trigger ms-2 rounded-circle border-0"
+                  style={{
+                    width: "38px",
+                    height: "38px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  title="Ask AI"
+                >
+                  <i className="fas fa-wand-magic-sparkles text-white"></i>
+                </button>
               </div>
             </div>
             {/* Left sidebar END */}
             {/* Main Content START */}
-            <div className="col-lg-10 mb-5">
+            <div className="col-lg-9 mb-5">
               {post.image && (
                 <div className="text-center mb-4">
                   <img
@@ -281,27 +419,60 @@ function Detail() {
 
               {/* AI Summary Section */}
               {post.ai_summary && post.ai_summary.status === "Success" && (
-                <div className="alert border-0 ai-summary-box shadow-sm rounded-3 p-4 my-4">
-                  <h5 className="text-primary fw-bold mb-3 d-flex align-items-center">
-                    <span style={{ fontSize: "24px", marginRight: "10px" }}>
-                      ✨
-                    </span>
-                    {t("detail.aiSummary") || "AI Summary"}
-                  </h5>
-                  <p
-                    className="mb-0 text-dark"
-                    style={{ lineHeight: "1.6", fontSize: "1.05rem" }}
-                  >
-                    {post.ai_summary.summarized_content}
-                  </p>
-                </div>
+                <>
+                  <style>
+                    {`
+                      /* Default (Light Mode) */
+                      .ai-summary-box {
+                        background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+                        border: 1px solid #bae6fd;
+                        color: #1e293b;
+                      }
+                      .ai-summary-box h5 {
+                        color: #4f46e5; /* Primary color */
+                      }
+
+                      /* Dark Mode Overrides */
+                      body.dark-theme .ai-summary-box {
+                        background: #1f2937 !important;
+                        border: 1px solid #374151 !important;
+                        color: #e5e7eb !important;
+                      }
+                      body.dark-theme .ai-summary-box h5 {
+                        color: #60a5fa !important; /* Light blue for title */
+                      }
+                      body.dark-theme .expect-white-icons i {
+                        color: #f1f5f9 !important;
+                      }
+                    `}
+                  </style>
+                  <div className="border-0 ai-summary-box shadow-sm rounded-3 p-4 my-4">
+                    <h5 className="fw-bold mb-3 d-flex align-items-center">
+                      <span style={{ fontSize: "24px", marginRight: "10px" }}>
+                        ✨
+                      </span>
+                      {t("detail.aiSummary") !== "detail.aiSummary"
+                        ? t("detail.aiSummary")
+                        : i18n.language === "vi"
+                          ? "Tóm tắt AI"
+                          : "AI Summary"}
+                    </h5>
+                    <p
+                      className="mb-0"
+                      style={{ lineHeight: "1.6", fontSize: "1.05rem" }}
+                    >
+                      {post.ai_summary.summarized_content}
+                    </p>
+                  </div>
+                </>
               )}
 
               <hr />
-              <AIChatAssistant />
+              {/* AIChatAssistant moved to floating panel */}
+              {/* <AIChatAssistant /> */}
               <div className="d-flex py-4">
                 <div>
-                  <ul className="nav">
+                  <ul className="nav expect-white-icons">
                     <li className="nav-item">
                       <a className="nav-link ps-0 pe-2 fs-5" href="#">
                         <i className="fab fa-facebook-square" />
@@ -309,7 +480,7 @@ function Detail() {
                     </li>
                     <li className="nav-item">
                       <a className="nav-link px-2 fs-5" href="#">
-                        <i className="fa-brands fa-x-twitter" />
+                        <i className="fa-brands fa-square-x-twitter" />
                       </a>
                     </li>
                     <li className="nav-item">
@@ -343,21 +514,9 @@ function Detail() {
                     </select>
                   </div>
                 </div>
+                {/* Render Recursive Comments */}
                 {allComments?.map((c) => (
-                  <div
-                    className="my-4 d-flex bg-light p-3 mb-3 rounded"
-                    key={c.id}
-                  >
-                    <div>
-                      <div className="mb-2">
-                        <h5 className="m-0">{c?.name}</h5>
-                        <span className="me-3 small">
-                          {Moment(c?.date, i18n.language)}
-                        </span>
-                      </div>
-                      <p className="fw-bold">{c?.comment}</p>
-                    </div>
-                  </div>
+                  <CommentItem key={c.id} comment={c} />
                 ))}
               </div>
               {/* Comments END */}
@@ -418,6 +577,23 @@ function Detail() {
               <div className="bg-light p-3 rounded mb-5">
                 <h3 className="fw-bold">{t("detail.leaveReply")}</h3>
                 <small>{t("detail.emailNotPublished")}</small>
+                {createComment.parent && (
+                  <div className="alert alert-info py-2 d-flex justify-content-between align-items-center">
+                    <small>
+                      Replying to {createComment.comment.split(" ")[0]}...
+                    </small>
+                    <button
+                      className="btn btn-sm btn-close"
+                      onClick={() =>
+                        setCreateComment({
+                          ...createComment,
+                          parent: null,
+                          comment: "",
+                        })
+                      }
+                    ></button>
+                  </div>
+                )}
                 <form
                   className="row g-3 mt-2"
                   onSubmit={handleCreateCommentSubmit}
@@ -469,6 +645,37 @@ function Detail() {
       </section>
       <div style={{ height: "200px" }}></div>
       <Footer />
+
+      {/* AI Assistant Side Panel */}
+      <div
+        style={{
+          position: "fixed",
+          top: "80px", // Below header
+          left: showAiChat ? "0" : "-400px",
+          width: "350px",
+          height: "calc(100vh - 80px)",
+          backgroundColor: "white",
+          boxShadow: "4px 0 10px rgba(0,0,0,0.1)",
+          transition: "left 0.3s ease-in-out",
+          zIndex: 1050,
+          display: "flex",
+          flexDirection: "column",
+        }}
+        className="ai-side-panel" // We will add dark mode styles for this class in index.css
+      >
+        <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+          <h5 className="m-0 fw-bold d-flex align-items-center text-primary">
+            <span className="me-2">✨</span> AI Assistant
+          </h5>
+          <button
+            onClick={() => setShowAiChat(false)}
+            className="btn-close"
+          ></button>
+        </div>
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <AIChatAssistant contextString={post.description} />
+        </div>
+      </div>
     </>
   );
 }

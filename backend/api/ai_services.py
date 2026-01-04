@@ -15,22 +15,35 @@ class AIServiceClient:
         
         self.client = genai.Client(api_key=api_key)
 
-    def generate_content(self, prompt: str, type: str, context: str):
+    def generate_content(self, prompt: str, type: str, context: str, image_base64: str = None):
         
         if type == 'text':
             system_instruction = (
-                "You are a Creative Assistant and Content Analyst for a professional Blog. "
-                "Your role is to analyze and critique the content provided. "
-                "Please respond to user requests IN VIETNAMESE, based on the following context:\n\n"
+                "You are a helpful AI Assistant for a professional Blog. "
+                "Your goal is to assist the user based on their specific request (e.g., summarize, explain, expand, or critique). "
+                "Always prioritize the user's instruction. "
+                "Please respond IN VIETNAMESE, using the following context if relevant:\n\n"
                 f"--- CONTENT BACKGROUND ---\n{context}"
             )
+
+            parts = [{"text": system_instruction}]
+            
+            if image_base64:
+                import base64
+                # Remove header if present (e.g., "data:image/jpeg;base64,")
+                if "base64," in image_base64:
+                   image_base64 = image_base64.split("base64,")[1]
+                
+                image_bytes = base64.b64decode(image_base64)
+                parts.append({"inline_data": {"mime_type": "image/jpeg", "data": image_bytes}})
+
+            parts.append({"text": prompt})
             
             try:
                 response = self.client.models.generate_content(
-                    model='gemini-2.5-flash', 
+                    model='gemini-1.5-flash-001', 
                     contents=[
-                        {"role": "user", "parts": [{"text": system_instruction}]},
-                        {"role": "user", "parts": [{"text": prompt}]} 
+                        {"role": "user", "parts": parts}
                     ],
                     config=types.GenerateContentConfig(
                         temperature=0.7, 
@@ -40,14 +53,14 @@ class AIServiceClient:
 
             except Exception as e:
                 logger.error(f"Error calling Gemini API (Text): {e}")
-                raise Exception("AI service error when generating text.")
+                raise Exception(f"AI service error: {str(e)}")
 
         elif type == 'image':
             image_prompt = f"Create a featured image for the following blog topic: {prompt}. Background: {context}. Style: Minimalist, professional, 16:9 ratio."
             
             try:
                 image_result = self.client.models.generate_images(
-                    model='imagen-3.0-generate-001',
+                    model='imagen-2.0-generate-001',
                     prompt=image_prompt,
                     config=types.GenerateImagesConfig(
                         number_of_images=1,

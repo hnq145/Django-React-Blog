@@ -6,6 +6,10 @@
     "english": "English",
     "vietnamese": "Vietnamese"
   },
+  "addPost": {
+    "rewrite": "Rewrite with AI",
+    "useAiHint": "Use the AI Assistant above to generate content!"
+  },
   "dashboard": {
     "allBlogPosts": "All Blog Posts",
     "addNew": "Add New Post",
@@ -71,12 +75,20 @@
     "oldest": "Oldest",
     "leaveReply": "Leave a Reply",
     "emailNotPublished": "Your email address will not be published. Required fields are marked *",
+    "reply": "Reply",
     "name": "Name *",
     "email": "Email *",
     "writeComment": "Write your comment here *",
     "postComment": "Post Comment",
     "commentPosted": "Comment posted successfully and is awaiting approval.",
-    "commentFailed": "Failed to post comment."
+    "commentFailed": "Failed to post comment.",
+    "aiAnswering": "AI is answering...",
+    "enterQuestion": "Ask AI anything...",
+    "aiSummary": "AI Summary",
+    "postLiked": "Post liked successfully.",
+    "postUnliked": "Post unliked successfully.",
+    "postBookmarked": "Post bookmarked successfully.",
+    "postUnbookmarked": "Post unbookmarked successfully."
   },
   "pagination": {
     "previous": "Previous",

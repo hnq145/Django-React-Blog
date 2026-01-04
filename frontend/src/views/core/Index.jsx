@@ -402,7 +402,7 @@ function Index() {
                 className={`page-item ${latestCurrentPage === 1 ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark fw-bold me-1 rounded-circle"
+                  className="page-link fw-bold me-1 rounded-circle"
                   onClick={() => setLatestCurrentPage(latestCurrentPage - 1)}
                   style={{
                     width: "40px",
@@ -422,7 +422,7 @@ function Index() {
                   className={`page-item ${latestCurrentPage === number ? "active" : ""}`}
                 >
                   <button
-                    className={`page-link fw-bold rounded-circle mx-1 ${latestCurrentPage === number ? "text-white bg-primary border-primary" : "text-dark"}`}
+                    className={`page-link fw-bold rounded-circle mx-1 ${latestCurrentPage === number ? "text-white bg-primary border-primary" : "text-reset"}`}
                     onClick={() => setLatestCurrentPage(number)}
                     style={{
                       width: "40px",
@@ -441,7 +441,7 @@ function Index() {
                 className={`page-item ${latestCurrentPage === totalLatestPages ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark fw-bold ms-1 rounded-circle"
+                  className="page-link fw-bold ms-1 rounded-circle"
                   onClick={() => setLatestCurrentPage(latestCurrentPage + 1)}
                   style={{
                     width: "40px",

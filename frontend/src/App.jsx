@@ -1,7 +1,7 @@
-import React from 'react';
-import { Route, Routes } from "react-router-dom";
-import { LanguageProvider } from './context/LanguageContext';
-import { WebSocketProvider } from './context/WebSocketProvider'; 
+import { Route, Routes, Navigate } from "react-router-dom";
+import { LanguageProvider } from "./context/LanguageContext";
+import { WebSocketProvider } from "./context/WebSocketProvider";
+import { useAuthStore } from "./store/auth";
 
 import Index from "./views/core/Index";
 import Detail from "./views/core/Detail";
@@ -9,6 +9,7 @@ import Search from "./views/core/Search";
 import CategoryDetail from "./views/category/CategoryDetail";
 import About from "./views/pages/About";
 import Contact from "./views/pages/Contact";
+import LandingPage from "./views/pages/LandingPage";
 import Register from "./views/auth/Register";
 import Login from "./views/auth/Login";
 import Logout from "./views/auth/Logout";
@@ -21,45 +22,57 @@ import EditPost from "./views/dashboard/EditPost";
 import Comments from "./views/dashboard/Comments";
 import Notifications from "./views/dashboard/Notifications";
 import Profile from "./views/dashboard/Profile";
-import MainWrapper from "./layouts/MainWrapper"; 
+import MainWrapper from "./layouts/MainWrapper";
 
 function App() {
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn());
 
   return (
-	<>
-		<LanguageProvider>
-			<WebSocketProvider>
-				<MainWrapper> 
-				<Routes>
-					<Route path="/" element={<Index />} />
-					<Route path="/post/:slug/" element={<Detail />} /> 
-					<Route path="/category/:slug/" element={<CategoryDetail />} />
-					<Route path="/search/" element={<Search />} />
+    <>
+      <LanguageProvider>
+        <WebSocketProvider>
+          <MainWrapper>
+            <Routes>
+              {/* Route Protection Logic */}
+              <Route
+                path="/"
+                element={isLoggedIn ? <Index /> : <LandingPage />}
+              />
 
-					{/* Authentication */}
-					<Route path="/register/" element={<Register />} />
-					<Route path="/login/" element={<Login />} />
-					<Route path="/logout/" element={<Logout />} />
-					<Route path="/forgot-password/" element={<ForgotPassword />} />
-					<Route path="/create-password/" element={<CreatePassword />} />
+              {/* Redirect Login to Home if already logged in */}
+              <Route
+                path="/login/"
+                element={isLoggedIn ? <Navigate to="/" /> : <Login />}
+              />
 
-					{/* Dashboard */}
-					<Route path="/dashboard/" element={<Dashboard />} />
-					<Route path="/posts/" element={<Posts />} />
-					<Route path="/add-post/" element={<AddPost />} />
-					<Route path="/edit-post/:id/" element={<EditPost />} />
-					<Route path="/comments/" element={<Comments />} />
-					<Route path="/notifications/" element={<Notifications />} />
-					<Route path="/profile/" element={<Profile />} />
+              <Route path="/post/:slug/" element={<Detail />} />
+              <Route path="/category/:slug/" element={<CategoryDetail />} />
+              <Route path="/search/" element={<Search />} />
 
-					{/* Pages */}
-					<Route path="/about/" element={<About />} />
-					<Route path="/contact/" element={<Contact />} />
-				</Routes>
-				</MainWrapper>
-			</WebSocketProvider>
-		</LanguageProvider>
-	</>
+              {/* Authentication */}
+              <Route path="/register/" element={<Register />} />
+              {/* /login/ handled above */}
+              <Route path="/logout/" element={<Logout />} />
+              <Route path="/forgot-password/" element={<ForgotPassword />} />
+              <Route path="/create-password/" element={<CreatePassword />} />
+
+              {/* Dashboard */}
+              <Route path="/dashboard/" element={<Dashboard />} />
+              <Route path="/posts/" element={<Posts />} />
+              <Route path="/add-post/" element={<AddPost />} />
+              <Route path="/edit-post/:id/" element={<EditPost />} />
+              <Route path="/comments/" element={<Comments />} />
+              <Route path="/notifications/" element={<Notifications />} />
+              <Route path="/profile/" element={<Profile />} />
+
+              {/* Pages */}
+              <Route path="/about/" element={<About />} />
+              <Route path="/contact/" element={<Contact />} />
+            </Routes>
+          </MainWrapper>
+        </WebSocketProvider>
+      </LanguageProvider>
+    </>
   );
 }
 

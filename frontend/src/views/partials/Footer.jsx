@@ -2,10 +2,7 @@ import React from "react";
 
 function Footer() {
   return (
-    <footer
-      className="pt-5 pb-3"
-      style={{ background: "linear-gradient(to bottom, #f8fafc, #e2e8f0)" }}
-    >
+    <footer className="pt-5 pb-3 footer-custom">
       <div className="container">
         <div className="row justify-content-between align-items-center">
           <div className="col-md-5 mb-3 mb-md-0">
