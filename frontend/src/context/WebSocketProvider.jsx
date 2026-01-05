@@ -12,7 +12,7 @@ export const WebSocketProvider = ({ children }) => {
     }
 
     const notificationSocket = new WebSocket(
-      `ws://localhost:8001/ws/notifications/?token=${token}`
+      `ws://localhost:8002/ws/notifications/?token=${token}`
     );
 
     notificationSocket.onopen = () => {
