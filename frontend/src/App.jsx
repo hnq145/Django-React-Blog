@@ -6,6 +6,7 @@ import { useAuthStore } from "./store/auth";
 import Index from "./views/core/Index";
 import Detail from "./views/core/Detail";
 import Search from "./views/core/Search";
+import Category from "./views/core/Category";
 import CategoryDetail from "./views/category/CategoryDetail";
 import About from "./views/pages/About";
 import Contact from "./views/pages/Contact";
@@ -46,6 +47,7 @@ function App() {
               />
 
               <Route path="/post/:slug/" element={<Detail />} />
+              <Route path="/category/" element={<Category />} />
               <Route path="/category/:slug/" element={<CategoryDetail />} />
               <Route path="/search/" element={<Search />} />
 

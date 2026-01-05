@@ -3,8 +3,11 @@ import Header from "../partials/Header";
 import Footer from "../partials/Footer";
 import { Link } from "react-router-dom";
 import { logout } from "../../utils/auth";
+import { useTranslation } from "react-i18next";
 
 function Logout() {
+  const { t } = useTranslation();
+
   useEffect(() => {
     logout();
   }, []);
@@ -21,22 +24,31 @@ function Logout() {
             <div className="card shadow">
               <div className="card-body p-6">
                 <div className="mb-4">
-                  <h1 className="mb-1 fw-bold">You have been logged out</h1>
+                  <h1 className="mb-1 fw-bold">
+                    {t("logout.title", {
+                      defaultValue: "You have been logged out",
+                    })}
+                  </h1>
                   <span>
-                    Thanks for visiing our website, come back anytime!
+                    {t("logout.message", {
+                      defaultValue:
+                        "Thanks for visiting our website, come back anytime!",
+                    })}
                   </span>
                 </div>
                 <form className="needs-validation mt-5" noValidate="">
                   <div className="d-grid d-flex">
                     <Link to="/login/" className="btn btn-primary me-2 w-100">
-                      Login <i className="fas fa-sign-in-alt"></i>
+                      {t("header.login", { defaultValue: "Login" })}{" "}
+                      <i className="fas fa-sign-in-alt"></i>
                     </Link>
                     <Link
                       to="/register/"
                       type="submit"
                       className="btn btn-primary w-100"
                     >
-                      Register <i className="fas fa-user-plus"></i>
+                      {t("header.register", { defaultValue: "Register" })}{" "}
+                      <i className="fas fa-user-plus"></i>
                     </Link>
                   </div>
                 </form>

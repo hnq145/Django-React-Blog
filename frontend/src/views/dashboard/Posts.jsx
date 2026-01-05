@@ -7,8 +7,7 @@ import { useTranslation } from "react-i18next";
 import apiInstance from "../../utils/axios";
 
 import moment from "moment";
-
-
+import Moment from "../../plugin/Moment";
 
 function Posts() {
   const [allPosts, setAllPosts] = useState([]);
@@ -48,9 +47,7 @@ function Posts() {
     }
 
     if (statusFilter) {
-      posts = posts.filter(
-        (p) => p.status.toLowerCase() === statusFilter
-      );
+      posts = posts.filter((p) => p.status.toLowerCase() === statusFilter);
     }
 
     if (sortOption === "newest") {
@@ -134,8 +131,12 @@ function Posts() {
                           className="form-select z-index-9 bg-transparent"
                         >
                           <option value="">{t("dashboard.sortBy")}</option>
-                          <option value="newest">{t("dashboard.newest")}</option>
-                          <option value="oldest">{t("dashboard.oldest")}</option>
+                          <option value="newest">
+                            {t("dashboard.newest")}
+                          </option>
+                          <option value="oldest">
+                            {t("dashboard.oldest")}
+                          </option>
                           <option value="a-z">{t("dashboard.a-z")}</option>
                           <option value="z-a">{t("dashboard.z-a")}</option>
                         </select>
@@ -150,7 +151,9 @@ function Posts() {
                           <option value="">{t("dashboard.allStatuses")}</option>
                           <option value="active">{t("status.active")}</option>
                           <option value="draft">{t("status.draft")}</option>
-                          <option value="disabled">{t("status.disabled")}</option>
+                          <option value="disabled">
+                            {t("status.disabled")}
+                          </option>
                         </select>
                       </form>
                     </div>
@@ -219,11 +222,7 @@ function Posts() {
                               <td>
                                 <h6 className="mb-0">{p.view}</h6>
                               </td>
-                              <td>
-                                {moment(p.date)
-                                  .locale(i18n.language)
-                                  .format("DD MMM, YYYY")}
-                              </td>
+                              <td>{Moment(p.date, i18n.language)}</td>
                               <td>
                                 {t(
                                   `category.${p.category?.title
@@ -238,8 +237,8 @@ function Posts() {
                                     p.status === "Active"
                                       ? "bg-success text-success"
                                       : p.status === "Draft"
-                                      ? "bg-warning text-warning"
-                                      : "bg-danger text-danger"
+                                        ? "bg-warning text-warning"
+                                        : "bg-danger text-danger"
                                   }`}
                                 >
                                   {t(

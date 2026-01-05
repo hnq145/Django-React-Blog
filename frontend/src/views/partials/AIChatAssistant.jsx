@@ -232,11 +232,7 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
               }}
             >
               <LoadingDots />
-              {tSafe(
-                "detail.aiAnswering",
-                "AI đang trả lời...",
-                "AI is answering..."
-              )}
+              {t("ai.answering", { defaultValue: "AI is answering..." })}
             </div>
           </div>
         )}
@@ -265,11 +261,9 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
           >
             <i className="fas fa-eye text-primary"></i>
             <span>
-              {tSafe(
-                "ai.imageContext",
-                "AI đang xem hình ảnh bạn chọn",
-                "AI is viewing your selected image"
-              )}
+              {t("ai.viewing_image", {
+                defaultValue: "AI is viewing your selected image",
+              })}
             </span>
           </div>
         )}
@@ -290,17 +284,13 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
             type="text"
             className="ai-chat-input"
             value={prompt}
-            // ... rest matches original
-
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSubmit(e);
             }}
-            placeholder={tSafe(
-              "detail.enterQuestion",
-              "Hỏi AI bất cứ điều gì...",
-              "Ask AI anything..."
-            )}
+            placeholder={t("ai.placeholder", {
+              defaultValue: "Ask AI anything...",
+            })}
             disabled={isLoading}
             style={{
               flex: 1,

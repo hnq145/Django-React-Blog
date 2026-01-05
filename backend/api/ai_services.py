@@ -20,9 +20,9 @@ class AIServiceClient:
         if type == 'text':
             system_instruction = (
                 "You are a helpful AI Assistant for a professional Blog. "
-                "Your goal is to assist the user based on their specific request (e.g., summarize, explain, expand, or critique). "
+                "Your goal is to assist the user based on their specific request (e.g., summarize, explain, expand, translate, or critique). "
                 "Always prioritize the user's instruction. "
-                "Please respond IN VIETNAMESE, using the following context if relevant:\n\n"
+                "Please respond in the language appropriate for the request (default to Vietnamese), using the following context if relevant:\n\n"
                 f"--- CONTENT BACKGROUND ---\n{context}"
             )
 
@@ -41,7 +41,7 @@ class AIServiceClient:
             
             try:
                 response = self.client.models.generate_content(
-                    model='gemini-3-pro-preview', 
+                    model='gemini-1.5-flash', 
                     contents=[
                         {"role": "user", "parts": parts}
                     ],

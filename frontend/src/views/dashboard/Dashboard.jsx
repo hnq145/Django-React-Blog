@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import apiInstance from "../../utils/axios";
 import useUserData from "../../plugin/useUserData";
 import moment from "moment";
+import Moment from "../../plugin/Moment";
 import Toast from "../../plugin/Toast";
 import Swal from "sweetalert2";
 
@@ -170,7 +171,7 @@ function Dashboard() {
                               </a>
                               <p className="small mb-0 mt-3">
                                 <i className="fas fa-calendar me-2"></i>
-                                {moment(p.date).format("DD MMM, YYYY")}
+                                {Moment(p.date, i18n.language)}
                               </p>
                               <p className="small mb-0">
                                 <i className="fas fa-eye me-2"></i>
@@ -247,9 +248,10 @@ function Dashboard() {
                               </p>
                               <div className="d-flex justify-content-between">
                                 <p className="small mb-0">
-                                  <i>{t("dashboard.by")}</i> {c.name} <br />
-                                  <i>{t("dashboard.date")}</i>{" "}
-                                  {moment(c.date).format("DD MMM, YYYY")}
+                                  <i>{t("dashboard.by", "Bởi")}</i> {c.name}{" "}
+                                  <br />
+                                  <i>{t("dashboard.date", "Ngày")}</i>{" "}
+                                  {Moment(c.date, i18n.language)}
                                 </p>
                               </div>
                             </div>

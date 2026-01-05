@@ -1,4 +1,16 @@
 {
+  "ai": {
+    "answering": "AI is answering...",
+    "viewing_image": "AI is viewing your selected image",
+    "placeholder": "Ask AI anything..."
+  },
+  "landing": {
+    "brandName": "AI Blog",
+    "slogan": "Discover the power of AI in creating and sharing knowledge.",
+    "description": "Join the community and experience features that assist with writing, summarizing, and intelligent content analysis.",
+    "createPage": "Create a Page",
+    "forCelebrity": "for a celebrity, brand or business."
+  },
   "header": {
     "menu": "Menu",
     "search": "Search Articles",
@@ -20,7 +32,12 @@
     "vietnamese": "Vietnamese"
   },
   "footer": {
-    "rights": "All rights reserved"
+    "rights": "All rights reserved",
+    "empowered_by": "Empowered by Gemini",
+    "description": "A modern blogging platform integrated with AI to help you write better and faster.",
+    "copyright": "© 2025 BlogAI. All rights reserved.",
+    "privacy_policy": "Privacy Policy",
+    "terms_of_service": "Terms of Service"
   },
   "index": {
     "trending": "Trending Articles 🔥",
@@ -29,9 +46,23 @@
     "categories": "Categories",
     "articles": "Articles",
     "latest": "Latest Articles 🕒",
-    "views": "Views"
+    "views": "Views",
+    "discovery_text": "Discover more interesting articles selected just for you based on current events.",
+    "trending_badge": "Trending #1 🔥",
+    "top_writers": "Top Writers",
+    "top_writers_desc": "Discover our most occurring writers.",
+    "newsletter_title": "Subscribe to Newsletter",
+    "newsletter_desc": "Get the latest posts, tutorials, and freebies delivered straight to your inbox. We promise no spam.",
+    "email_placeholder": "Enter your email address",
+    "subscribe": "Subscribe",
+    "privacy_text": "We care about your data in our",
+    "privacy_policy": "privacy policy",
+    "article_badge": "Article",
+    "content_creator": "Content Creator"
   },
   "common": {
+    "generate": "Generate",
+    "currentLanguageName": "English",
     "newest": "Newest",
     "oldest": "Oldest",
     "aToZ": "A-Z",
@@ -42,7 +73,9 @@
     "signIn": "Sign in",
     "noAccount": "Don’t have an account?",
     "signUp": "Sign up",
+    "create_account": "Create new account",
     "email": "Email Address",
+    "email_placeholder": "Email or phone number",
     "enterUsername": "Please enter valid username.",
     "password": "Password",
     "enterPassword": "Please enter valid password.",
@@ -53,6 +86,10 @@
     "signInButton": "Sign In",
     "signedInSuccess": "Signed in successfully",
     "loggedOutSuccess": "You have been logged out."
+  },
+  "logout": {
+    "title": "You have been logged out",
+    "message": "Thanks for visiting our website, come back anytime!"
   },
   "register": {
     "signUp": "Sign up",
@@ -126,6 +163,11 @@
     "createPostButton": "Create Post",
     "notAuthenticated": "User not authenticated. Please login again.",
     "allFieldsRequired": "All Fields Are Required To Create A Post",
+    "thumbnailGenerated": "Thumbnail generated successfully!",
+    "imageGenerationFailed": "Failed to generate image",
+    "contentRewritten": "Content rewritten successfully!",
+    "enterTextFirst": "Please enter text first",
+    "rewrite": "Rewrite with AI",
     "selectStatus": "Please select a post status",
     "errorCreating": "Error creating post",
     "postCreatedSuccess": "Post created successfully."
@@ -243,7 +285,10 @@
     "commentFailed": "Failed to post comment",
     "category": "Category",
     "status": "Status",
+    "ask_ai": "Ask AI",
     "sortBy": "Sort By",
+    "translate_content": "Translate Content",
+    "translating": "Translating...",
     "newest": "Newest",
     "oldest": "Oldest"
   },

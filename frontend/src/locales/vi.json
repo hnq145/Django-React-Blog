@@ -1,4 +1,16 @@
 {
+  "ai": {
+    "answering": "AI đang trả lời...",
+    "viewing_image": "AI đang xem hình ảnh bạn chọn",
+    "placeholder": "Hỏi AI bất cứ điều gì..."
+  },
+  "landing": {
+    "brandName": "AI Blog",
+    "slogan": "Khám phá sức mạnh của AI trong việc sáng tạo và chia sẻ kiến thức.",
+    "description": "Tham gia cộng đồng và trải nghiệm các tính năng hỗ trợ viết bài, tóm tắt và phân tích nội dung thông minh.",
+    "createPage": "Tạo Trang",
+    "forCelebrity": "dành cho người nổi tiếng, thương hiệu hoặc doanh nghiệp."
+  },
   "header": {
     "menu": "Menu",
     "search": "Tìm kiếm bài viết",
@@ -20,7 +32,12 @@
     "vietnamese": "Tiếng Việt"
   },
   "footer": {
-    "rights": "Đã đăng ký bản quyền"
+    "rights": "Đã đăng ký bản quyền",
+    "empowered_by": "Được hỗ trợ bởi Gemini",
+    "description": "Nền tảng viết blog hiện đại được tích hợp AI giúp bạn viết tốt hơn và nhanh hơn.",
+    "copyright": "© 2025 BlogAI. Đã đăng ký bản quyền.",
+    "privacy_policy": "Chính sách bảo mật",
+    "terms_of_service": "Điều khoản dịch vụ"
   },
   "index": {
     "trending": "Bài viết thịnh hành 🔥",
@@ -29,9 +46,23 @@
     "categories": "Danh mục",
     "articles": "Bài viết",
     "latest": "Bài viết mới nhất 🕒",
-    "views": "Lượt xem"
+    "views": "Lượt xem",
+    "discovery_text": "Khám phá thêm nhiều bài viết hấp dẫn được chọn lọc dành riêng cho bạn dựa trên các sự kiện hiện tại.",
+    "trending_badge": "Thịnh hành #1 🔥",
+    "top_writers": "Tác giả hàng đầu",
+    "top_writers_desc": "Khám phá những tác giả nổi bật nhất.",
+    "newsletter_title": "Đăng ký nhận bản tin",
+    "newsletter_desc": "Nhận các bài viết, hướng dẫn và quà tặng miễn phí mới nhất gửi trực tiếp đến hộp thư đến của bạn. Chúng tôi cam kết không spam.",
+    "email_placeholder": "Nhập địa chỉ email của bạn",
+    "subscribe": "Đăng ký",
+    "privacy_text": "Chúng tôi quan tâm đến dữ liệu của bạn trong",
+    "privacy_policy": "chính sách quyền riêng tư",
+    "article_badge": "Bài viết",
+    "content_creator": "Người sáng tạo nội dung"
   },
   "common": {
+    "generate": "Tạo",
+    "currentLanguageName": "Vietnamese",
     "newest": "Mới nhất",
     "oldest": "Cũ nhất",
     "aToZ": "A-Z",
@@ -42,7 +73,9 @@
     "signIn": "Đăng nhập",
     "noAccount": "Chưa có tài khoản?",
     "signUp": "Đăng ký",
+    "create_account": "Tạo tài khoản mới",
     "email": "Địa chỉ email",
+    "email_placeholder": "Email hoặc số điện thoại",
     "enterUsername": "Vui lòng nhập tên người dùng hợp lệ.",
     "password": "Mật khẩu",
     "enterPassword": "Vui lòng nhập mật khẩu hợp lệ.",
@@ -53,6 +86,10 @@
     "signInButton": "Đăng nhập",
     "signedInSuccess": "Đăng nhập thành công",
     "loggedOutSuccess": "Bạn đã đăng xuất."
+  },
+  "logout": {
+    "title": "Bạn đã đăng xuất",
+    "message": "Cảm ơn bạn đã ghé thăm trang web của chúng tôi, hãy quay lại bất cứ lúc nào!"
   },
   "register": {
     "signUp": "Đăng ký",
@@ -126,6 +163,11 @@
     "createPostButton": "Tạo bài viết",
     "notAuthenticated": "Người dùng chưa được xác thực. Vui lòng đăng nhập lại.",
     "allFieldsRequired": "Yêu cầu tất cả các trường để tạo bài viết.",
+    "thumbnailGenerated": "Đã tạo hình thu nhỏ thành công!",
+    "imageGenerationFailed": "Tạo hình ảnh thất bại",
+    "contentRewritten": "Viết lại nội dung thành công!",
+    "enterTextFirst": "Vui lòng nhập văn bản trước",
+    "rewrite": "Viết lại bằng AI",
     "selectStatus": "Vui lòng chọn trạng thái bài viết.",
     "errorCreating": "Lỗi khi tạo bài viết",
     "postCreatedSuccess": "Tạo bài viết thành công."
@@ -243,7 +285,10 @@
     "commentFailed": "Gửi bình luận thất bại",
     "category": "Danh mục",
     "status": "Trạng thái",
+    "ask_ai": "Hỏi AI",
     "sortBy": "Sắp xếp theo",
+    "translate_content": "Dịch nội dung",
+    "translating": "Đang dịch...",
     "newest": "Mới nhất",
     "oldest": "Cũ nhất"
   },

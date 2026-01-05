@@ -182,17 +182,26 @@ function AddPost() {
                         type="button"
                         onClick={async () => {
                           const { value: prompt } = await Swal.fire({
-                            title:
-                              t("addPost.generateImageTitle") ||
-                              "Generate Thumbnail",
+                            title: t("addPost.generateImageTitle", {
+                              defaultValue: "Generate Thumbnail",
+                            }),
                             input: "text",
-                            inputLabel:
-                              t("addPost.generateImageLabel") ||
-                              "Enter image description",
-                            inputPlaceholder:
-                              t("addPost.generateImagePlaceholder") ||
-                              "A futuristic city...",
+                            inputLabel: t("addPost.generateImageLabel", {
+                              defaultValue: "Enter image description",
+                            }),
+                            inputPlaceholder: t(
+                              "addPost.generateImagePlaceholder",
+                              {
+                                defaultValue: "A futuristic city...",
+                              }
+                            ),
                             showCancelButton: true,
+                            cancelButtonText: t("dashboard.cancel", {
+                              defaultValue: "Cancel",
+                            }),
+                            confirmButtonText: t("common.generate", {
+                              defaultValue: "Generate",
+                            }),
                           });
 
                           if (prompt) {
@@ -225,11 +234,19 @@ function AddPost() {
                                 });
                                 Toast(
                                   "success",
-                                  "Thumbnail generated successfully!"
+                                  t("addPost.thumbnailGenerated", {
+                                    defaultValue:
+                                      "Thumbnail generated successfully!",
+                                  })
                                 );
                               }
                             } catch (error) {
-                              Toast("error", "Failed to generate image");
+                              Toast(
+                                "error",
+                                t("addPost.imageGenerationFailed", {
+                                  defaultValue: "Failed to generate image",
+                                })
+                              );
                             } finally {
                               setIsLoading(false);
                             }
@@ -330,8 +347,11 @@ function AddPost() {
                               }
                               setIsLoading(true);
                               try {
-                                const prompt =
-                                  "Rewrite the following text to be more professional and engaging in Vietnamese:";
+                                const langText =
+                                  t("common.currentLanguageName", {
+                                    defaultValue: "English",
+                                  }) || "English";
+                                const prompt = `Rewrite the following text to be more professional and engaging in ${langText}:`;
                                 const result = await generateContent(
                                   prompt,
                                   "text",
@@ -345,7 +365,10 @@ function AddPost() {
                                   });
                                   Toast(
                                     "success",
-                                    "Content rewritten successfully!"
+                                    t("addPost.contentRewritten", {
+                                      defaultValue:
+                                        "Content rewritten successfully!",
+                                    })
                                   );
                                 }
                               } catch (error) {

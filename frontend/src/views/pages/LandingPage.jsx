@@ -56,22 +56,22 @@ const LandingPage = () => {
               className="fw-bold text-primary display-3"
               style={{ color: "#1877f2" }}
             >
-              AI Blog
+              {t("landing.brandName", { defaultValue: "AI Blog" })}
             </h1>
             <h2
               className="h4 fw-normal mt-3 mb-4"
               style={{ fontSize: "28px", lineHeight: "32px", width: "auto" }}
             >
-              {t(
-                "landing.slogan",
-                "Khám phá sức mạnh của AI trong việc sáng tạo và chia sẻ kiến thức."
-              )}
+              {t("landing.slogan", {
+                defaultValue:
+                  "Discover the power of AI in creating and sharing knowledge.",
+              })}
             </h2>
             <p className="fs-5 text-muted">
-              {t(
-                "landing.description",
-                "Tham gia cộng đồng và trải nghiệm các tính năng hỗ trợ viết bài, tóm tắt và phân tích nội dung thông minh."
-              )}
+              {t("landing.description", {
+                defaultValue:
+                  "Join the community and experience features that assist with writing, summarizing, and intelligent content analysis.",
+              })}
             </p>
           </div>
 
@@ -87,7 +87,9 @@ const LandingPage = () => {
                     <input
                       type="email"
                       className="form-control form-control-lg"
-                      placeholder={t("login.email", "Email hoặc số điện thoại")}
+                      placeholder={t("login.email_placeholder", {
+                        defaultValue: "Email or phone number",
+                      })}
                       name="email"
                       value={bioData.email}
                       onChange={handleBioDataChange}
@@ -99,7 +101,9 @@ const LandingPage = () => {
                     <input
                       type="password"
                       className="form-control form-control-lg"
-                      placeholder={t("login.password", "Mật khẩu")}
+                      placeholder={t("login.password", {
+                        defaultValue: "Password",
+                      })}
                       name="password"
                       value={bioData.password}
                       onChange={handleBioDataChange}
@@ -121,7 +125,7 @@ const LandingPage = () => {
                     {isLoading ? (
                       <i className="fas fa-spinner fa-spin"></i>
                     ) : (
-                      t("login.signInButton", "Đăng nhập")
+                      t("login.signInButton", { defaultValue: "Sign In" })
                     )}
                   </button>
 
@@ -131,7 +135,9 @@ const LandingPage = () => {
                       className="text-decoration-none"
                       style={{ fontSize: "14px", color: "#1877f2" }}
                     >
-                      {t("login.forgotPassword", "Quên mật khẩu?")}
+                      {t("login.forgotPassword", {
+                        defaultValue: "Forgot password?",
+                      })}
                     </Link>
                   </div>
 
@@ -147,7 +153,9 @@ const LandingPage = () => {
                         borderColor: "#42b72a",
                       }}
                     >
-                      {t("login.signUp", "Tạo tài khoản mới")}
+                      {t("login.create_account", {
+                        defaultValue: "Create new account",
+                      })}
                     </Link>
                   </div>
                 </form>
@@ -155,11 +163,12 @@ const LandingPage = () => {
             </div>
             <div className="mt-3 text-center">
               <p style={{ fontSize: "14px" }}>
-                <strong>{t("landing.createPage", "Tạo Trang")}</strong>{" "}
-                {t(
-                  "landing.forCelebrity",
-                  "dành cho người nổi tiếng, thương hiệu hoặc doanh nghiệp."
-                )}
+                <strong>
+                  {t("landing.createPage", { defaultValue: "Create a Page" })}
+                </strong>{" "}
+                {t("landing.forCelebrity", {
+                  defaultValue: "for a celebrity, brand or business.",
+                })}
               </p>
             </div>
           </div>

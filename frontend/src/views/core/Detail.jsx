@@ -12,6 +12,46 @@ import "moment/locale/en-gb";
 
 const baseURL = apiInstance.defaults.baseURL.replace("/api/v1", "");
 
+const CommentItem = ({ comment, t, i18n, handleReply }) => {
+  return (
+    <div
+      className={`d-flex ${comment.parent ? "ms-5 border-start ps-3" : ""} bg-light p-3 mb-3 rounded flex-column`}
+    >
+      <div className="d-flex justify-content-between">
+        <div className="mb-2">
+          <h5 className="m-0">{comment?.name}</h5>
+          <span className="me-3 small text-muted">
+            {Moment(comment?.date, i18n.language)}
+          </span>
+        </div>
+        <button
+          onClick={() => handleReply(comment.id, comment.name)}
+          className="btn btn-sm btn-link text-decoration-none small"
+        >
+          <i className="fas fa-reply me-1"></i>{" "}
+          {t("detail.reply", { defaultValue: "Reply" })}
+        </button>
+      </div>
+      <p className="fw-bold mb-2">{comment?.comment}</p>
+
+      {/* Nested Replies */}
+      {comment.reply_set && comment.reply_set.length > 0 && (
+        <div className="mt-3">
+          {comment.reply_set.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              t={t}
+              i18n={i18n}
+              handleReply={handleReply}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 function Detail() {
   const { t, i18n } = useTranslation();
   const [post, setPost] = useState({});
@@ -28,6 +68,46 @@ function Detail() {
     comment: "",
   });
   const [commentSortOrder, setCommentSortOrder] = useState("newest");
+  const [translating, setTranslating] = useState(false);
+
+  const handleTranslate = async () => {
+    if (translating) return;
+    setTranslating(true);
+    try {
+      const targetLang = i18n.language === "vi" ? "Vietnamese" : "English";
+      const prompt = `Translate the following blog post to ${targetLang}. Return ONLY a valid JSON object with keys "title" and "description". Do not include Markdown formatting (no \`\`\`json). \n\nOriginal Title: ${post.title}\nOriginal Description: ${post.description}`;
+
+      const response = await apiInstance.post("content/generate/", {
+        prompt: prompt,
+        type: "text",
+      });
+
+      let content = response.data.content;
+      content = content
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+      const translated = JSON.parse(content);
+      setPost((prev) => ({
+        ...prev,
+        title: translated.title,
+        description: translated.description,
+      }));
+      Toast(
+        "success",
+        i18n.language === "vi" ? "Dịch thành công!" : "Translated successfully!"
+      );
+    } catch (error) {
+      console.error("Translation error", error);
+      Toast(
+        "error",
+        i18n.language === "vi" ? "Dịch thất bại" : "Translation failed"
+      );
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   const tSafe = (key, valVi, valEn) => {
     const tVal = t(key);
@@ -140,39 +220,7 @@ function Detail() {
     if (form) form.scrollIntoView({ behavior: "smooth" });
   };
 
-  const CommentItem = ({ comment }) => {
-    return (
-      <div
-        className={`d-flex ${comment.parent ? "ms-5 border-start ps-3" : ""} bg-light p-3 mb-3 rounded flex-column`}
-      >
-        <div className="d-flex justify-content-between">
-          <div className="mb-2">
-            <h5 className="m-0">{comment?.name}</h5>
-            <span className="me-3 small text-muted">
-              {Moment(comment?.date, i18n.language)}
-            </span>
-          </div>
-          <button
-            onClick={() => handleReply(comment.id, comment.name)}
-            className="btn btn-sm btn-link text-decoration-none small"
-          >
-            <i className="fas fa-reply me-1"></i>{" "}
-            {t("detail.reply", { defaultValue: "Reply" })}
-          </button>
-        </div>
-        <p className="fw-bold mb-2">{comment?.comment}</p>
-
-        {/* Nested Replies */}
-        {comment.reply_set && comment.reply_set.length > 0 && (
-          <div className="mt-3">
-            {comment.reply_set.map((reply) => (
-              <CommentItem key={reply.id} comment={reply} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  // ... (CommentItem removed from here)
 
   const handleCreateCommentSubmit = async (event) => {
     event.preventDefault();
@@ -302,6 +350,29 @@ function Detail() {
                 })}
               </a>
               <h1 className="text-center">{post.title}</h1>
+              <div className="text-center mt-3">
+                <button
+                  onClick={handleTranslate}
+                  className="btn btn-sm btn-outline-primary rounded-pill px-3"
+                  disabled={translating}
+                >
+                  {translating ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin me-2"></i>
+                      {t("detail.translating", {
+                        defaultValue: "Translating...",
+                      })}
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-language me-2"></i>
+                      {t("detail.translate_content", {
+                        defaultValue: "Translate Content",
+                      })}
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -345,19 +416,34 @@ function Detail() {
                 <hr className="d-none d-lg-block " />
 
                 <ul className="list-inline list-unstyled">
-                  <li className="list-inline-item d-lg-block my-lg-2 text-start">
-                    <i className="fas fa-calendar"></i>{" "}
-                    {Moment(post.date, i18n.language)}
+                  <li className="list-inline-item d-lg-flex align-items-center my-lg-2 text-start">
+                    <div
+                      className="d-inline-flex justify-content-center align-items-center me-2"
+                      style={{ width: "30px" }}
+                    >
+                      <i className="fas fa-calendar fa-fw"></i>
+                    </div>
+                    {Moment(post?.date, i18n.language)}
                   </li>
-                  <li className="list-inline-item d-lg-block my-lg-2 text-start">
-                    <a href="#" className="text-body">
-                      <i className="fas fa-heart me-1" />
-                    </a>
-                    {post?.likes?.length} {t("detail.likes")}
+                  <li className="list-inline-item d-lg-flex align-items-center my-lg-2 text-start">
+                    <div
+                      className="d-inline-flex justify-content-center align-items-center me-2"
+                      style={{ width: "30px" }}
+                    >
+                      <i className="fas fa-heart fa-fw" />
+                    </div>
+                    <span>
+                      {post?.likes?.length} {t("detail.likes")}
+                    </span>
                   </li>
-                  <li className="list-inline-item d-lg-block my-lg-2 text-start">
-                    <i className="fas fa-eye" />
-                    {post.view} {t("detail.views")}
+                  <li className="list-inline-item d-lg-flex align-items-center my-lg-2 text-start">
+                    <div
+                      className="d-inline-flex justify-content-center align-items-center me-2"
+                      style={{ width: "30px" }}
+                    >
+                      <i className="fas fa-eye fa-fw" />
+                    </div>
+                    {post?.view} {t("detail.views")}
                   </li>
                 </ul>
                 {/* Tags */}
@@ -389,15 +475,8 @@ function Detail() {
                 {/* AI Assistant Trigger Button */}
                 <button
                   onClick={() => setShowAiChat(!showAiChat)}
-                  className="btn btn-ai-trigger ms-2 rounded-circle border-0"
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  title="Ask AI"
+                  className="btn btn-ai-trigger ms-2"
+                  title={t("detail.ask_ai", { defaultValue: "Ask AI" })}
                 >
                   <i className="fas fa-wand-magic-sparkles text-white"></i>
                 </button>
@@ -474,17 +553,32 @@ function Detail() {
                 <div>
                   <ul className="nav expect-white-icons">
                     <li className="nav-item">
-                      <a className="nav-link ps-0 pe-2 fs-5" href="#">
+                      <a
+                        className="nav-link ps-0 pe-2 fs-5"
+                        target="_blank"
+                        rel="noreferrer"
+                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                      >
                         <i className="fab fa-facebook-square" />
                       </a>
                     </li>
                     <li className="nav-item">
-                      <a className="nav-link px-2 fs-5" href="#">
+                      <a
+                        className="nav-link px-2 fs-5"
+                        target="_blank"
+                        rel="noreferrer"
+                        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`}
+                      >
                         <i className="fa-brands fa-square-x-twitter" />
                       </a>
                     </li>
                     <li className="nav-item">
-                      <a className="nav-link px-2 fs-5" href="#">
+                      <a
+                        className="nav-link px-2 fs-5"
+                        target="_blank"
+                        rel="noreferrer"
+                        href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(post.title)}`}
+                      >
                         <i className="fab fa-linkedin" />
                       </a>
                     </li>
@@ -516,7 +610,13 @@ function Detail() {
                 </div>
                 {/* Render Recursive Comments */}
                 {allComments?.map((c) => (
-                  <CommentItem key={c.id} comment={c} />
+                  <CommentItem
+                    key={c.id}
+                    comment={c}
+                    t={t}
+                    i18n={i18n}
+                    handleReply={handleReply}
+                  />
                 ))}
               </div>
               {/* Comments END */}

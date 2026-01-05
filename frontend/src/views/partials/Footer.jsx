@@ -1,6 +1,8 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 function Footer() {
+  const { t } = useTranslation();
   return (
     <footer className="pt-5 pb-3 footer-custom">
       <div className="container">
@@ -8,11 +10,17 @@ function Footer() {
           <div className="col-md-5 mb-3 mb-md-0">
             <div className="d-flex align-items-center">
               <h4 className="fw-bold mb-0 me-3 text-primary">BlogAI.</h4>
-              <small className="text-muted">Empowered by Gemini</small>
+              <small className="text-muted">
+                {t("footer.empowered_by", {
+                  defaultValue: "Empowered by Gemini",
+                })}
+              </small>
             </div>
             <p className="text-muted mt-2 small">
-              A modern blogging platform integrated with AI to help you write
-              better and faster.
+              {t("footer.description", {
+                defaultValue:
+                  "A modern blogging platform integrated with AI to help you write better and faster.",
+              })}
             </p>
           </div>
           <div className="col-md-5 text-md-end">
@@ -51,15 +59,19 @@ function Footer() {
         <div className="row align-items-center">
           <div className="col-md-6 text-center text-md-start">
             <small className="text-muted">
-              © 2025 BlogAI. All rights reserved.
+              {t("footer.copyright", {
+                defaultValue: "© 2025 BlogAI. All rights reserved.",
+              })}
             </small>
           </div>
           <div className="col-md-6 text-center text-md-end">
             <a href="#" className="text-decoration-none small text-muted me-3">
-              Privacy Policy
+              {t("footer.privacy_policy", { defaultValue: "Privacy Policy" })}
             </a>
             <a href="#" className="text-decoration-none small text-muted">
-              Terms of Service
+              {t("footer.terms_of_service", {
+                defaultValue: "Terms of Service",
+              })}
             </a>
           </div>
         </div>
