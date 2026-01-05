@@ -117,30 +117,23 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
 
   return (
     <div
+      className="ai-chat-container"
       style={{
         display: "flex",
         flexDirection: "column",
         width: "100%",
-
         height: "100%",
         minHeight: "100%",
         maxHeight: "100%",
-        backgroundColor: "transparent",
-        borderRadius: "0",
-        boxShadow: "none",
-        overflow: "hidden",
-        boxSizing: "border-box",
-        fontFamily:
-          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       }}
     >
       {/* CHAT BODY */}
       <div
+        className="ai-chat-body"
         style={{
           flex: 1,
           overflowY: "auto",
           padding: "16px",
-          backgroundColor: "#111827",
           display: "flex",
           flexDirection: "column",
           gap: "16px",
@@ -156,23 +149,19 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
             }}
           >
             <div
+              className={
+                msg.role === "user"
+                  ? "ai-chat-message-user"
+                  : "ai-chat-message-ai"
+              }
               style={{
                 width: "auto",
                 minWidth: "30%",
                 maxWidth: "85%",
-
                 padding: "12px 16px",
                 borderRadius: "18px",
-
-                borderBottomRightRadius: msg.role === "user" ? "4px" : "18px",
-                borderBottomLeftRadius: msg.role === "ai" ? "4px" : "18px",
-
-                backgroundColor: msg.role === "user" ? "#2563EB" : "#374151",
-                color: msg.role === "user" ? "white" : "#F3F4F6",
-
                 fontSize: "15px",
                 lineHeight: "1.5",
-
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
@@ -205,13 +194,13 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
                       }}
                     >
                       <button
+                        className="ai-chat-copy-btn"
                         onClick={() => handleCopy(msg.content)}
                         title="Copy"
                         style={{
                           background: "transparent",
                           border: "none",
                           cursor: "pointer",
-                          color: "#6B7280",
                           padding: "2px",
                         }}
                       >
@@ -231,13 +220,11 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
         {isLoading && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             <div
+              className="ai-chat-message-ai"
               style={{
-                backgroundColor: "#374151",
                 padding: "10px 16px",
                 borderRadius: "18px",
                 borderBottomLeftRadius: "4px",
-                color: "#9CA3AF",
-                fontSize: "15px",
                 fontStyle: "italic",
                 display: "flex",
                 alignItems: "center",
@@ -258,10 +245,9 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
 
       {/* FOOTER INPUT */}
       <div
+        className="ai-chat-footer"
         style={{
           padding: "12px",
-          borderTop: "1px solid #374151",
-          backgroundColor: "#111827",
           flexShrink: 0,
         }}
       >
@@ -289,12 +275,11 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
         )}
 
         <div
+          className="ai-chat-input-wrapper"
           style={{
             display: "flex",
             alignItems: "center",
             width: "100%",
-            backgroundColor: "#374151",
-            border: "1px solid #4B5563",
             borderRadius: "500px",
             padding: "6px 6px 6px 16px",
             boxSizing: "border-box",
@@ -303,6 +288,7 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
         >
           <input
             type="text"
+            className="ai-chat-input"
             value={prompt}
             // ... rest matches original
 
@@ -324,9 +310,7 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
               outline: "none !important",
               boxShadow: "none !important",
               background: "transparent",
-              borderRadius: "500px",
               fontSize: "15px",
-              color: "#F3F4F6",
               margin: 0,
               padding: 0,
             }}

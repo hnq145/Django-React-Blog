@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import apiInstance from "../utils/axios";
-import { useWebSocket } from "../context/WebSocketProvider"; 
+import { useWebSocket } from "../context/WebSocketContext";
 import Toast from "./Toast";
 import { useTranslation } from "react-i18next";
 
 const useNotification = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { notification } = useWebSocket(); 
-  const [processedNotiIds, setProcessedNotiIds] = useState(new Set()); 
+  const { notification } = useWebSocket();
+  const [processedNotiIds, setProcessedNotiIds] = useState(new Set());
 
   useEffect(() => {
     if (notification && !processedNotiIds.has(notification.id)) {
@@ -26,22 +26,14 @@ const useNotification = () => {
         title = t("notifications.newBookmark");
       }
 
-      Toast(
-        icon,
-        title,
-        notification.post.title,
-        "bottom-end",
-        5000,
-        () => {
-          navigate(`/post/${notification.post.slug}/`);
-          markAsSeen(notification.id);
-        }
-      );
+      Toast(icon, title, notification.post.title, "bottom-end", 5000, () => {
+        navigate(`/post/${notification.post.slug}/`);
+        markAsSeen(notification.id);
+      });
 
-      
-      setProcessedNotiIds(prev => new Set(prev).add(notification.id));
+      setProcessedNotiIds((prev) => new Set(prev).add(notification.id));
     }
-  }, [notification, navigate, t, processedNotiIds]); 
+  }, [notification, navigate, t, processedNotiIds]);
 
   const markAsSeen = async (notiId) => {
     try {
@@ -55,4 +47,3 @@ const useNotification = () => {
 };
 
 export default useNotification;
-

@@ -41,7 +41,7 @@ class AIServiceClient:
             
             try:
                 response = self.client.models.generate_content(
-                    model='gemini-1.5-flash-001', 
+                    model='gemini-3-pro-preview', 
                     contents=[
                         {"role": "user", "parts": parts}
                     ],

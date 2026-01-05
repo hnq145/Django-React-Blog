@@ -78,7 +78,7 @@ function Detail() {
     }
 
     const commentSocket = new WebSocket(
-      `ws://localhost:8000/ws/posts/${post.id}/comments/`
+      `ws://localhost:8002/ws/posts/${post.id}/comments/`
     );
 
     commentSocket.onopen = () => {

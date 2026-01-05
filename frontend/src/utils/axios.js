@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 import { logout, setAuthUser, getRefreshToken } from "./auth";
 
 const apiInstance = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/v1/",
+  baseURL: "http://127.0.0.1:8002/api/v1/",
   timeout: 50000,
   headers: {
     "Content-Type": "application/json",
