@@ -4,8 +4,11 @@ import { useAuthStore } from "../../store/auth";
 import { useTranslation } from "react-i18next";
 import apiInstance from "../../utils/axios";
 
+import { useWebSocket } from "../../context/WebSocketContext";
+
 function Header() {
   const [isLoggedIn] = useAuthStore((state) => [state.isLoggedIn]);
+  const { unreadCount } = useWebSocket() || { unreadCount: 0 }; // Handle context not ready
   const [categories, setCategories] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
@@ -176,6 +179,26 @@ function Header() {
 
           {/* Right Side: Actions */}
           <div className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex align-items-center gap-3">
+            {/* Notifications */}
+            {/* Notifications */}
+            {isLoggedIn() && (
+              <Link
+                to="/notifications"
+                className="btn btn-link text-dark p-0 border-0 position-relative me-2"
+              >
+                <i className="fas fa-bell fs-5"></i>
+                {/* Badge for notifications */}
+                {unreadCount > 0 && (
+                  <span
+                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    style={{ fontSize: "0.6rem" }}
+                  >
+                    {unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {/* Dark Mode */}
             <button
               className="btn btn-link text-dark p-0 border-0"

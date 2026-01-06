@@ -4,8 +4,8 @@ function Toast(
   icon,
   title,
   text,
-  position = "top",
-  timer = 1500,
+  position = "bottom-end",
+  timer = 5000,
   onClick = null
 ) {
   const Toast = Swal.mixin({

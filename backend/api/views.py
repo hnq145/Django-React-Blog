@@ -368,31 +368,31 @@ class DashboardPostEditAPIView(generics.RetrieveUpdateDestroyAPIView):
         return Response({'message': 'Post updated successfully'}, status=status.HTTP_200_OK)
 
 @method_decorator(csrf_exempt, name='dispatch') 
-class ContentGenerateView(View):
-    # permission_classes = [IsAuthenticated] 
+class ContentGenerateView(APIView):
+    permission_classes = [AllowAny] 
 
     def post(self, request, *args, **kwargs):
         try:
-            data = json.loads(request.body)
-            prompt = data.get('prompt')
-            type = data.get('type', 'text') 
-            context = data.get('context', '')
-            image_base64 = data.get('image_base64', None)
+            # For APIView, data is already parsed in request.data
+            prompt = request.data.get('prompt')
+            type = request.data.get('type', 'text') 
+            context = request.data.get('context', '')
+            image_base64 = request.data.get('image_base64', None)
 
             if not prompt:
-                return JsonResponse({"error": "Lack of prompt from user."}, status=400)
+                return Response({"error": "Lack of prompt from user."}, status=status.HTTP_400_BAD_REQUEST)
             
             ai_client = AIServiceClient()
             
             result = ai_client.generate_content(prompt, type, context, image_base64)
             
-            return JsonResponse(result, status=200)
+            return Response(result, status=status.HTTP_200_OK)
 
         except ValueError as e:
-            return JsonResponse({"error": str(e)}, status=400)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.error(f"Error processing ContentGenerateView: {e}")
-            return JsonResponse({"error": f"AI Service Error: {str(e)}"}, status=503)
+            return Response({"error": f"AI Service Error: {str(e)}"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 from django.http import HttpResponse
 from api.models import Category
@@ -424,3 +424,10 @@ def restore_categories_view(request):
             existed.append(category_name)
 
     return HttpResponse(f"Restored: {restored}. Existed: {existed}.")
+
+class DashboardMarkAllNotificationsAsSeen(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        api_models.Notification.objects.filter(user=request.user, seen=False).update(seen=True)
+        return Response({'message': 'All notifications marked as seen'}, status=status.HTTP_200_OK)

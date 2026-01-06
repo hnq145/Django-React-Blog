@@ -12,10 +12,11 @@ const MainWrapper = ({ children }) => {
       try {
         await setUser();
       } catch (error) {
-        console.error("Error in setUser:", error);
+        console.error("Critical error in MainWrapper/setUser:", error);
         logout();
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     handler();

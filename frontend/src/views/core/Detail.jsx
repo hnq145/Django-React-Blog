@@ -13,6 +13,39 @@ import "moment/locale/en-gb";
 const baseURL = apiInstance.defaults.baseURL.replace("/api/v1", "");
 
 const CommentItem = ({ comment, t, i18n, handleReply }) => {
+  const [translatedText, setTranslatedText] = useState(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isTranslated, setIsTranslated] = useState(false);
+
+  const handleTranslateComment = async () => {
+    if (translatedText) {
+      setIsTranslated(!isTranslated);
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const targetLang = i18n.language === "vi" ? "Vietnamese" : "English";
+      const prompt = `Translate the following comment to ${targetLang}. Return ONLY the translated text. Original: ${comment.comment}`;
+
+      const response = await apiInstance.post("content/generate/", {
+        prompt: prompt,
+        type: "text",
+      });
+
+      setTranslatedText(response.data.content);
+      setIsTranslated(true);
+    } catch (error) {
+      console.error("Translation error", error);
+      Toast(
+        "error",
+        i18n.language === "vi" ? "Dịch thất bại" : "Translation failed"
+      );
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   return (
     <div
       className={`d-flex ${comment.parent ? "ms-5 border-start ps-3" : ""} bg-light p-3 mb-3 rounded flex-column`}
@@ -32,7 +65,29 @@ const CommentItem = ({ comment, t, i18n, handleReply }) => {
           {t("detail.reply", { defaultValue: "Reply" })}
         </button>
       </div>
-      <p className="fw-bold mb-2">{comment?.comment}</p>
+
+      <p className="fw-bold mb-2">
+        {isTranslated ? translatedText : comment?.comment}
+      </p>
+
+      {/* Translation Button */}
+      <button
+        onClick={handleTranslateComment}
+        className="btn btn-sm btn-link text-decoration-none p-0 mb-2 text-start"
+        style={{ fontSize: "0.85rem", color: "#6c757d" }}
+        disabled={isTranslating}
+      >
+        {isTranslating ? (
+          <span>
+            <i className="fas fa-spinner fa-spin me-1"></i>{" "}
+            {t("detail.translating", "Translating...")}
+          </span>
+        ) : isTranslated ? (
+          t("detail.seeOriginal", "See Original")
+        ) : (
+          t("detail.seeTranslation", "See Translation")
+        )}
+      </button>
 
       {/* Nested Replies */}
       {comment.reply_set && comment.reply_set.length > 0 && (
@@ -68,10 +123,20 @@ function Detail() {
     comment: "",
   });
   const [commentSortOrder, setCommentSortOrder] = useState("newest");
+
+  // Post Translation State
   const [translating, setTranslating] = useState(false);
+  const [translatedPost, setTranslatedPost] = useState(null);
+  const [showTranslated, setShowTranslated] = useState(false);
+
+  const displayPost = showTranslated && translatedPost ? translatedPost : post;
 
   const handleTranslate = async () => {
-    if (translating) return;
+    if (translatedPost) {
+      setShowTranslated(!showTranslated);
+      return;
+    }
+
     setTranslating(true);
     try {
       const targetLang = i18n.language === "vi" ? "Vietnamese" : "English";
@@ -89,11 +154,13 @@ function Detail() {
         .trim();
 
       const translated = JSON.parse(content);
-      setPost((prev) => ({
-        ...prev,
+      setTranslatedPost({
+        ...post,
         title: translated.title,
         description: translated.description,
-      }));
+      });
+      setShowTranslated(true);
+
       Toast(
         "success",
         i18n.language === "vi" ? "Dịch thành công!" : "Translated successfully!"
@@ -158,7 +225,7 @@ function Detail() {
     }
 
     const commentSocket = new WebSocket(
-      `ws://localhost:8002/ws/posts/${post.id}/comments/`
+      `ws://localhost:8000/ws/posts/${post.id}/comments/`
     );
 
     commentSocket.onopen = () => {
@@ -349,7 +416,7 @@ function Detail() {
                   defaultValue: post.category?.title,
                 })}
               </a>
-              <h1 className="text-center">{post.title}</h1>
+              <h1 className="text-center">{displayPost.title}</h1>
               <div className="text-center mt-3">
                 <button
                   onClick={handleTranslate}
@@ -361,6 +428,13 @@ function Detail() {
                       <i className="fas fa-spinner fa-spin me-2"></i>
                       {t("detail.translating", {
                         defaultValue: "Translating...",
+                      })}
+                    </>
+                  ) : showTranslated ? (
+                    <>
+                      <i className="fas fa-undo me-2"></i>
+                      {t("detail.seeOriginal", {
+                        defaultValue: "See Original",
                       })}
                     </>
                   ) : (
@@ -489,12 +563,12 @@ function Detail() {
                 <div className="text-center mb-4">
                   <img
                     src={post.image}
-                    alt={post.title}
+                    alt={displayPost.title}
                     className="img-fluid rounded"
                   />
                 </div>
               )}
-              <p>{post.description}</p>
+              <p>{displayPost.description}</p>
 
               {/* AI Summary Section */}
               {post.ai_summary && post.ai_summary.status === "Success" && (

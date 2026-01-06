@@ -44,6 +44,7 @@
     "previous": "Previous",
     "next": "Next",
     "categories": "Categories",
+    "view_all": "View All",
     "articles": "Articles",
     "latest": "Latest Articles 🕒",
     "views": "Views",
@@ -135,7 +136,9 @@
     "z-a": "Z-A",
     "allStatuses": "All Statuses",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "markAllAsRead": "Mark all as read",
+    "allNotiSeen": "All notifications marked as seen"
   },
   "addPost": {
     "rewrite": "Rewrite with AI",
@@ -167,7 +170,6 @@
     "imageGenerationFailed": "Failed to generate image",
     "contentRewritten": "Content rewritten successfully!",
     "enterTextFirst": "Please enter text first",
-    "rewrite": "Rewrite with AI",
     "selectStatus": "Please select a post status",
     "errorCreating": "Error creating post",
     "postCreatedSuccess": "Post created successfully."
@@ -309,8 +311,5 @@
     "lifestyle": "Lifestyle",
     "technology": "Technology",
     "culture": "Culture"
-  },
-  "ai": {
-    "imageContext": "AI is viewing your selected image"
   }
 }

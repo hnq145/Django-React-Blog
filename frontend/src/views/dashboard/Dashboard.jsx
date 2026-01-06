@@ -13,6 +13,8 @@ import Swal from "sweetalert2";
 
 // const baseURL = apiInstance.defaults.baseURL.replace('/api/v1', '');
 
+import { useWebSocket } from "../../context/WebSocketContext";
+
 function Dashboard() {
   const [stats, setStats] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -23,6 +25,8 @@ function Dashboard() {
   const postsPerPage = 10;
 
   const userId = useUserData()?.user_id;
+
+  const { notification, setUnreadCount } = useWebSocket();
 
   const fetchDashboardData = useCallback(async () => {
     if (!userId) return;
@@ -44,6 +48,12 @@ function Dashboard() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  useEffect(() => {
+    if (notification) {
+      setNoti((prevNoti) => [notification, ...prevNoti]);
+    }
+  }, [notification]);
+
   const handleMarkNotiAsSeen = async (notiId) => {
     const response = await apiInstance.post(
       "author/dashboard/noti-mark-seen/",
@@ -51,6 +61,7 @@ function Dashboard() {
     );
     console.log(response.data);
     fetchDashboardData();
+    setUnreadCount((prev) => Math.max(0, prev - 1));
     Toast("success", t("dashboard.notiSeen"), "");
   };
 
@@ -279,7 +290,35 @@ function Dashboard() {
                   <h5 className="card-header-title mb-0">
                     {t("dashboard.notifications")} ({noti?.length})
                   </h5>
-                  <div className="dropdown text-end">
+                  <div className="dropdown text-end d-flex align-items-center gap-2">
+                    {noti?.length > 0 && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await apiInstance.post(
+                              "author/dashboard/noti-mark-all-seen/"
+                            );
+                            fetchDashboardData();
+                            setUnreadCount(0);
+                            Toast(
+                              "success",
+                              t("dashboard.allNotiSeen", "Đã đọc tất cả"),
+                              ""
+                            );
+                          } catch (error) {
+                            console.error(error);
+                          }
+                        }}
+                        className="btn btn-sm btn-outline-primary"
+                        data-bs-toggle="tooltip"
+                        title={t(
+                          "dashboard.markAllAsRead",
+                          "Đánh dấu tất cả là đã đọc"
+                        )}
+                      >
+                        <i className="fas fa-check-double"></i>
+                      </button>
+                    )}
                     <a
                       href="#"
                       className="btn border-0 p-0 mb-0"

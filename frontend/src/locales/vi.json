@@ -44,6 +44,7 @@
     "previous": "Trước",
     "next": "Tiếp",
     "categories": "Danh mục",
+    "view_all": "Xem tất cả",
     "articles": "Bài viết",
     "latest": "Bài viết mới nhất 🕒",
     "views": "Lượt xem",
@@ -135,7 +136,9 @@
     "z-a": "Z-A",
     "allStatuses": "Tất cả trạng thái",
     "edit": "Chỉnh sửa",
-    "delete": "Xóa"
+    "delete": "Xóa",
+    "markAllAsRead": "Đánh dấu tất cả là đã đọc",
+    "allNotiSeen": "Đã xem tất cả thông báo"
   },
   "addPost": {
     "rewrite": "Viết lại bằng AI",
@@ -167,7 +170,6 @@
     "imageGenerationFailed": "Tạo hình ảnh thất bại",
     "contentRewritten": "Viết lại nội dung thành công!",
     "enterTextFirst": "Vui lòng nhập văn bản trước",
-    "rewrite": "Viết lại bằng AI",
     "selectStatus": "Vui lòng chọn trạng thái bài viết.",
     "errorCreating": "Lỗi khi tạo bài viết",
     "postCreatedSuccess": "Tạo bài viết thành công."
@@ -309,8 +311,5 @@
     "lifestyle": "Lối sống",
     "technology": "Công nghệ",
     "culture": "Văn hóa"
-  },
-  "ai": {
-    "imageContext": "AI đang xem hình ảnh bạn chọn"
   }
 }

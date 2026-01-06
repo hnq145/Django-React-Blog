@@ -1,6 +1,3 @@
-# python manage.py makemigrations
-# python manage.py migrate
-# daphne -p 8002 backend.asgi:application
 asgiref==3.8.1
 Django==4.2
 sqlparse==0.5.3

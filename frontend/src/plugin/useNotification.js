@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 const useNotification = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { notification } = useWebSocket();
+  const { notification, setUnreadCount } = useWebSocket();
   const [processedNotiIds, setProcessedNotiIds] = useState(new Set());
 
   useEffect(() => {
@@ -40,6 +40,7 @@ const useNotification = () => {
       await apiInstance.post(`author/dashboard/noti-mark-seen/`, {
         noti_id: notiId,
       });
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error(error);
     }

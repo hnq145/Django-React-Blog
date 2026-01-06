@@ -4,15 +4,30 @@ import WebSocketContext from "./WebSocketContext";
 
 export const WebSocketProvider = ({ children }) => {
   const [notification, setNotification] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    // Fetch initial unread count
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await import("../utils/axios").then((module) =>
+          module.default.get("author/dashboard/noti-list/")
+        );
+        setUnreadCount(res.data.length);
+      } catch (error) {
+        console.error("Error fetching unread notifications:", error);
+      }
+    };
+
+    fetchUnreadCount();
+
     const token = Cookies.get("access_token");
     if (!token) {
       return;
     }
 
     const notificationSocket = new WebSocket(
-      `ws://localhost:8002/ws/notifications/?token=${token}`
+      `ws://localhost:8000/ws/notifications/?token=${token}`
     );
 
     notificationSocket.onopen = () => {
@@ -25,6 +40,7 @@ export const WebSocketProvider = ({ children }) => {
 
       if (data.type === "notification") {
         setNotification(data.message);
+        setUnreadCount((prev) => prev + 1);
       }
     };
 
@@ -43,6 +59,8 @@ export const WebSocketProvider = ({ children }) => {
 
   const wsValue = {
     notification,
+    unreadCount,
+    setUnreadCount,
   };
 
   return (

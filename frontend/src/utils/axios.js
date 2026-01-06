@@ -2,14 +2,18 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { logout, setAuthUser, getRefreshToken } from "./auth";
 
+import { API_BASE_URL } from "./constants";
+
 const apiInstance = axios.create({
-  baseURL: "http://127.0.0.1:8002/api/v1/",
+  baseURL: API_BASE_URL,
   timeout: 50000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
 });
+
+console.log("Axios instance created with baseURL:", API_BASE_URL);
 
 apiInstance.interceptors.request.use(
   (config) => {
@@ -30,7 +34,12 @@ apiInstance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes("user/token/refresh/")
+    ) {
       originalRequest._retry = true;
       try {
         const response = await getRefreshToken();
@@ -39,7 +48,6 @@ apiInstance.interceptors.response.use(
         return apiInstance(originalRequest);
       } catch (refreshError) {
         logout();
-        window.location.href = "/login/";
         return Promise.reject(refreshError);
       }
     }
