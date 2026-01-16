@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import "../../ckeditor.css";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -103,10 +106,7 @@ function EditPost() {
       !post.category ||
       !post.status
     ) {
-      Toast(
-        "error",
-        t("editPost.fillAllFields")
-      );
+      Toast("error", t("editPost.fillAllFields"));
       setIsLoading(false);
       return;
     }
@@ -165,7 +165,9 @@ function EditPost() {
                       <div className="offset-lg-1 col-lg-10 col-md-12 col-12">
                         <div className="d-lg-flex align-items-center justify-content-between">
                           <div className="mb-4 mb-lg-0">
-                            <h1 className="text-white mb-1">{t("editPost.editPost")}</h1>
+                            <h1 className="text-white mb-1">
+                              {t("editPost.editPost")}
+                            </h1>
                             <p className="mb-0 text-white lead">
                               {t("editPost.useBuilder")}
                             </p>
@@ -177,7 +179,8 @@ function EditPost() {
                               style={{ backgroundColor: "white" }}
                             >
                               {" "}
-                              <i className="fas fa-arrow-left"></i> {t("editPost.backToPosts")}
+                              <i className="fas fa-arrow-left"></i>{" "}
+                              {t("editPost.backToPosts")}
                             </Link>
                             <a
                               href="instructor-posts.html"
@@ -210,7 +213,11 @@ function EditPost() {
                           borderRadius: "10px",
                         }}
                         className="mb-4"
-                        src={imagePreview || post?.image || "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png"}
+                        src={
+                          imagePreview ||
+                          post?.image ||
+                          "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png"
+                        }
                         alt=""
                       />
                       <div className="mb-3">
@@ -227,7 +234,9 @@ function EditPost() {
                       </div>
 
                       <div className="mb-3">
-                        <label className="form-label">{t("editPost.title")}</label>
+                        <label className="form-label">
+                          {t("editPost.title")}
+                        </label>
                         <input
                           onChange={handleCreatePostChange}
                           value={post?.title || ""}
@@ -239,7 +248,9 @@ function EditPost() {
                         <small>{t("editPost.titleHelp")}</small>
                       </div>
                       <div className="mb-3">
-                        <label className="form-label">{t("editPost.category")}</label>
+                        <label className="form-label">
+                          {t("editPost.category")}
+                        </label>
                         <select
                           className="form-select"
                           onChange={handleCreatePostChange}
@@ -253,23 +264,22 @@ function EditPost() {
                             </option>
                           ))}
                         </select>
-                        <small>
-                          {t("editPost.categoryHelp")}
-                        </small>
+                        <small>{t("editPost.categoryHelp")}</small>
                       </div>
 
                       <div className="mb-3">
-                        <label className="form-label">{t("editPost.description")}</label>
+                        <label className="form-label">
+                          {t("editPost.description")}
+                        </label>
                         <AIChatAssistant />
-                        <textarea
-                          value={post?.description || ""}
-                          name="description"
-                          onChange={handleCreatePostChange}
-                          className="form-control"
-                          id=""
-                          cols="30"
-                          rows="10"
-                        ></textarea>
+                        <CKEditor
+                          editor={ClassicEditor}
+                          data={post?.description || ""}
+                          onChange={(event, editor) => {
+                            const data = editor.getData();
+                            setEditPost({ ...post, description: data });
+                          }}
+                        />
                         <small>{t("editPost.descriptionHelp")}</small>
                       </div>
                       <div>
@@ -306,7 +316,8 @@ function EditPost() {
                         className="btn btn-lg btn-secondary w-100 mt-2"
                         type="submit"
                       >
-                        {t("editPost.savingPost")} <i className="fas fa-spinner fa-spin"></i>
+                        {t("editPost.savingPost")}{" "}
+                        <i className="fas fa-spinner fa-spin"></i>
                       </button>
                     </>
                   ) : (
@@ -315,7 +326,8 @@ function EditPost() {
                         className="btn btn-lg btn-success w-100 mt-2"
                         type="submit"
                       >
-                        {t("editPost.saveChanges")} <i className="fas fa-check-circle"></i>
+                        {t("editPost.saveChanges")}{" "}
+                        <i className="fas fa-check-circle"></i>
                       </button>
                     </>
                   )}

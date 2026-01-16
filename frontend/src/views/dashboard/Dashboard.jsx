@@ -15,6 +15,66 @@ import Swal from "sweetalert2";
 
 import { useWebSocket } from "../../context/WebSocketContext";
 
+const DashboardCommentItem = ({ c, t, i18n }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const maxLength = 100; // Character limit for check
+  const isLong = c.comment && c.comment.length > maxLength;
+
+  return (
+    <div key={c.id}>
+      <div className="col-12">
+        <div className="d-flex align-items-start position-relative">
+          <div className="avatar avatar-lg flex-shrink-0">
+            <img
+              className="avatar-img"
+              src="https://as1.ftcdn.net/v2/jpg/03/53/11/00/1000_F_353110097_nbpmfn9iHlxef4EDIhXB1tdTD0lcWhG9.jpg"
+              style={{
+                width: "50px",
+                height: "50px",
+                objectFit: "cover",
+                borderRadius: "50%",
+              }}
+              alt="avatar"
+            />
+          </div>
+          <div className="ms-3 w-100">
+            <div className="mb-1">
+              <div
+                className={`text-dark text-decoration-none ${isExpanded ? "" : "line-clamp-3"}`}
+                style={{ fontSize: "1rem", whiteSpace: "pre-wrap" }}
+              >
+                {c.comment}
+              </div>
+              {isLong && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsExpanded(!isExpanded);
+                  }}
+                  className="btn btn-link p-0 text-decoration-none mt-1"
+                  style={{ fontSize: "0.85rem", fontWeight: "bold" }}
+                >
+                  {isExpanded
+                    ? t("dashboard.showLess", "Rút gọn")
+                    : t("dashboard.showMore", "Xem thêm")}
+                </button>
+              )}
+            </div>
+            <div className="d-flex justify-content-between">
+              <p className="small mb-0 text-muted">
+                <i>{t("dashboard.by", "Bởi")}</i> {c.name} •{" "}
+                {Moment(c.date, i18n.language)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr className="my-3" />
+    </div>
+  );
+};
+
 function Dashboard() {
   const [stats, setStats] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -158,7 +218,7 @@ function Dashboard() {
                 </div>
                 <div className="card-body p-3">
                   <div className="row">
-                    {posts?.map((p) => (
+                    {posts?.slice(0, 5).map((p) => (
                       <div key={p.id}>
                         <div className="col-12">
                           <div className="d-flex position-relative">
@@ -231,45 +291,13 @@ function Dashboard() {
                 </div>
                 <div className="card-body p-3">
                   <div className="row">
-                    {comments?.slice(0, 3).map((c) => (
-                      <div key={c.id}>
-                        <div className="col-12">
-                          <div className="d-flex align-items-center position-relative">
-                            <div className="avatar avatar-lg flex-shrink-0">
-                              <img
-                                className="avatar-img"
-                                src="https://as1.ftcdn.net/v2/jpg/03/53/11/00/1000_F_353110097_nbpmfn9iHlxef4EDIhXB1tdTD0lcWhG9.jpg"
-                                style={{
-                                  width: "100px",
-                                  height: "100px",
-                                  objectFit: "cover",
-                                  borderRadius: "50%",
-                                }}
-                                alt="avatar"
-                              />
-                            </div>
-                            <div className="ms-3">
-                              <p className="mb-1">
-                                <a
-                                  className="h6 stretched-link text-decoration-none text-dark"
-                                  href="#"
-                                >
-                                  {c.comment}
-                                </a>
-                              </p>
-                              <div className="d-flex justify-content-between">
-                                <p className="small mb-0">
-                                  <i>{t("dashboard.by", "Bởi")}</i> {c.name}{" "}
-                                  <br />
-                                  <i>{t("dashboard.date", "Ngày")}</i>{" "}
-                                  {Moment(c.date, i18n.language)}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <hr className="my-3" />
-                      </div>
+                    {comments?.slice(0, 5).map((c) => (
+                      <DashboardCommentItem
+                        key={c.id}
+                        c={c}
+                        t={t}
+                        i18n={i18n}
+                      />
                     ))}
                   </div>
                 </div>
@@ -334,7 +362,7 @@ function Dashboard() {
                 <div className="card-body p-3">
                   <div className="custom-scrollbar h-350">
                     <div className="row">
-                      {noti?.slice(0, 3)?.map((n) => (
+                      {noti?.slice(0, 5)?.map((n) => (
                         <div key={n.id}>
                           <div className="col-12">
                             <div className="d-flex justify-content-between position-relative">

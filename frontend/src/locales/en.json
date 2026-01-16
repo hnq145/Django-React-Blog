@@ -59,7 +59,8 @@
     "privacy_text": "We care about your data in our",
     "privacy_policy": "privacy policy",
     "article_badge": "Article",
-    "content_creator": "Content Creator"
+    "content_creator": "Content Creator",
+    "explore_topics": "Explore all our topics and find the best stories for you."
   },
   "common": {
     "generate": "Generate",
@@ -292,7 +293,10 @@
     "translate_content": "Translate Content",
     "translating": "Translating...",
     "newest": "Newest",
-    "oldest": "Oldest"
+    "oldest": "Oldest",
+    "seeTranslation": "See Translation",
+    "seeOriginal": "See Original",
+    "reply": "Reply"
   },
   "pagination": {
     "previous": "Previous",

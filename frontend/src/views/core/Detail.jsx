@@ -9,6 +9,8 @@ import AIChatAssistant from "../partials/AIChatAssistant";
 import { useTranslation } from "react-i18next";
 import "moment/locale/vi";
 import "moment/locale/en-gb";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const baseURL = apiInstance.defaults.baseURL.replace("/api/v1", "");
 
@@ -16,6 +18,7 @@ const CommentItem = ({ comment, t, i18n, handleReply }) => {
   const [translatedText, setTranslatedText] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslated, setIsTranslated] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleTranslateComment = async () => {
     if (translatedText) {
@@ -66,9 +69,29 @@ const CommentItem = ({ comment, t, i18n, handleReply }) => {
         </button>
       </div>
 
-      <p className="fw-bold mb-2">
-        {isTranslated ? translatedText : comment?.comment}
-      </p>
+      <div className={`fw-bold mb-2 ${isExpanded ? "" : "line-clamp-5"}`}>
+        {isTranslated ? (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {translatedText}
+          </ReactMarkdown>
+        ) : (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {comment?.comment}
+          </ReactMarkdown>
+        )}
+      </div>
+      {((isTranslated && translatedText?.length > 300) ||
+        (!isTranslated && comment?.comment?.length > 300)) && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="btn btn-link p-0 mb-2 text-decoration-none small"
+          style={{ fontSize: "0.9rem" }}
+        >
+          {isExpanded
+            ? t("dashboard.showLess", "Rút gọn")
+            : t("dashboard.showMore", "Xem thêm")}
+        </button>
+      )}
 
       {/* Translation Button */}
       <button

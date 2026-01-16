@@ -11,12 +11,6 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
   const [messages, setMessages] = useState([]);
   const { t, i18n } = useTranslation();
 
-  const tSafe = (key, valVi, valEn) => {
-    const tVal = t(key);
-    if (tVal !== key) return tVal;
-    return i18n.language === "vi" ? valVi : valEn;
-  };
-
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -65,8 +59,12 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
     }
   };
 
-  const handleCopy = (text) => {
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
+  const handleCopy = (text, index) => {
     navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   const LoadingDots = () => (
@@ -195,16 +193,33 @@ const AIChatAssistant = ({ contextString, imageContext }) => {
                     >
                       <button
                         className="ai-chat-copy-btn"
-                        onClick={() => handleCopy(msg.content)}
+                        onClick={() => handleCopy(msg.content, index)}
                         title="Copy"
                         style={{
                           background: "transparent",
                           border: "none",
                           cursor: "pointer",
                           padding: "2px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
                         }}
                       >
-                        <MdContentCopy size={16} />
+                        {copiedIndex === index ? (
+                          <>
+                            <span
+                              style={{ fontSize: "12px", color: "#10B981" }}
+                            >
+                              Copied!
+                            </span>
+                            <i
+                              className="fas fa-check"
+                              style={{ color: "#10B981", fontSize: "14px" }}
+                            ></i>
+                          </>
+                        ) : (
+                          <MdContentCopy size={16} />
+                        )}
                       </button>
                     </div>
                   )}

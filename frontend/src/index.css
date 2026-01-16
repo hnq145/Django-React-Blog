@@ -491,6 +491,20 @@ body.dark-theme .bg-primary-subtle {
   overflow: hidden;
 }
 
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-5 {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Hero Badge */
 .badge {
   font-weight: 500;

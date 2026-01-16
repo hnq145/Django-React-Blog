@@ -59,7 +59,8 @@
     "privacy_text": "Chúng tôi quan tâm đến dữ liệu của bạn trong",
     "privacy_policy": "chính sách quyền riêng tư",
     "article_badge": "Bài viết",
-    "content_creator": "Người sáng tạo nội dung"
+    "content_creator": "Người sáng tạo nội dung",
+    "explore_topics": "Khám phá tất cả các chủ đề của chúng tôi và tìm những câu chuyện hay nhất dành cho bạn."
   },
   "common": {
     "generate": "Tạo",
@@ -292,7 +293,10 @@
     "translate_content": "Dịch nội dung",
     "translating": "Đang dịch...",
     "newest": "Mới nhất",
-    "oldest": "Cũ nhất"
+    "oldest": "Cũ nhất",
+    "seeTranslation": "Xem bản dịch",
+    "seeOriginal": "Xem bản gốc",
+    "reply": "Trả lời"
   },
   "pagination": {
     "previous": "Trước",

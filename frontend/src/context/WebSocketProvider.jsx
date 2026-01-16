@@ -1,25 +1,28 @@
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import WebSocketContext from "./WebSocketContext";
+import Toast from "../plugin/Toast";
 
 export const WebSocketProvider = ({ children }) => {
-  const [notification, setNotification] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    // Fetch initial unread count
-    const fetchUnreadCount = async () => {
+    // Fetch initial unread count AND notifications
+    const fetchNotifications = async () => {
       try {
         const res = await import("../utils/axios").then((module) =>
           module.default.get("author/dashboard/noti-list/")
         );
-        setUnreadCount(res.data.length);
+        setNotifications(res.data);
+        // data.length is a reasonable approximation if API returns all or unread
+        setUnreadCount(res.data.filter((n) => !n.seen).length);
       } catch (error) {
-        console.error("Error fetching unread notifications:", error);
+        console.error("Error fetching notifications:", error);
       }
     };
 
-    fetchUnreadCount();
+    fetchNotifications();
 
     const token = Cookies.get("access_token");
     if (!token) {
@@ -39,8 +42,9 @@ export const WebSocketProvider = ({ children }) => {
       console.log("Notification received:", data);
 
       if (data.type === "notification") {
-        setNotification(data.message);
+        setNotifications((prev) => [data.message, ...prev]);
         setUnreadCount((prev) => prev + 1);
+        Toast("info", "Bạn có thông báo mới!", "New notification!");
       }
     };
 
@@ -58,7 +62,8 @@ export const WebSocketProvider = ({ children }) => {
   }, []);
 
   const wsValue = {
-    notification,
+    notifications,
+    setNotifications,
     unreadCount,
     setUnreadCount,
   };

@@ -3,12 +3,19 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../../store/auth";
 import { useTranslation } from "react-i18next";
 import apiInstance from "../../utils/axios";
+import Moment from "../../plugin/Moment";
 
 import { useWebSocket } from "../../context/WebSocketContext";
 
 function Header() {
   const [isLoggedIn] = useAuthStore((state) => [state.isLoggedIn]);
-  const { unreadCount } = useWebSocket() || { unreadCount: 0 }; // Handle context not ready
+  const { unreadCount, notifications, setNotifications, setUnreadCount } =
+    useWebSocket() || {
+      unreadCount: 0,
+      notifications: [],
+      setNotifications: () => {},
+      setUnreadCount: () => {},
+    }; // Handle context not ready
   const [categories, setCategories] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
@@ -182,21 +189,124 @@ function Header() {
             {/* Notifications */}
             {/* Notifications */}
             {isLoggedIn() && (
-              <Link
-                to="/notifications"
-                className="btn btn-link text-dark p-0 border-0 position-relative me-2"
-              >
-                <i className="fas fa-bell fs-5"></i>
-                {/* Badge for notifications */}
-                {unreadCount > 0 && (
-                  <span
-                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                    style={{ fontSize: "0.6rem" }}
-                  >
-                    {unreadCount}
-                  </span>
-                )}
-              </Link>
+              <div className="nav-item dropdown">
+                <a
+                  className="nav-link text-dark p-0 border-0 position-relative me-2"
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <i className="fas fa-bell fs-5"></i>
+                  {unreadCount > 0 && (
+                    <span
+                      className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      style={{ fontSize: "0.6rem" }}
+                    >
+                      {unreadCount}
+                    </span>
+                  )}
+                </a>
+                <ul
+                  className="dropdown-menu dropdown-menu-end border-0 shadow-lg p-0"
+                  style={{
+                    width: "320px",
+                    maxHeight: "400px",
+                    overflowY: "auto",
+                  }}
+                >
+                  <li className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top">
+                    <h6 className="m-0 fw-bold">
+                      {t("header.notifications", "Notifications")}
+                    </h6>
+                    {unreadCount > 0 && (
+                      <small
+                        className="fw-bold text-primary cursor-pointer"
+                        onClick={async () => {
+                          try {
+                            await apiInstance.post(
+                              "author/dashboard/noti-mark-all-seen/"
+                            );
+                            setUnreadCount(0);
+                            setNotifications((prev) =>
+                              prev.map((n) => ({ ...n, is_seen: true }))
+                            );
+                          } catch (e) {
+                            console.error(e);
+                          }
+                        }}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("header.markAllRead", "Mark all read")}
+                      </small>
+                    )}
+                  </li>
+                  {notifications?.length > 0 ? (
+                    notifications.map((n) => (
+                      <li key={n.id}>
+                        <Link
+                          to={`/post/${n.post?.slug || n.post_slug || ""}/`} // Fallback if slug missing
+                          className={`dropdown-item p-3 border-bottom ${!n.is_seen ? "bg-light" : ""}`}
+                          onClick={async () => {
+                            if (!n.is_seen) {
+                              try {
+                                await apiInstance.post(
+                                  "author/dashboard/noti-mark-seen/",
+                                  { noti_id: n.id }
+                                );
+                                setNotifications((prev) =>
+                                  prev.map((item) =>
+                                    item.id === n.id
+                                      ? { ...item, is_seen: true }
+                                      : item
+                                  )
+                                );
+                                setUnreadCount((prev) => Math.max(0, prev - 1));
+                              } catch (e) {
+                                console.error("Error marking seen", e);
+                              }
+                            }
+                          }}
+                          style={{ whiteSpace: "normal" }}
+                        >
+                          <div className="d-flex align-items-start">
+                            <div className="flex-grow-1">
+                              <small className="d-block text-muted mb-1">
+                                {Moment(n.date)}
+                              </small>
+                              <div className="small">
+                                <span className="fw-bold">
+                                  {n.sender?.username || "Someone"}
+                                </span>{" "}
+                                {n.type === "Like"
+                                  ? "liked your post"
+                                  : n.type === "Comment"
+                                    ? "commented on your post"
+                                    : "interacted with you"}
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="p-4 text-center text-muted">
+                      <i className="fas fa-bell-slash fs-4 mb-2"></i>
+                      <p className="m-0 small">
+                        {t("header.noNotifications", "No notifications")}
+                      </p>
+                    </li>
+                  )}
+                  <li className="p-2 text-center bg-light rounded-bottom">
+                    <Link
+                      to="/dashboard/notifications/"
+                      className="small text-decoration-none fw-bold"
+                    >
+                      {t("header.viewAll", "View all")}
+                    </Link>
+                  </li>
+                </ul>
+              </div>
             )}
 
             {/* Dark Mode */}

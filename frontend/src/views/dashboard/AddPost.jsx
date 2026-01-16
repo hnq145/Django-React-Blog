@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import "../../ckeditor.css";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
 import { Link, useNavigate } from "react-router-dom";
@@ -322,14 +325,14 @@ function AddPost() {
                           {t("addPost.description")}
                         </label>
                         <AIChatAssistant imageContext={imagePreview} />
-                        <textarea
-                          onChange={handleCreatePostChange}
-                          name="description"
-                          className="form-control"
-                          id=""
-                          cols="30"
-                          rows="10"
-                        ></textarea>
+                        <CKEditor
+                          editor={ClassicEditor}
+                          data={post.description}
+                          onChange={(event, editor) => {
+                            const data = editor.getData();
+                            setCreatePost({ ...post, description: data });
+                          }}
+                        />
 
                         <div className="d-flex gap-2 mt-2">
                           <button
@@ -351,7 +354,7 @@ function AddPost() {
                                   t("common.currentLanguageName", {
                                     defaultValue: "English",
                                   }) || "English";
-                                const prompt = `Rewrite the following text to be more professional and engaging in ${langText}:`;
+                                const prompt = `Rewrite the following text to be more professional and engaging in ${langText} (Return ONLY the rewritten HTML content, keep formatting):`;
                                 const result = await generateContent(
                                   prompt,
                                   "text",

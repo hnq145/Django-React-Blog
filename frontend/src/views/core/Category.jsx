@@ -35,9 +35,7 @@ function Category() {
               <h1 className="fw-bold display-5 mb-3">
                 {t("index.categories", "Categories")}
               </h1>
-              <p className="lead text-muted">
-                Explore all our topics and find the best stories for you.
-              </p>
+              <p className="lead text-muted">{t("index.explore_topics")}</p>
             </div>
           </div>
 

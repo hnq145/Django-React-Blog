@@ -399,7 +399,9 @@ function Index() {
                           {post?.user?.username || "Admin"}
                         </small>
                       </div>
-                      <small className="text-muted">{Moment(post.date)}</small>
+                      <small className="text-muted">
+                        {Moment(post.date, i18n.language)}
+                      </small>
                     </div>
                   </div>
                 </div>
