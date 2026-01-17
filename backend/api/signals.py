@@ -1,4 +1,5 @@
 
+# Force Reload Trigger
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from channels.layers import get_channel_layer
@@ -34,7 +35,7 @@ def notification_created_handler(sender, instance, created, **kwargs):
             print(f"Error in notification signal: {e}")
 
 from .models import Post, AI_Summary
-from .ai_services import AIServiceClient
+from .ai_services import AIServiceClientFixed
 
 @receiver(post_save, sender=Post)
 def post_ai_summary_handler(sender, instance, created, **kwargs):
@@ -45,7 +46,7 @@ def post_ai_summary_handler(sender, instance, created, **kwargs):
         try:
             # Only summarize if it's active and has description
             if instance.status == "Active" and instance.description:
-                ai_client = AIServiceClient()
+                ai_client = AIServiceClientFixed()
                 prompt = "Summarize the following blog post in Vietnamese (approx 3-4 sentences):"
                 result = ai_client.generate_content(prompt, type='text', context=instance.description)
                 

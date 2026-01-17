@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
-import "../../ckeditor.css";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -12,6 +11,22 @@ import useUserData from "../../plugin/useUserData";
 import Toast from "../../plugin/Toast";
 import Swal from "sweetalert2";
 import AIChatAssistant from "../partials/AIChatAssistant";
+
+const Quill = ReactQuill.Quill;
+const Font = Quill.import("formats/font");
+Font.whitelist = [
+  "roboto",
+  "open-sans",
+  "lato",
+  "montserrat",
+  "merriweather",
+  "inconsolata",
+  "outfit",
+  "sans-serif",
+  "serif",
+  "monospace",
+];
+Quill.register(Font, true);
 
 function EditPost() {
   const [post, setEditPost] = useState({
@@ -151,6 +166,46 @@ function EditPost() {
     }
   };
 
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ font: Font.whitelist }],
+      [{ size: [] }],
+      ["bold", "italic", "underline", "strike", "blockquote", "code-block"],
+      [
+        { list: "ordered" },
+        { list: "bullet" },
+        { indent: "-1" },
+        { indent: "+1" },
+      ],
+      [{ color: [] }, { background: [] }],
+      ["link", "image", "video"],
+      [{ align: [] }],
+      ["clean"],
+    ],
+  };
+
+  const formats = [
+    "header",
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "blockquote",
+    "code-block",
+    "list",
+    "bullet",
+    "indent",
+    "color",
+    "background",
+    "link",
+    "image",
+    "video",
+    "align",
+  ];
+
   return (
     <>
       <Header />
@@ -272,13 +327,14 @@ function EditPost() {
                           {t("editPost.description")}
                         </label>
                         <AIChatAssistant />
-                        <CKEditor
-                          editor={ClassicEditor}
-                          data={post?.description || ""}
-                          onChange={(event, editor) => {
-                            const data = editor.getData();
-                            setEditPost({ ...post, description: data });
-                          }}
+                        <ReactQuill
+                          theme="snow"
+                          value={post?.description || ""}
+                          onChange={(value) =>
+                            setEditPost({ ...post, description: value })
+                          }
+                          modules={modules}
+                          formats={formats}
                         />
                         <small>{t("editPost.descriptionHelp")}</small>
                       </div>

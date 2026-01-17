@@ -8,19 +8,31 @@ import json
 logger = logging.getLogger(__name__)
 
 
-class AIServiceClientRaw:
+
+class AIServiceClientFixed:
     def __init__(self):
-        print("DEBUG: AIServiceClientRaw Initialized - VERSION 8.0 (RAW REST) - IMAGEN 3.0")
+        print("DEBUG: AIServiceClientFixed Initialized - VERSION 10.0 (RENAMED CLASS) - SDK ONLY")
         self.api_key = os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
             logger.error("GEMINI_API_KEY was not found in the environment variables.")
             raise ValueError("GEMINI_API_KEY is missing.")
 
     def generate_content(self, prompt: str, type: str, context: str, image_base64: str = None):
+
         if type == 'text':
-            # Existing Text Logic (Working)
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
-            headers = {'Content-Type': 'application/json'}
+            api_key = self.api_key
+            
+            # List of models to try in order
+            models_to_try = [
+                'gemini-1.5-flash',
+                'gemini-2.0-flash-exp',
+                'gemini-1.5-flash-002',
+                'gemini-1.5-flash-8b',
+                'gemini-1.5-pro',
+                'gemini-pro',
+                'gemini-1.0-pro'
+            ]
+
             system_instruction = (
                 "You are a helpful AI Assistant for a professional Blog. "
                 "Your goal is to assist the user based on their specific request (e.g., summarize, explain, expand, translate, or critique)."
@@ -28,6 +40,7 @@ class AIServiceClientRaw:
                 "Please respond in the language appropriate for the request (default to Vietnamese), using the following context if relevant:\n\n"
                 f"--- CONTENT BACKGROUND ---\n{context}"
             )
+
             parts = [{"text": system_instruction}]
             if image_base64:
                 import base64
@@ -40,22 +53,54 @@ class AIServiceClientRaw:
                     }
                 })
             parts.append({"text": prompt})
+            
             payload = {
                 "contents": [{"parts": parts}],
                 "generationConfig": {"temperature": 0.7}
             }
-            try:
-                response = requests.post(url, headers=headers, json=payload)
-                response.raise_for_status()
-                result_json = response.json()
+            
+            headers = {'Content-Type': 'application/json'}
+            last_error = None
+
+            for model in models_to_try:
                 try:
-                    text_content = result_json['candidates'][0]['content']['parts'][0]['text']
-                except (KeyError, IndexError):
-                    text_content = ""
-                return {'type': 'text', 'content': text_content}
-            except Exception as e:
-                logger.error(f"Error calling Gemini API (Text): {e}")
-                raise Exception(f"AI service error: {str(e)}")
+                    print(f"DEBUG: Trying REST API with model: {model}")
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                    
+                    response = requests.post(url, headers=headers, json=payload)
+                    
+                    if response.status_code == 200:
+                        result_json = response.json()
+                        try:
+                            text_content = result_json['candidates'][0]['content']['parts'][0]['text']
+                            print(f"DEBUG: Success with model {model}!")
+                            return {'type': 'text', 'content': text_content}
+                        except (KeyError, IndexError):
+                            print(f"DEBUG: Model {model} returned malformed response.")
+                            continue
+                            
+                    elif response.status_code == 429:
+                        print(f"DEBUG: Model {model} Quota Exceeded (429).")
+                        last_error = f"Quota Exceeded on {model}"
+                        continue # Try next model
+                        
+                    elif response.status_code == 404:
+                         print(f"DEBUG: Model {model} Not Found (404).")
+                         continue # Try next model
+                    
+                    else:
+                        print(f"DEBUG: Model {model} Error {response.status_code}: {response.text}")
+                        last_error = f"Error {response.status_code} on {model}"
+                        continue
+
+                except Exception as e:
+                    print(f"DEBUG: Exception with {model}: {e}")
+                    last_error = str(e)
+                    continue
+
+            # If we get here, all models failed
+            logger.error(f"All AI models failed. Last error: {last_error}")
+            raise Exception(f"AI Service Unavailable: All models failed. Last error: {last_error}")
 
         elif type == 'image':
             image_prompt = f"Create a featured image for the following blog topic: {prompt}. Background: {context}. Style: Minimalist, professional, 16:9 ratio."
