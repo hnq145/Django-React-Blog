@@ -11,6 +11,7 @@ import useUserData from "../../plugin/useUserData";
 import Toast from "../../plugin/Toast";
 import Swal from "sweetalert2";
 import AIChatAssistant from "../partials/AIChatAssistant";
+import { useAIService } from "../../utils/useAIService";
 
 const Quill = ReactQuill.Quill;
 const Font = Quill.import("formats/font");
@@ -42,6 +43,7 @@ function EditPost() {
   const [categoryList, setCategoryList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
+  const { generateContent } = useAIService();
 
   const userData = useUserData();
   const userId = userData?.userId;
@@ -51,7 +53,7 @@ function EditPost() {
   const fetchPost = async () => {
     try {
       const response = await apiInstance.get(
-        `author/dashboard/post-detail/${userId}/${param?.id}/`
+        `author/dashboard/post-detail/${userId}/${param?.id}/`,
       );
       console.log(response.data);
       setEditPost(response.data);
@@ -152,7 +154,7 @@ function EditPost() {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
       console.log(response.data);
       setIsLoading(false);
@@ -326,7 +328,9 @@ function EditPost() {
                         <label className="form-label">
                           {t("editPost.description")}
                         </label>
-                        <AIChatAssistant />
+                        <AIChatAssistant
+                          imageContext={imagePreview || post.image}
+                        />
                         <ReactQuill
                           theme="snow"
                           value={post?.description || ""}
@@ -336,6 +340,60 @@ function EditPost() {
                           modules={modules}
                           formats={formats}
                         />
+                        <div className="d-flex gap-2 mt-2">
+                          <button
+                            type="button"
+                            disabled={isLoading}
+                            className="btn btn-sm btn-outline-primary rounded-pill"
+                            onClick={async () => {
+                              if (!post.description) {
+                                Toast(
+                                  "error",
+                                  t("addPost.enterTextFirst") ||
+                                    "Please enter text",
+                                );
+                                return;
+                              }
+                              setIsLoading(true);
+                              try {
+                                const langText =
+                                  t("common.currentLanguageName", {
+                                    defaultValue: "English",
+                                  }) || "English";
+                                const prompt = `Rewrite the following text to be more professional and engaging in ${langText} (Return ONLY the rewritten HTML content, keep formatting):`;
+                                const result = await generateContent(
+                                  prompt,
+                                  "text",
+                                  post.description,
+                                );
+
+                                if (result && result.content) {
+                                  setEditPost({
+                                    ...post,
+                                    description: result.content,
+                                  });
+                                  Toast(
+                                    "success",
+                                    t("addPost.contentRewritten", {
+                                      defaultValue:
+                                        "Content rewritten successfully!",
+                                    }),
+                                  );
+                                }
+                              } catch (error) {
+                                Toast("error", "AI Error: " + error.message);
+                              } finally {
+                                setIsLoading(false);
+                              }
+                            }}
+                          >
+                            <i className="fas fa-magic me-1"></i>{" "}
+                            {t("addPost.rewrite") || "Rewrite with AI"}
+                          </button>
+                          <small className="text-muted ms-auto">
+                            {t("addPost.useAiHint")}
+                          </small>
+                        </div>
                         <small>{t("editPost.descriptionHelp")}</small>
                       </div>
                       <div>

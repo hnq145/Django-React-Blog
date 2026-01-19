@@ -49,6 +49,12 @@ class Profile(models.Model):
     def save(self, *args, **kwargs):
         if self.full_name == "" or self.user.full_name is None:  
             self.full_name = self.user.full_name
+        
+        # Sync full_name back to User model
+        if self.full_name and self.user.full_name != self.full_name:
+            self.user.full_name = self.full_name
+            self.user.save()
+            
         super(Profile, self).save(*args, **kwargs)
 
 def create_profile(sender, instance, created, **kwargs):

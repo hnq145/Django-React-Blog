@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
 import apiInstance from "../../utils/axios";
@@ -8,34 +8,46 @@ import { useTranslation } from "react-i18next";
 
 function Search() {
   const [posts, setPosts] = useState([]);
+  const [allPosts, setAllPosts] = useState([]);
   const [query, setQuery] = useState("");
   const { t } = useTranslation();
 
-  const handleSearch = async (e) => {
+  /* Live Search Logic */
+  useEffect(() => {
+    // Fetch all posts once on mount for instant client-side search
+    // In a real large-scale app, we would debounce and hit a search API
+    const fetchAllPosts = async () => {
+      try {
+        const response = await apiInstance.get("post/lists/");
+        setAllPosts(response.data);
+      } catch (error) {
+        console.error("Error fetching posts for search:", error);
+      }
+    };
+    fetchAllPosts();
+  }, []);
+
+  const handleSearch = (e) => {
     const searchTerm = e.target.value;
     setQuery(searchTerm);
-    if (searchTerm.length > 2) {
-      try {
-        // Assuming generic post list can be filtered or we use a specific endpoint
-        // Since we don't have a dedicated search endpoint in the summary,
-        // we'll fetch all and filter client side for "demo" purposes if API doesn't support it,
-        // OR use a likely API pattern. Let's try filtered fetch if backend supports it,
-        // otherwise client filter. Re-checking backend views...
-        // Backend URL summary showed 'post/lists/'.
-        // Let's standard fetch and filter client side for better responsiveness in this demo.
-        const response = await apiInstance.get("post/lists/");
-        const filtered = response.data.filter(
-          (p) =>
-            p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.description.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setPosts(filtered);
-      } catch (error) {
-        console.error(error);
-      }
-    } else {
+
+    if (searchTerm.length === 0) {
       setPosts([]);
+      return;
     }
+
+    const lowerTerm = searchTerm.toLowerCase();
+    const filtered = allPosts.filter(
+      (p) =>
+        p.title?.toLowerCase().includes(lowerTerm) ||
+        p.description?.toLowerCase().includes(lowerTerm),
+    );
+    setPosts(filtered);
+  };
+
+  const clearSearch = () => {
+    setQuery("");
+    setPosts([]);
   };
 
   return (
@@ -57,6 +69,14 @@ function Search() {
                   style={{ border: "none", padding: "20px" }}
                 />
                 <i className="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
+                {query.length > 0 && (
+                  <button
+                    onClick={clearSearch}
+                    className="btn position-absolute top-50 end-0 translate-middle-y me-3 text-muted border-0 bg-transparent"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
               </div>
             </div>
           </div>

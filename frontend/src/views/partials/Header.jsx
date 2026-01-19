@@ -115,6 +115,11 @@ function Header() {
                     {t("header.addPost")}
                   </Link>
                 </li>
+                <li>
+                  <Link className="dropdown-item" to="/profile/">
+                    {t("header.profile")}
+                  </Link>
+                </li>
               </ul>
             </li>
           </ul>
@@ -141,7 +146,7 @@ function Header() {
                     try {
                       const response = await apiInstance.get(`post/lists/`);
                       const filtered = response.data.filter((p) =>
-                        p.title.toLowerCase().includes(query.toLowerCase())
+                        p.title.toLowerCase().includes(query.toLowerCase()),
                       );
                       setSuggestions(filtered.slice(0, 5));
                     } catch (err) {
@@ -225,11 +230,11 @@ function Header() {
                         onClick={async () => {
                           try {
                             await apiInstance.post(
-                              "author/dashboard/noti-mark-all-seen/"
+                              "author/dashboard/noti-mark-all-seen/",
                             );
                             setUnreadCount(0);
                             setNotifications((prev) =>
-                              prev.map((n) => ({ ...n, is_seen: true }))
+                              prev.map((n) => ({ ...n, is_seen: true })),
                             );
                           } catch (e) {
                             console.error(e);
@@ -252,14 +257,14 @@ function Header() {
                               try {
                                 await apiInstance.post(
                                   "author/dashboard/noti-mark-seen/",
-                                  { noti_id: n.id }
+                                  { noti_id: n.id },
                                 );
                                 setNotifications((prev) =>
                                   prev.map((item) =>
                                     item.id === n.id
                                       ? { ...item, is_seen: true }
-                                      : item
-                                  )
+                                      : item,
+                                  ),
                                 );
                                 setUnreadCount((prev) => Math.max(0, prev - 1));
                               } catch (e) {
@@ -368,10 +373,10 @@ function Header() {
             {isLoggedIn() ? (
               <div className="d-flex gap-2">
                 <Link
-                  to={"/dashboard/"}
+                  to={"/profile/"}
                   className="btn btn-primary d-flex align-items-center gap-2 btn-sm rounded-pill px-3"
                 >
-                  {t("header.dashboard")} <i className="fas fa-user-circle"></i>
+                  {t("header.profile")} <i className="fas fa-user-circle"></i>
                 </Link>
                 <Link
                   to={"/logout/"}

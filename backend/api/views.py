@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.db.models import Sum
+from django.db.models import Sum, Count
 
 from rest_framework import status
 from rest_framework.decorators import api_view, APIView
@@ -230,9 +230,10 @@ class DashboardStats(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         user_id = request.user.id
-        views = api_models.Post.objects.filter(user_id=user_id).aggregate(view=Sum("view"))['view']
+        views = api_models.Post.objects.filter(user_id=user_id).aggregate(view=Sum("view"))['view'] or 0
         posts = api_models.Post.objects.filter(user_id=user_id).count()
-        likes = api_models.Post.objects.filter(user_id=user_id).count() 
+        # Calculate total likes across all posts by this user
+        likes = api_models.Post.objects.filter(user_id=user_id).aggregate(total_likes=Count('likes'))['total_likes'] or 0
         bookmarks = api_models.Bookmark.objects.filter(post__user_id=user_id).count()
         
         return Response({'views': views, 'posts': posts, 'likes': likes, 'bookmarks': bookmarks})

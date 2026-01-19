@@ -11,7 +11,25 @@ import Moment from "../../plugin/Moment";
 import Toast from "../../plugin/Toast";
 import Swal from "sweetalert2";
 
-// const baseURL = apiInstance.defaults.baseURL.replace('/api/v1', '');
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+);
 
 import { useWebSocket } from "../../context/WebSocketContext";
 
@@ -27,7 +45,7 @@ const DashboardCommentItem = ({ c, t, i18n }) => {
           <div className="avatar avatar-lg flex-shrink-0">
             <img
               className="avatar-img"
-              src="https://as1.ftcdn.net/v2/jpg/03/53/11/00/1000_F_353110097_nbpmfn9iHlxef4EDIhXB1tdTD0lcWhG9.jpg"
+              src="https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWbv5S3vJ6bkwyBfeD8oVl8Q98Xrmof50="
               style={{
                 width: "50px",
                 height: "50px",
@@ -76,7 +94,12 @@ const DashboardCommentItem = ({ c, t, i18n }) => {
 };
 
 function Dashboard() {
-  const [stats, setStats] = useState([]);
+  const [stats, setStats] = useState({
+    views: 0,
+    posts: 0,
+    likes: 0,
+    bookmarks: 0,
+  });
   const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState([]);
   const [noti, setNoti] = useState([]);
@@ -90,18 +113,26 @@ function Dashboard() {
 
   const fetchDashboardData = useCallback(async () => {
     if (!userId) return;
+    try {
+      const stats_res = await apiInstance.get(`author/dashboard/stats/`);
+      setStats(
+        stats_res.data || { views: 0, posts: 0, likes: 0, bookmarks: 0 },
+      );
 
-    const stats_res = await apiInstance.get(`author/dashboard/stats/`);
-    setStats(stats_res.data[0]);
+      const post_res = await apiInstance.get(`author/dashboard/post-list/`);
+      setPosts(post_res.data || []);
 
-    const post_res = await apiInstance.get(`author/dashboard/post-list/`);
-    setPosts(post_res.data);
+      const comment_res = await apiInstance.get(
+        `author/dashboard/comment-list/`,
+      );
+      setComments(comment_res.data || []);
 
-    const comment_res = await apiInstance.get(`author/dashboard/comment-list/`);
-    setComments(comment_res.data);
-
-    const noti_res = await apiInstance.get(`author/dashboard/noti-list/`);
-    setNoti(noti_res.data);
+      const noti_res = await apiInstance.get(`author/dashboard/noti-list/`);
+      setNoti(noti_res.data || []);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      // Optional: Redirect to login if 401? For now just log.
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -117,7 +148,7 @@ function Dashboard() {
   const handleMarkNotiAsSeen = async (notiId) => {
     const response = await apiInstance.post(
       "author/dashboard/noti-mark-seen/",
-      { noti_id: notiId }
+      { noti_id: notiId },
     );
     console.log(response.data);
     fetchDashboardData();
@@ -149,7 +180,7 @@ function Dashboard() {
                         <i className="bi bi-people-fill" />
                       </div>
                       <div className="ms-3">
-                        <h3>{stats.views}</h3>
+                        <h3>{stats?.views || 0}</h3>
                         <h6 className="mb-0">{t("dashboard.totalViews")}</h6>
                       </div>
                     </div>
@@ -162,7 +193,7 @@ function Dashboard() {
                         <i className="bi bi-file-earmark-text-fill" />
                       </div>
                       <div className="ms-3">
-                        <h3>{stats.posts}</h3>
+                        <h3>{stats?.posts || 0}</h3>
                         <h6 className="mb-0">{t("dashboard.posts")}</h6>
                       </div>
                     </div>
@@ -175,7 +206,7 @@ function Dashboard() {
                         <i className="bi bi-suit-heart-fill" />
                       </div>
                       <div className="ms-3">
-                        <h3>{stats.likes}</h3>
+                        <h3>{stats?.likes || 0}</h3>
                         <h6 className="mb-0">{t("dashboard.likes")}</h6>
                       </div>
                     </div>
@@ -188,11 +219,70 @@ function Dashboard() {
                         <i className="bi bi-tag" />
                       </div>
                       <div className="ms-3">
-                        <h3>{stats.bookmarks}</h3>
+                        <h3>{stats?.bookmarks || 0}</h3>
                         <h6 className="mb-0">{t("dashboard.bookmarks")}</h6>
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12">
+              <div className="card border h-100">
+                <div className="card-header border-bottom p-3">
+                  <h5 className="card-header-title mb-0">
+                    {t("dashboard.analytics_overview", "Analytics Overview")}
+                  </h5>
+                </div>
+                <div className="card-body p-4" style={{ height: "300px" }}>
+                  <Bar
+                    data={{
+                      labels: [
+                        t("dashboard.totalViews", "Views"),
+                        t("dashboard.posts", "Posts"),
+                        t("dashboard.likes", "Likes"),
+                        t("dashboard.bookmarks", "Bookmarks"),
+                      ],
+                      datasets: [
+                        {
+                          label: t("dashboard.counts", "Counts"),
+                          data: [
+                            stats?.views || 0,
+                            stats?.posts || 0,
+                            stats?.likes || 0,
+                            stats?.bookmarks || 0,
+                          ],
+                          backgroundColor: [
+                            "rgba(255, 99, 132, 0.5)",
+                            "rgba(53, 162, 235, 0.5)",
+                            "rgba(255, 206, 86, 0.5)",
+                            "rgba(75, 192, 192, 0.5)",
+                          ],
+                          borderColor: [
+                            "rgba(255, 99, 132, 1)",
+                            "rgba(53, 162, 235, 1)",
+                            "rgba(255, 206, 86, 1)",
+                            "rgba(75, 192, 192, 1)",
+                          ],
+                          borderWidth: 1,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: "top",
+                          display: false,
+                        },
+                        title: {
+                          display: false,
+                        },
+                      },
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -324,14 +414,14 @@ function Dashboard() {
                         onClick={async () => {
                           try {
                             await apiInstance.post(
-                              "author/dashboard/noti-mark-all-seen/"
+                              "author/dashboard/noti-mark-all-seen/",
                             );
                             fetchDashboardData();
                             setUnreadCount(0);
                             Toast(
                               "success",
                               t("dashboard.allNotiSeen", "Đã đọc tất cả"),
-                              ""
+                              "",
                             );
                           } catch (error) {
                             console.error(error);
@@ -341,7 +431,7 @@ function Dashboard() {
                         data-bs-toggle="tooltip"
                         title={t(
                           "dashboard.markAllAsRead",
-                          "Đánh dấu tất cả là đã đọc"
+                          "Đánh dấu tất cả là đã đọc",
                         )}
                       >
                         <i className="fas fa-check-double"></i>
@@ -388,25 +478,34 @@ function Dashboard() {
                                     {n.type === "Like" && (
                                       <span>
                                         {t("dashboard.someoneLiked")}{" "}
-                                        <b>
+                                        <Link
+                                          to={`/post/${n.post?.slug}/`}
+                                          className="fw-bold text-dark text-decoration-none"
+                                        >
                                           {n.post?.title?.slice(0, 30) + "..."}
-                                        </b>
+                                        </Link>
                                       </span>
                                     )}
                                     {n.type === "Comment" && (
                                       <span>
                                         {t("dashboard.newComment")}{" "}
-                                        <b>
+                                        <Link
+                                          to={`/post/${n.post?.slug}/`}
+                                          className="fw-bold text-dark text-decoration-none"
+                                        >
                                           {n.post?.title?.slice(0, 30) + "..."}
-                                        </b>
+                                        </Link>
                                       </span>
                                     )}
                                     {n.type === "Bookmark" && (
                                       <span>
                                         {t("dashboard.someoneBookmarked")}{" "}
-                                        <b>
+                                        <Link
+                                          to={`/post/${n.post?.slug}/`}
+                                          className="fw-bold text-dark text-decoration-none"
+                                        >
                                           {n.post?.title?.slice(0, 30) + "..."}
-                                        </b>
+                                        </Link>
                                       </span>
                                     )}
                                   </div>
@@ -514,13 +613,13 @@ function Dashboard() {
                             </td>
                             <td>
                               {t(
-                                `category.${p.category?.title?.toLowerCase()}`
+                                `category.${p.category?.title?.toLowerCase()}`,
                               )}
                             </td>
                             <td>
                               <span className="badge bg-dark bg-opacity-10 text-dark mb-2">
                                 {t(
-                                  `status.${p.status.toLowerCase().replace(" ", "_")}`
+                                  `status.${p.status.toLowerCase().replace(" ", "_")}`,
                                 )}
                               </span>
                             </td>
@@ -600,12 +699,12 @@ function Dashboard() {
                                     if (result.isConfirmed) {
                                       try {
                                         await apiInstance.delete(
-                                          `author/dashboard/post-detail/${p.id}/`
+                                          `author/dashboard/post-detail/${p.id}/`,
                                         );
                                         Swal.fire(
                                           txt.deletedTitle,
                                           txt.deletedText,
-                                          "success"
+                                          "success",
                                         );
                                         fetchDashboardData();
                                       } catch (err) {
@@ -613,7 +712,7 @@ function Dashboard() {
                                         Swal.fire(
                                           txt.errorTitle,
                                           txt.errorText,
-                                          "error"
+                                          "error",
                                         );
                                       }
                                     }

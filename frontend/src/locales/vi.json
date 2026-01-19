@@ -139,7 +139,9 @@
     "edit": "Chỉnh sửa",
     "delete": "Xóa",
     "markAllAsRead": "Đánh dấu tất cả là đã đọc",
-    "allNotiSeen": "Đã xem tất cả thông báo"
+    "allNotiSeen": "Đã xem tất cả thông báo",
+    "analytics_overview": "Tổng quan phân tích",
+    "counts": "Số lượng"
   },
   "addPost": {
     "rewrite": "Viết lại bằng AI",

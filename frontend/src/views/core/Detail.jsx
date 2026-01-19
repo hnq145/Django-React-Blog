@@ -42,7 +42,7 @@ const CommentItem = ({ comment, t, i18n, handleReply }) => {
       console.error("Translation error", error);
       Toast(
         "error",
-        i18n.language === "vi" ? "Dịch thất bại" : "Translation failed"
+        i18n.language === "vi" ? "Dịch thất bại" : "Translation failed",
       );
     } finally {
       setIsTranslating(false);
@@ -163,7 +163,7 @@ function Detail() {
     setTranslating(true);
     try {
       const targetLang = i18n.language === "vi" ? "Vietnamese" : "English";
-      const prompt = `Translate the following blog post to ${targetLang}. Return ONLY a valid JSON object with keys "title" and "description". Do not include Markdown formatting (no \`\`\`json). \n\nOriginal Title: ${post.title}\nOriginal Description: ${post.description}`;
+      const prompt = `Translate the following blog post to ${targetLang}. Preserve all HTML tags and structure in the description. Return ONLY a valid JSON object with keys "title" and "description". Do not include Markdown formatting (no \`\`\`json). \n\nOriginal Title: ${post.title}\nOriginal Description: ${post.description}`;
 
       const response = await apiInstance.post("content/generate/", {
         prompt: prompt,
@@ -186,13 +186,15 @@ function Detail() {
 
       Toast(
         "success",
-        i18n.language === "vi" ? "Dịch thành công!" : "Translated successfully!"
+        i18n.language === "vi"
+          ? "Dịch thành công!"
+          : "Translated successfully!",
       );
     } catch (error) {
       console.error("Translation error", error);
       Toast(
         "error",
-        i18n.language === "vi" ? "Dịch thất bại" : "Translation failed"
+        i18n.language === "vi" ? "Dịch thất bại" : "Translation failed",
       );
     } finally {
       setTranslating(false);
@@ -216,7 +218,7 @@ function Detail() {
     async (sortOrder, page = 1) => {
       try {
         const response = await apiInstance.get(
-          `post/detail/${param.slug}/?comment_sort=${sortOrder}&page=${page}`
+          `post/detail/${param.slug}/?comment_sort=${sortOrder}&page=${page}`,
         );
         setPost(response.data);
         if (response.data.comments) {
@@ -235,7 +237,7 @@ function Detail() {
         console.error("Error fetching post:", error);
       }
     },
-    [param.slug]
+    [param.slug],
   );
 
   useEffect(() => {
@@ -248,7 +250,7 @@ function Detail() {
     }
 
     const commentSocket = new WebSocket(
-      `ws://localhost:8000/ws/posts/${post.id}/comments/`
+      `ws://localhost:8000/ws/posts/${post.id}/comments/`,
     );
 
     commentSocket.onopen = () => {
@@ -359,13 +361,13 @@ function Detail() {
         toastMessage = tSafe(
           "detail.postUnliked",
           "Đã bỏ thích bài viết",
-          "Post unliked successfully"
+          "Post unliked successfully",
         );
       } else if (message.includes("Liked") || message.includes("liked")) {
         toastMessage = tSafe(
           "detail.postLiked",
           "Đã thích bài viết",
-          "Post liked successfully"
+          "Post liked successfully",
         );
       }
       Toast("success", toastMessage);
@@ -390,7 +392,7 @@ function Detail() {
         toastMessage = tSafe(
           "detail.postUnbookmarked",
           "Đã bỏ lưu bài viết",
-          "Post unbookmarked successfully"
+          "Post unbookmarked successfully",
         );
       } else if (
         message.includes("Bookmarked") ||
@@ -399,7 +401,7 @@ function Detail() {
         toastMessage = tSafe(
           "detail.postBookmarked",
           "Đã lưu bài viết",
-          "Post bookmarked successfully"
+          "Post bookmarked successfully",
         );
       }
       Toast("success", toastMessage);
@@ -486,26 +488,43 @@ function Detail() {
                 data-sticky-for={991}
               >
                 <div className="position-relative">
-                  {post?.profile?.image && (
-                    <div className="avatar avatar-xl">
-                      <img
-                        className="avatar-img"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          objectFit: "cover",
-                          borderRadius: "50%",
-                        }}
-                        src={`${baseURL}${post?.profile?.image}`}
-                        alt="avatar"
-                      />
-                    </div>
-                  )}
+                  <div className="avatar avatar-xl">
+                    <img
+                      className="avatar-img"
+                      style={{
+                        width: "100px",
+                        height: "100px",
+                        objectFit: "cover",
+                        borderRadius: "50%",
+                      }}
+                      src={
+                        post?.profile?.image &&
+                        !post?.profile?.image.includes("default-user")
+                          ? post?.profile?.image?.startsWith("http")
+                            ? post?.profile?.image
+                            : `${baseURL}${post?.profile?.image}`
+                          : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                              post?.user?.full_name ||
+                                post?.user?.username ||
+                                "User",
+                            )}&background=random&color=fff&size=128`
+                      }
+                      alt="avatar"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          post?.user?.full_name ||
+                            post?.user?.username ||
+                            "User",
+                        )}&background=random&color=fff&size=128`;
+                      }}
+                    />
+                  </div>
                   <a
                     href="#"
                     className="h5 fw-bold text-dark text-decoration-none mt-2 mb-0 d-block"
                   >
-                    {post?.user?.username}
+                    {post?.user?.full_name || post?.user?.username}
                   </a>
                   <p>{post?.profile?.bio || ""}</p>
                 </div>
@@ -591,7 +610,12 @@ function Detail() {
                   />
                 </div>
               )}
-              <p>{displayPost.description}</p>
+              {/* Render HTML Content from Quill */}
+              <div
+                className="content-body"
+                style={{ fontSize: "1.1rem", lineHeight: "1.8" }}
+                dangerouslySetInnerHTML={{ __html: displayPost.description }}
+              />
 
               {/* AI Summary Section */}
               {post.ai_summary && post.ai_summary.status === "Success" && (
@@ -727,8 +751,8 @@ function Detail() {
                           onClick={() =>
                             handlePageChange(
                               new URL(
-                                commentPagination.previous
-                              ).searchParams.get("page")
+                                commentPagination.previous,
+                              ).searchParams.get("page"),
                             )
                           }
                         >
@@ -739,7 +763,7 @@ function Detail() {
 
                     {Array.from(
                       { length: Math.ceil(commentPagination.count / 10) },
-                      (_, i) => i + 1
+                      (_, i) => i + 1,
                     ).map((page) => (
                       <li className="page-item" key={page}>
                         <button
@@ -758,8 +782,8 @@ function Detail() {
                           onClick={() =>
                             handlePageChange(
                               new URL(commentPagination.next).searchParams.get(
-                                "page"
-                              )
+                                "page",
+                              ),
                             )
                           }
                         >

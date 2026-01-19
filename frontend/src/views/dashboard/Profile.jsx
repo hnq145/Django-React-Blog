@@ -20,13 +20,13 @@ function Profile() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const response = await apiInstance.get(`user/profile/${user_id}/`);
+      const response = await apiInstance.get(`user/profile/`);
       setProfileData(response.data);
       console.log(response.data);
     } catch (error) {
       console.error(error);
     }
-  }, [user_id]);
+  }, []); // user_id dependency removed as it's not needed for the URL
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -52,26 +52,29 @@ function Profile() {
   };
 
   const handleFormSubmit = async () => {
-    if (!user_id) {
-      Toast("error", t("profile.loggedInToUpdate"));
-      return;
-    }
-    const res = await apiInstance.get(`user/profile/${user_id}/`);
+    // Basic check if user is logged in
+    // However, apiInstance interceptors usually handle auth headers
+    const res = await apiInstance.get(`user/profile/`);
     const formdata = new FormData();
     console.log(profileData.image);
     console.log(imagePreview);
 
+    // Only append image if it's a file (newly uploaded) or explicitly changed if logic requires
+    // But basic logic: check if it's the same string as fetched url, if so don't upload
     if (profileData.image && profileData.image !== res.data.image) {
-      formdata.append("image", profileData.image);
+      // If profileData.image is a File object, append it
+      if (profileData.image instanceof File) {
+        formdata.append("image", profileData.image);
+      }
     }
 
-    formdata.append("full_name", profileData.fullName);
+    formdata.append("full_name", profileData.full_name);
     formdata.append("about", profileData.about);
     formdata.append("country", profileData.country);
     formdata.append("bio", profileData.bio);
 
     try {
-      await apiInstance.patch(`user/profile/${user_id}/`, formdata, {
+      await apiInstance.patch(`user/profile/`, formdata, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -86,7 +89,7 @@ function Profile() {
     if (user_id) {
       fetchProfile();
     }
-  }, [fetchProfile]);
+  }, [fetchProfile, user_id]);
 
   console.log(profileData?.full_name);
 
@@ -100,9 +103,7 @@ function Profile() {
               <div className="card">
                 <div className="card-header">
                   <h3 className="mb-0">{t("profile.profileDetails")}</h3>
-                  <p className="mb-0">
-                    {t("profile.manageAccount")}
-                  </p>
+                  <p className="mb-0">{t("profile.manageAccount")}</p>
                 </div>
                 <div className="card-body">
                   <div className="d-lg-flex align-items-center justify-content-between">
@@ -121,9 +122,7 @@ function Profile() {
                       />
                       <div className="ms-3">
                         <h4 className="mb-0">{t("profile.yourAvatar")}</h4>
-                        <p className="mb-0">
-                          {t("profile.avatarHelp")}
-                        </p>
+                        <p className="mb-0">{t("profile.avatarHelp")}</p>
                         <input
                           type="file"
                           className="form-control mt-3"
@@ -137,11 +136,10 @@ function Profile() {
                   <hr className="my-5" />
                   <div>
                     <h4 className="mb-0 fw-bold">
-                      <i className="fas fa-user-gear me-2"></i>{t("profile.personalDetails")}
+                      <i className="fas fa-user-gear me-2"></i>
+                      {t("profile.personalDetails")}
                     </h4>
-                    <p className="mb-4 mt-2">
-                      {t("profile.editPersonalInfo")}
-                    </p>
+                    <p className="mb-4 mt-2">{t("profile.editPersonalInfo")}</p>
                     <div className="row gx-3">
                       <div className="mb-3 col-12 col-md-12">
                         <label className="form-label" htmlFor="fname">
@@ -185,6 +183,7 @@ function Profile() {
                         </label>
                         <textarea
                           onChange={handleProfileChange}
+                          name="about"
                           value={profileData?.about || ""}
                           placeholder={t("profile.enterAboutMe")}
                           id=""
@@ -221,7 +220,8 @@ function Profile() {
                           className="btn btn-primary"
                           type="button"
                         >
-                          {t("profile.updateProfile")} <i className="fas fa-check-circle"></i>
+                          {t("profile.updateProfile")}{" "}
+                          <i className="fas fa-check-circle"></i>
                         </button>
                       </div>
                     </div>
