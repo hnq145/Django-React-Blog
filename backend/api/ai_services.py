@@ -24,10 +24,14 @@ class AIServiceClientFixed:
             
             # List of models to try in order
             models_to_try = [
+                'gemini-2.0-flash-exp', 
                 'gemini-1.5-flash',
-                'gemini-2.0-flash-exp',
+                'gemini-1.5-flash-latest',
+                'gemini-1.5-flash-001',
                 'gemini-1.5-flash-002',
                 'gemini-1.5-flash-8b',
+                'gemini-exp-1206',
+                'gemini-exp-1121',
                 'gemini-1.5-pro',
                 'gemini-pro',
                 'gemini-1.0-pro'
