@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 
 import apiInstance from "../../utils/axios";
 import useUserData from "../../plugin/useUserData";
-import moment from "moment";
 import Moment from "../../plugin/Moment";
 import Toast from "../../plugin/Toast";
 import Swal from "sweetalert2";
@@ -614,11 +613,7 @@ function Dashboard() {
                                 </a>
                               </h6>
                             </td>
-                            <td>
-                              {moment(p.date)
-                                .locale(i18n.language)
-                                .format("DD MMM, YYYY")}
-                            </td>
+                            <td>{Moment(p.date, i18n.language)}</td>
                             <td>
                               {t(
                                 `category.${p.category?.title?.toLowerCase()}`,

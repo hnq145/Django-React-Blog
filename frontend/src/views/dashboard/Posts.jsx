@@ -6,8 +6,8 @@ import { useTranslation } from "react-i18next";
 
 import apiInstance from "../../utils/axios";
 
-import moment from "moment";
 import Moment from "../../plugin/Moment";
+import Swal from "sweetalert2";
 
 function Posts() {
   const [allPosts, setAllPosts] = useState([]);
@@ -42,7 +42,7 @@ function Posts() {
 
     if (searchQuery) {
       posts = posts.filter((p) =>
-        p.title.toLowerCase().includes(searchQuery.toLowerCase())
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
@@ -196,7 +196,7 @@ function Posts() {
                           currentPosts?.map((p, index) => (
                             <tr key={index}>
                               <td>
-                                <Link to={`/detail/${p.slug}/`}>
+                                <Link to={`/post/${p.slug}/`}>
                                   <img
                                     src={p.image}
                                     style={{
@@ -212,7 +212,7 @@ function Posts() {
                               <td>
                                 <h6 className="mt-2 mt-md-0 mb-0 ">
                                   <Link
-                                    to={`/detail/${p.slug}/`}
+                                    to={`/post/${p.slug}/`}
                                     className="text-dark text-decoration-none"
                                   >
                                     {p?.title}
@@ -228,7 +228,7 @@ function Posts() {
                                   `category.${p.category?.title
                                     ?.toLowerCase()
                                     .replace(" ", "_")}`,
-                                  { defaultValue: p.category?.title }
+                                  { defaultValue: p.category?.title },
                                 )}
                               </td>
                               <td>
@@ -245,7 +245,7 @@ function Posts() {
                                     `status.${p.status
                                       ?.toLowerCase()
                                       .replace(" ", "_")}`,
-                                    { defaultValue: p.status }
+                                    { defaultValue: p.status },
                                   )}
                                 </span>
                               </td>
@@ -265,6 +265,41 @@ function Posts() {
                                     data-bs-toggle="tooltip"
                                     data-bs-placement="top"
                                     title={t("dashboard.delete")}
+                                    onClick={async () => {
+                                      const result = await Swal.fire({
+                                        title: t("dashboard.confirmDelete"),
+                                        text: t("dashboard.deleteWarning"),
+                                        icon: "warning",
+                                        showCancelButton: true,
+                                        confirmButtonColor: "#d33",
+                                        cancelButtonColor: "#3085d6",
+                                        confirmButtonText: t(
+                                          "dashboard.deleteConfirm",
+                                        ),
+                                        cancelButtonText: t("dashboard.cancel"),
+                                      });
+
+                                      if (result.isConfirmed) {
+                                        try {
+                                          await apiInstance.delete(
+                                            `author/dashboard/post-detail/${p.id}/`,
+                                          );
+                                          Swal.fire(
+                                            t("dashboard.postDeleted"),
+                                            "",
+                                            "success",
+                                          );
+                                          fetchPosts();
+                                        } catch (error) {
+                                          console.error(error);
+                                          Swal.fire(
+                                            t("dashboard.deleteFailed"),
+                                            "",
+                                            "error",
+                                          );
+                                        }
+                                      }
+                                    }}
                                   >
                                     <i className="bi bi-trash" />
                                   </button>

@@ -19,7 +19,7 @@ export const WebSocketProvider = ({ children }) => {
         );
         setNotifications(res.data);
         // data.length is a reasonable approximation if API returns all or unread
-        setUnreadCount(res.data.filter((n) => !n.is_seen).length); // Corrected from !n.seen to !n.is_seen based on earlier Notification model usage, assuming field is is_seen. If not sure, check model. But n.seen was seemingly wrong or inconsistent. Actually backend serializer typically returns matching model fields. Notification model usually has 'is_seen'.
+        setUnreadCount(res.data.filter((n) => !n.seen).length);
       } catch (error) {
         console.error("Error fetching notifications:", error);
       }

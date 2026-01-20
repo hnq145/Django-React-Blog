@@ -18,10 +18,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.parsers import MultiPartParser, FormParser
-
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from datetime import datetime
+
 
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -42,6 +42,15 @@ from django.views.decorators.csrf import csrf_exempt
 
 from api import serializer as api_serializer
 from api import models as api_models
+
+class UserSearchAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.UserSerializer
+    permission_classes = [AllowAny]
+    def get_queryset(self):
+        query = self.request.query_params.get('q')
+        if query:
+            return api_models.User.objects.filter(username__icontains=query) | api_models.User.objects.filter(full_name__icontains=query)
+        return api_models.User.objects.none()
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = api_serializer.MyTokenObtainPairSerializer
@@ -132,6 +141,14 @@ class ProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user.profile
 
+class UserProfileView(generics.RetrieveAPIView):
+    serializer_class = api_serializer.ProfileSerializer
+    permission_classes = [AllowAny] # Or IsAuthenticated if you want private profiles
+    def get_object(self):
+        user_id = self.kwargs['user_id']
+        user = get_object_or_404(api_models.User, id=user_id)
+        return user.profile
+
 class CategoryListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.CategorySerializer
     permission_classes = [AllowAny]
@@ -166,27 +183,42 @@ class LikePostAPIView(APIView):
     def post(self, request):
         user_id = request.data.get('user_id')
         post_id = request.data.get('post_id')
+        reaction_type = request.data.get('reaction_type', 'Like')
         
         post = api_models.Post.objects.get(id=post_id)
-        
-        # Check if user exists (generic) or use request.user if authenticated
-        # Using raw user_id as per typical unsecure pattern or for frontend convenience
-        # If user_id is passed, use it, else usage request.user
         
         if request.user.is_authenticated:
             user = request.user
         else:
              user = api_models.User.objects.get(id=user_id)
 
-        if user in post.likes.all():
-            post.likes.remove(user)
-            return Response({'message': 'Post Disliked'}, status=status.HTTP_200_OK)
+        existing_reaction = api_models.Reaction.objects.filter(user=user, post=post).first()
+
+        if existing_reaction:
+            if existing_reaction.reaction_type == reaction_type:
+                # Toggle OFF
+                existing_reaction.delete()
+                post.likes.remove(user)
+                return Response({'message': 'Reaction Removed', 'type': None}, status=status.HTTP_200_OK)
+            else:
+                # Update Type
+                existing_reaction.reaction_type = reaction_type
+                existing_reaction.save()
+                return Response({'message': 'Reaction Updated', 'type': reaction_type}, status=status.HTTP_200_OK)
         else:
-            post.likes.add(user)
-            api_models.Notification.objects.create(
-                user=post.user, post=post, type='Like'
+            # Create NEW
+            api_models.Reaction.objects.create(
+                user=user, post=post, reaction_type=reaction_type
             )
-            return Response({'message': 'Post Liked'}, status=status.HTTP_200_OK)
+            post.likes.add(user)
+            
+            # Notification
+            if user != post.user:
+                api_models.Notification.objects.create(
+                    user=post.user, post=post, type=reaction_type
+                )
+            
+            return Response({'message': 'Reaction Added', 'type': reaction_type}, status=status.HTTP_200_OK)
 
 class PostCommentAPIView(APIView):
     permission_classes = [AllowAny]
@@ -194,15 +226,48 @@ class PostCommentAPIView(APIView):
         post_id = request.data.get('post_id')
         name = request.data.get('name')
         email = request.data.get('email')
-        comment = request.data.get('comment')
+        comment_text = request.data.get('comment')
         
         post = api_models.Post.objects.get(id=post_id)
+        user = request.user if request.user.is_authenticated else None
+        
         api_models.Comment.objects.create(
-            post=post, name=name, email=email, comment=comment
+            post=post, name=name, email=email, comment=comment_text, user=user
         )
-        api_models.Notification.objects.create(
-            user=post.user, post=post, type='Comment'
-        )
+        
+        # Notify Post Author (if not self)
+        # Assuming post.user.email check or similar logic if comment is from same user
+        can_notify_author = True
+        if request.user.is_authenticated and request.user == post.user:
+             can_notify_author = False
+        
+        if can_notify_author:
+            api_models.Notification.objects.create(
+                user=post.user, post=post, type='Comment'
+            )
+        
+        # Detect & Notify Mentions
+        import re
+        mentions = re.findall(r'@(\w+)', comment_text)
+        
+        # Deduplicate matches
+        mentions = set(mentions)
+        
+        for username in mentions:
+            try:
+                mentioned_user = api_models.User.objects.get(username=username)
+                
+                # Check if mentioned user is the commenter (prevent self-notification if logged in)
+                if request.user.is_authenticated and request.user == mentioned_user:
+                    continue
+                    
+                # Create Notification
+                api_models.Notification.objects.create(
+                     user=mentioned_user, post=post, type='Mention'
+                )
+            except api_models.User.DoesNotExist:
+                pass # Ignore invalid usernames
+
         return Response({'message': 'Comment Posted'}, status=status.HTTP_201_CREATED)
 
 class BookmarkPostAPIView(APIView):
@@ -293,3 +358,48 @@ class DashboardPostEditAPIView(generics.RetrieveUpdateDestroyAPIView):
          user_id = self.request.user.id
          post_id = self.kwargs['post_id']
          return api_models.Post.objects.get(user__id=user_id, id=post_id)
+
+class FollowUserAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        follower = request.user
+        following_id = request.data.get('user_id')
+        
+        if not following_id:
+             return Response({"message": "User ID required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        following = get_object_or_404(api_models.User, id=following_id)
+        
+        # Prevent self-follow
+        if follower == following:
+             return Response({"message": "You cannot follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
+
+        follow_record = api_models.Follow.objects.filter(follower=follower, following=following)
+        
+        if follow_record.exists():
+            follow_record.delete()
+            return Response({"message": "Unfollowed", "status": "unfollowed"}, status=status.HTTP_200_OK)
+        else:
+            api_models.Follow.objects.create(follower=follower, following=following)
+            # Notification
+            api_models.Notification.objects.create(
+                user=following, 
+                sender=follower, 
+                type="Follow"
+            )
+            return Response({"message": "Followed", "status": "followed"}, status=status.HTTP_201_CREATED)
+
+class FollowingPostListAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Get users that request.user follows
+        # 'following' related_name on User returns Follow objects where user is follower
+        following_user_ids = self.request.user.following.values_list('following__id', flat=True)
+        return api_models.Post.objects.filter(user__id__in=following_user_ids, status="Active").order_by("-date")
+
+class DashboardCommentDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = api_serializer.CommentSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = api_models.Comment.objects.all()

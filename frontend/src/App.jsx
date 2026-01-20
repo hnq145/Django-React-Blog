@@ -66,6 +66,7 @@ function App() {
               <Route path="/comments/" element={<Comments />} />
               <Route path="/notifications/" element={<Notifications />} />
               <Route path="/profile/" element={<Profile />} />
+              <Route path="/profile/:userId/" element={<Profile />} />
 
               {/* Pages */}
               <Route path="/about/" element={<About />} />

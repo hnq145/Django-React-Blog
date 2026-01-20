@@ -8,11 +8,15 @@ urlpatterns = [
   path('user/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'), 
   path('user/register/', api_views.RegisterView.as_view(), name='register'),
   path('user/profile/', api_views.ProfileView.as_view(), name='user_profile'),
+  path('user/search/', api_views.UserSearchAPIView.as_view(), name='user_search'),
+  path('user/profile/<int:user_id>/', api_views.UserProfileView.as_view(), name='user_public_profile'),
+  path('user/follow/', api_views.FollowUserAPIView.as_view(), name='user_follow'),
 
   # Post Endpoint
   path('post/category/list/', api_views.CategoryListAPIView.as_view(), name='category_list'),
   path('post/category/posts/<category_slug>/', api_views.PostCategoryListAPIView.as_view(), name='category_posts'),
-  path('post/lists/', api_views.PostListAPIView.as_view(), name='home'), 
+  path('post/lists/', api_views.PostListAPIView.as_view(), name='home'),
+  path('post/lists/following/', api_views.FollowingPostListAPIView.as_view(), name='home_following'), 
   path('post/detail/<slug>/', api_views.PostDetailAPIView.as_view(), name='post_detail'),
   path('post/like-post/', api_views.LikePostAPIView.as_view(), name='like_post'),
   path('post/comment-post/', api_views.PostCommentAPIView.as_view(), name='comment_post'),
@@ -29,4 +33,5 @@ urlpatterns = [
   path('author/dashboard/reply-comment/', api_views.DashboardReplyCommentAPIView.as_view(), name='dashboard_reply_comment'), 
   path('author/dashboard/post-create/', api_views.DashboardPostCreateAPIView.as_view(), name='dashboard_post_create'),
   path('author/dashboard/post-detail/<post_id>/', api_views.DashboardPostEditAPIView.as_view(), name='dashboard_post_edit'),
+  path('author/dashboard/comment-detail/<int:pk>/', api_views.DashboardCommentDetailAPIView.as_view(), name='dashboard_comment_detail'),
 ]

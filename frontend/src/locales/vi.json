@@ -29,7 +29,10 @@
     "login": "Đăng nhập",
     "logout": "Đăng xuất",
     "english": "Tiếng Anh",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "markAllRead": "Đánh dấu tất cả là đã đọc",
+    "noNotifications": "Không có thông báo nào",
+    "viewAll": "Xem tất cả"
   },
   "footer": {
     "rights": "Đã đăng ký bản quyền",
@@ -253,6 +256,8 @@
     "notificationSeen": "Đã xem thông báo"
   },
   "profile": {
+    "follow": "Theo dõi",
+    "unfollow": "Hủy theo dõi",
     "profileDetails": "Chi tiết hồ sơ",
     "manageAccount": "Bạn có toàn quyền kiểm soát để quản lý cài đặt tài khoản của riêng mình.",
     "yourAvatar": "Ảnh đại diện của bạn",
@@ -298,7 +303,18 @@
     "oldest": "Cũ nhất",
     "seeTranslation": "Xem bản dịch",
     "seeOriginal": "Xem bản gốc",
-    "reply": "Trả lời"
+    "reply": "Trả lời",
+    "replyingTo": "Đang trả lời",
+    "postLiked": "Đã thích bài viết.",
+    "postUnliked": "Đã bỏ thích bài viết.",
+    "postBookmarked": "Đã lưu bài viết.",
+    "postUnbookmarked": "Đã bỏ lưu bài viết."
+  },
+  "notification": {
+    "liked_your_post": "đã thích bài viết của bạn",
+    "commented_on_your_post": "đã bình luận về bài viết của bạn",
+    "followed_you": "đã theo dõi bạn",
+    "interacted_with_you": "đã tương tác với bạn"
   },
   "pagination": {
     "previous": "Trước",

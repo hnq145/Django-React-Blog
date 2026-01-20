@@ -251,9 +251,9 @@ function Header() {
                       <li key={n.id}>
                         <Link
                           to={`/post/${n.post?.slug || n.post_slug || ""}/`} // Fallback if slug missing
-                          className={`dropdown-item p-3 border-bottom ${!n.is_seen ? "bg-light" : ""}`}
+                          className={`dropdown-item p-3 border-bottom ${!n.seen ? "bg-light" : ""}`}
                           onClick={async () => {
-                            if (!n.is_seen) {
+                            if (!n.seen) {
                               try {
                                 await apiInstance.post(
                                   "author/dashboard/noti-mark-seen/",
@@ -262,7 +262,7 @@ function Header() {
                                 setNotifications((prev) =>
                                   prev.map((item) =>
                                     item.id === n.id
-                                      ? { ...item, is_seen: true }
+                                      ? { ...item, seen: true }
                                       : item,
                                   ),
                                 );
@@ -281,13 +281,28 @@ function Header() {
                               </small>
                               <div className="small">
                                 <span className="fw-bold">
-                                  {n.sender?.username || "Someone"}
+                                  {n.sender?.username ||
+                                    t("common.someone", "Someone")}
                                 </span>{" "}
                                 {n.type === "Like"
-                                  ? "liked your post"
+                                  ? t(
+                                      "notification.liked_your_post",
+                                      "liked your post",
+                                    )
                                   : n.type === "Comment"
-                                    ? "commented on your post"
-                                    : "interacted with you"}
+                                    ? t(
+                                        "notification.commented_on_your_post",
+                                        "commented on your post",
+                                      )
+                                    : n.type === "Follow"
+                                      ? t(
+                                          "notification.followed_you",
+                                          "followed you",
+                                        )
+                                      : t(
+                                          "notification.interacted_with_you",
+                                          "interacted with you",
+                                        )}
                               </div>
                             </div>
                           </div>
@@ -304,7 +319,7 @@ function Header() {
                   )}
                   <li className="p-2 text-center bg-light rounded-bottom">
                     <Link
-                      to="/dashboard/notifications/"
+                      to="/notifications/"
                       className="small text-decoration-none fw-bold"
                     >
                       {t("header.viewAll", "View all")}

@@ -31,6 +31,16 @@ class User(AbstractUser):
             return self.profile.image.url
         return None
 
+
+class Badge(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+    icon = models.CharField(max_length=100, help_text="FontAwesome class or image URL")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     image = models.FileField(upload_to="image/", default="image/default-user.jpg", null=True, blank=True)
@@ -42,6 +52,7 @@ class Profile(models.Model):
     facebook = models.CharField(max_length=100, null=True, blank=True)
     twitter = models.CharField(max_length=100, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
+    badges = models.ManyToManyField(Badge, blank=True, related_name="users")
 
     def __str__(self):
         return self.user.username
@@ -119,9 +130,31 @@ class Post(models.Model):
     def comments(self):
         return Comment.objects.filter(post=self).count()
 
+class Reaction(models.Model):
+    REACTION_CHOICES = (
+        ("Like", "Like"),
+        ("Love", "Love"),
+        ("Haha", "Haha"),
+        ("Wow", "Wow"),
+        ("Sad", "Sad"),
+        ("Angry", "Angry"),
+    )
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reactions")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    reaction_type = models.CharField(max_length=50, choices=REACTION_CHOICES, default="Like")
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'post']
+        verbose_name_plural = "Reactions"
+
+    def __str__(self):
+        return f"{self.user.username} reacted {self.reaction_type} to {self.post.title}"
+
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='reply_set')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100)
     comment = models.TextField(null=True, blank=True)
@@ -151,12 +184,21 @@ class Bookmark(models.Model):
 class Notification(models.Model):
     NOTI_TYPE = (
         ("Like", "Like"),
+        ("Love", "Love"),
+        ("Haha", "Haha"),
+        ("Wow", "Wow"),
+        ("Sad", "Sad"),
+        ("Angry", "Angry"),
         ("Comment", "Comment"),
         ("Bookmark", "Bookmark"),
+        ("Mention", "Mention"),
+        ("Badge", "Badge"),
+        ("Follow", "Follow"),
     )
 
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notification_sender", null=True, blank=True)
     type = models.CharField(choices=NOTI_TYPE, max_length=100)
     seen = models.BooleanField(default=False)
     date = models.DateTimeField(auto_now_add=True)
@@ -200,3 +242,15 @@ class AI_Summary(models.Model):
 
     def __str__(self):
         return f"Summary for: {self.post.title}"
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following")
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['follower', 'following']
+        verbose_name_plural = "Follow"
+    
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"

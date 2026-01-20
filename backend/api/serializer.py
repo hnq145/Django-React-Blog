@@ -43,11 +43,22 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return user
 
+class BadgeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.Badge
+        fields = ['name', 'description', 'icon', 'created_at']
+
 class ProfileSerializer(serializers.ModelSerializer):
     image = serializers.FileField(required=False)
+    badges = BadgeSerializer(many=True, read_only=True)
+    followers_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
+    post_count = serializers.SerializerMethodField()
+    
     class Meta:
         model = api_models.Profile
-        fields = ['full_name', 'bio', 'about', 'country', 'facebook', 'twitter', 'image']
+        fields = ['full_name', 'bio', 'about', 'country', 'facebook', 'twitter', 'image', 'badges', 'followers_count', 'following_count', 'is_following', 'post_count', 'date']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -55,6 +66,21 @@ class ProfileSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             representation['image'] = request.build_absolute_uri(instance.image.url)
         return representation
+
+    def get_followers_count(self, obj):
+        return obj.user.followers.count()
+
+    def get_following_count(self, obj):
+        return obj.user.following.count()
+    
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return api_models.Follow.objects.filter(follower=request.user, following=obj.user).exists()
+        return False
+
+    def get_post_count(self, obj):
+        return api_models.Post.objects.filter(user=obj.user, status="Active").count()
 
 class CategorySerializer(serializers.ModelSerializer):
     post_count = serializers.SerializerMethodField()
@@ -93,17 +119,40 @@ class CommentSerializer(serializers.ModelSerializer):
     profile_image = serializers.SerializerMethodField()
     
     def get_profile_image(self, comment):
-        if comment.email:
-            try:
-                user = api_models.User.objects.get(email=comment.email)
-                if hasattr(user, 'profile') and user.profile.image:
-                    request = self.context.get('request')
-                    if request:
-                        return request.build_absolute_uri(user.profile.image.url)
-                    return user.profile.image.url
-            except api_models.User.DoesNotExist:
-                return None
+        # 1. Try using the direct Foreign Key 'user'
+        user = comment.user
+        # 2. If 'user' is None, try fallback lookup by email (legacy)
+        if not user and comment.email:
+             try:
+                 user = api_models.User.objects.get(email=comment.email)
+             except api_models.User.DoesNotExist:
+                 pass
+        
+        if user and hasattr(user, 'profile') and user.profile.image:
+             request = self.context.get('request')
+             if request:
+                 return request.build_absolute_uri(user.profile.image.url)
+             return user.profile.image.url
         return None
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        
+        # Determine the user associated with this comment
+        user = instance.user
+        if not user and instance.email:
+             try:
+                 user = api_models.User.objects.get(email=instance.email)
+             except api_models.User.DoesNotExist:
+                 pass
+        
+        # If user found, override the static name with dynamic profile name
+        if user:
+             if hasattr(user, 'profile') and user.profile.full_name:
+                  ret['name'] = user.profile.full_name
+             elif user.full_name:
+                  ret['name'] = user.full_name
+        return ret
 
 
 class AI_SummarySerializer(serializers.ModelSerializer):
@@ -118,12 +167,40 @@ class PostSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField()
     ai_summary = AI_SummarySerializer(read_only=True)
     
+    reaction_counts = serializers.SerializerMethodField()
+    my_reaction = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
+    
     class Meta:
         model = api_models.Post
         fields = [
             'id', 'user', 'profile', 'category', 'title', 'tags', 'description', 
-            'image', 'status', 'view', 'likes', 'slug', 'date', 'comments', 'ai_summary'
+            'image', 'status', 'view', 'likes', 'slug', 'date', 'comments', 'ai_summary',
+            'reaction_counts', 'my_reaction', 'is_following'
         ]
+
+    def get_reaction_counts(self, instance):
+        return {
+            'Like': instance.reactions.filter(reaction_type='Like').count(),
+            'Love': instance.reactions.filter(reaction_type='Love').count(),
+            'Haha': instance.reactions.filter(reaction_type='Haha').count(),
+            'Wow': instance.reactions.filter(reaction_type='Wow').count(),
+            'Sad': instance.reactions.filter(reaction_type='Sad').count(),
+            'Angry': instance.reactions.filter(reaction_type='Angry').count(),
+        }
+
+    def get_my_reaction(self, instance):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            reaction = instance.reactions.filter(user=request.user).first()
+            return reaction.reaction_type if reaction else None
+        return None
+
+    def get_is_following(self, instance):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and instance.user:
+            return api_models.Follow.objects.filter(follower=request.user, following=instance.user).exists()
+        return False
 
     def get_comments(self, obj):
         comment_sort = self.context.get('comment_sort')
@@ -166,3 +243,10 @@ class AuthorSerializer(serializers.Serializer):
     posts = serializers.IntegerField(default=0)
     likes = serializers.IntegerField(default=0)
     bookmarks = serializers.IntegerField(default=0)
+    followers = serializers.IntegerField(default=0)
+    following = serializers.IntegerField(default=0)
+    is_following = serializers.SerializerMethodField()
+    
+    def get_is_following(self, obj):
+        # obj is assumed to be dict or similar, this might need refinement depending on usage View
+        return False

@@ -11,6 +11,7 @@ import "moment/locale/vi";
 import "moment/locale/en-gb";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useAuthStore } from "../../store/auth";
 
 const baseURL = apiInstance.defaults.baseURL.replace("/api/v1", "");
 
@@ -188,6 +189,12 @@ function Detail() {
   });
   const [commentSortOrder, setCommentSortOrder] = useState("newest");
 
+  // Mention State
+  const [mentionSuggestions, setMentionSuggestions] = useState([]);
+  const [showMentionList, setShowMentionList] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [cursorPosition, setCursorPosition] = useState(0);
+
   // Post Translation State
   const [translating, setTranslating] = useState(false);
   const [translatedPost, setTranslatedPost] = useState(null);
@@ -319,11 +326,76 @@ function Detail() {
     };
   }, [post.id, commentSortOrder, fetchPost]);
 
+  const fetchUserSuggestions = useCallback(async (query) => {
+    if (!query) {
+      setMentionSuggestions([]);
+      return;
+    }
+    try {
+      const response = await apiInstance.get(`user/search/?q=${query}`);
+      setMentionSuggestions(response.data);
+      setShowMentionList(true);
+    } catch (error) {
+      console.error("Error searching users", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mentionQuery) {
+      const timer = setTimeout(() => {
+        fetchUserSuggestions(mentionQuery);
+      }, 300); // 300ms debounce
+      return () => clearTimeout(timer);
+    } else {
+      setShowMentionList(false);
+    }
+  }, [mentionQuery, fetchUserSuggestions]);
+
   const handleCreateCommentChange = (event) => {
+    const { name, value } = event.target;
     setCreateComment({
       ...createComment,
-      [event.target.name]: event.target.value,
+      [name]: value,
     });
+
+    if (name === "comment") {
+      const cursor = event.target.selectionStart;
+      setCursorPosition(cursor);
+
+      // Check for @ mention trigger
+      // Look for @ symbol before cursor
+      const textBeforeCursor = value.slice(0, cursor);
+      const lastAtPos = textBeforeCursor.lastIndexOf("@");
+
+      if (lastAtPos !== -1) {
+        const textAfterAt = textBeforeCursor.slice(lastAtPos + 1);
+        // Only trigger if no spaces in between (simple validation)
+        if (!textAfterAt.includes(" ")) {
+          setMentionQuery(textAfterAt);
+          return;
+        }
+      }
+      setShowMentionList(false);
+      setMentionQuery("");
+    }
+  };
+
+  const handleMentionSelect = (username) => {
+    const value = createComment.comment;
+    const textBeforeAt = value.slice(
+      0,
+      value.lastIndexOf("@", cursorPosition - 1),
+    );
+    const textAfterCursor = value.slice(cursorPosition);
+    const newValue = `${textBeforeAt}@${username} ${textAfterCursor}`;
+
+    setCreateComment({
+      ...createComment,
+      comment: newValue,
+    });
+    setShowMentionList(false);
+    setMentionQuery("");
+    // Optional: focus back to textarea logic here if ref is used
   };
 
   // Reading Progress Logic
@@ -383,39 +455,71 @@ function Detail() {
     }
   };
 
-  const handleLikePost = async () => {
-    const json = {
-      user_id: 1,
-      post_id: post?.id,
-    };
-
+  const handleReaction = async (type = "Like") => {
     try {
-      const response = await apiInstance.post(`post/like-post/`, json);
-      // Determine message based on backend response
-      const message = response.data.message;
-      let toastMessage = message;
-      if (
-        message.includes("Unliked") ||
-        message.includes("unliked") ||
-        message.includes("Disliked")
-      ) {
-        toastMessage = tSafe(
-          "detail.postUnliked",
-          "Đã bỏ thích bài viết",
-          "Post unliked successfully",
-        );
-      } else if (message.includes("Liked") || message.includes("liked")) {
-        toastMessage = tSafe(
-          "detail.postLiked",
-          "Đã thích bài viết",
-          "Post liked successfully",
-        );
-      }
-      Toast("success", toastMessage);
+      const response = await apiInstance.post(`post/like-post/`, {
+        post_id: post?.id,
+        reaction_type: type,
+        // user_id is optional if authenticated, backend prefers auth user
+      });
 
-      fetchPost(commentSortOrder);
+      const message = response.data.message;
+      let toastType = "success";
+      let translatedMessage = t("detail.postLiked", "Post Liked");
+
+      const oldReaction = post.my_reaction;
+      const newReaction = type;
+      let newMyReaction = newReaction;
+      let newCounts = { ...post.reaction_counts };
+
+      if (message.includes("Removed") || message.includes("Unliked")) {
+        toastType = "info";
+        translatedMessage = t("detail.postUnliked", "Post Unliked");
+        newMyReaction = null;
+        if (oldReaction && newCounts[oldReaction] > 0) {
+          newCounts[oldReaction] -= 1;
+        }
+      } else {
+        // Added or Changed
+        if (oldReaction && oldReaction !== newReaction) {
+          if (newCounts[oldReaction] > 0) newCounts[oldReaction] -= 1;
+        }
+        if (!oldReaction || oldReaction !== newReaction) {
+          newCounts[newReaction] = (newCounts[newReaction] || 0) + 1;
+        }
+      }
+
+      Toast(toastType, translatedMessage);
+
+      // Update state locally without refetching to preserve Follow status and improved UX
+      setPost((prev) => ({
+        ...prev,
+        my_reaction: newMyReaction,
+        reaction_counts: newCounts,
+      }));
     } catch (error) {
-      console.error("Error liking post:", error);
+      console.error("Error reacting to post:", error);
+      Toast("error", "Failed to react");
+    }
+  };
+
+  // Helper to get reaction icon
+  const getReactionIcon = (type) => {
+    switch (type) {
+      case "Like":
+        return "👍";
+      case "Love":
+        return "❤️";
+      case "Haha":
+        return "😂";
+      case "Wow":
+        return "😮";
+      case "Sad":
+        return "😢";
+      case "Angry":
+        return "😡";
+      default:
+        return <i className="fas fa-thumbs-up"></i>;
     }
   };
 
@@ -476,11 +580,16 @@ function Detail() {
         <div className="container">
           <div className="row">
             <div className="col-12">
-              <a href="#" className="badge bg-info mb-2 text-decoration-none">
-                <i className="small fw-bold " />
-                {t(`category.${post.category?.title?.toLowerCase()}`, {
-                  defaultValue: post.category?.title,
-                })}
+              <a
+                href="#"
+                className="badge bg-primary mb-2 text-decoration-none"
+              >
+                {post.category?.title
+                  ? t(
+                      `category.${post.category.title.toLowerCase()}`,
+                      post.category.title,
+                    )
+                  : t("category.uncategorized", "Chưa phân loại")}
               </a>
               <h1 className="text-center">{displayPost.title}</h1>
               <div className="text-center mt-3">
@@ -567,6 +676,50 @@ function Detail() {
                   >
                     {post?.user?.full_name || post?.user?.username}
                   </a>
+
+                  {/* Follow Button */}
+                  {post?.user?.id &&
+                    String(useAuthStore.getState().user?.user_id) !==
+                      String(post.user.id) && (
+                      <button
+                        className={`btn btn-sm mt-2 rounded-pill px-3 ${post?.is_following ? "btn-outline-danger" : "btn-primary"}`}
+                        onClick={async () => {
+                          try {
+                            await apiInstance.post(`user/follow/`, {
+                              user_id: post?.user?.id,
+                            });
+                            const newStatus = !post?.is_following;
+                            Toast(
+                              "success",
+                              newStatus
+                                ? t("notification.followed_you", "Followed")
+                                : t("profile.unfollow", "Unfollowed"),
+                            );
+                            // Optimistic Update or Refresh
+                            setPost((prev) => ({
+                              ...prev,
+                              is_following: !prev.is_following,
+                            }));
+                          } catch (error) {
+                            console.error(error);
+                            Toast("error", "Error following user");
+                          }
+                        }}
+                      >
+                        {post?.is_following ? (
+                          <>
+                            <i className="fas fa-user-minus me-1"></i>{" "}
+                            {t("profile.unfollow", "Unfollow")}
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-user-plus me-1"></i>{" "}
+                            {t("profile.follow", "Follow")}
+                          </>
+                        )}
+                      </button>
+                    )}
+
                   <p>{post?.profile?.bio || ""}</p>
                 </div>
 
@@ -617,10 +770,116 @@ function Detail() {
                   ))}
                 </ul>
 
-                <button onClick={handleLikePost} className="btn btn-primary">
-                  <i className="fas fa-thumbs-up me-2"></i>
-                  {post?.likes?.length}
-                </button>
+                {/* Rich Reaction UI */}
+                <style>
+                  {`
+                    .reaction-container { position: relative; display: inline-block; }
+                    .reaction-popup {
+                      display: none;
+                      position: absolute;
+                      bottom: 100%;
+                      left: 50%;
+                      transform: translateX(-50%);
+                      background: white;
+                      padding: 5px 10px;
+                      border-radius: 50px;
+                      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+                      margin-bottom: 10px;
+                      white-space: nowrap;
+                      z-index: 10;
+                      animation: popUp 0.3s ease forwards;
+                    }
+                    .reaction-container:hover .reaction-popup { display: flex; gap: 5px; }
+                    .reaction-btn {
+                      font-size: 1.5rem;
+                      cursor: pointer;
+                      transition: transform 0.2s;
+                      background: none;
+                      border: none;
+                      padding: 0 5px;
+                    }
+                    .reaction-btn:hover { transform: scale(1.3); }
+                    @keyframes popUp {
+                      from { opacity: 0; transform: translate(-50%, 10px); }
+                      to { opacity: 1; transform: translate(-50%, 0); }
+                    }
+                    /* Invisible bridge to prevent losing hover */
+                    .reaction-popup::after {
+                      content: '';
+                      position: absolute;
+                      top: 100%;
+                      left: 0;
+                      width: 100%;
+                      height: 15px; 
+                    }
+                  `}
+                </style>
+                <div className="reaction-container">
+                  <div className="reaction-popup">
+                    <button
+                      onClick={() => handleReaction("Like")}
+                      className="reaction-btn"
+                      title="Like"
+                    >
+                      👍
+                    </button>
+                    <button
+                      onClick={() => handleReaction("Love")}
+                      className="reaction-btn"
+                      title="Love"
+                    >
+                      ❤️
+                    </button>
+                    <button
+                      onClick={() => handleReaction("Haha")}
+                      className="reaction-btn"
+                      title="Haha"
+                    >
+                      😂
+                    </button>
+                    <button
+                      onClick={() => handleReaction("Wow")}
+                      className="reaction-btn"
+                      title="Wow"
+                    >
+                      😮
+                    </button>
+                    <button
+                      onClick={() => handleReaction("Sad")}
+                      className="reaction-btn"
+                      title="Sad"
+                    >
+                      😢
+                    </button>
+                    <button
+                      onClick={() => handleReaction("Angry")}
+                      className="reaction-btn"
+                      title="Angry"
+                    >
+                      😡
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => handleReaction(post?.my_reaction || "Like")}
+                    className={`btn ${post?.my_reaction ? "btn-light border" : "btn-primary"}`}
+                  >
+                    {post?.my_reaction ? (
+                      <span className="me-2" style={{ fontSize: "1.2rem" }}>
+                        {getReactionIcon(post.my_reaction)}
+                      </span>
+                    ) : (
+                      <i className="fas fa-thumbs-up me-2"></i>
+                    )}
+
+                    {post?.reaction_counts
+                      ? Object.values(post.reaction_counts).reduce(
+                          (a, b) => a + b,
+                          0,
+                        )
+                      : post?.likes?.length || 0}
+                  </button>
+                </div>
 
                 <button
                   onClick={handleBookmarkPost}
@@ -843,7 +1102,8 @@ function Detail() {
                 {createComment.parent && (
                   <div className="alert alert-info py-2 d-flex justify-content-between align-items-center">
                     <small>
-                      Replying to {createComment.comment.split(" ")[0]}...
+                      {t("detail.replyingTo", "Replying to")}{" "}
+                      {createComment.comment.split(" ")[0]}...
                     </small>
                     <button
                       className="btn btn-sm btn-close"
@@ -882,7 +1142,7 @@ function Detail() {
                       className="form-control"
                     />
                   </div>
-                  <div className="col-12">
+                  <div className="col-12 position-relative">
                     <label className="form-label">
                       {t("detail.writeComment")}
                     </label>
@@ -893,6 +1153,52 @@ function Detail() {
                       className="form-control"
                       rows={4}
                     />
+
+                    {/* Mention Suggestions List */}
+                    {showMentionList && mentionSuggestions.length > 0 && (
+                      <div
+                        className="card position-absolute shadow-lg"
+                        style={{
+                          bottom: "100%",
+                          left: "0",
+                          width: "250px",
+                          maxHeight: "200px",
+                          overflowY: "auto",
+                          zIndex: 1000,
+                        }}
+                      >
+                        <ul className="list-group list-group-flush">
+                          {mentionSuggestions.map((user) => (
+                            <li
+                              key={user.id}
+                              className="list-group-item list-group-item-action cursor-pointer d-flex align-items-center"
+                              onClick={() => handleMentionSelect(user.username)}
+                              style={{ cursor: "pointer" }}
+                            >
+                              <img
+                                src={
+                                  user.profile?.image ||
+                                  "https://ui-avatars.com/api/?name=" +
+                                    user.username
+                                }
+                                alt={user.username}
+                                className="rounded-circle me-2"
+                                width="30"
+                                height="30"
+                              />
+                              <div>
+                                <small className="fw-bold d-block">
+                                  {user.full_name || user.username}
+                                </small>
+                                <small className="text-muted">
+                                  @{user.username}
+                                </small>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                   <div className="col-12">
                     <button type="submit" className="btn btn-primary">

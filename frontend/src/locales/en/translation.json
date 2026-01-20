@@ -4,7 +4,19 @@
   "header": {
     "search": "Search...",
     "english": "English",
-    "vietnamese": "Vietnamese"
+    "vietnamese": "Vietnamese",
+    "home": "Home",
+    "category": "Category",
+    "dashboard": "Dashboard",
+    "posts": "Posts",
+    "addPost": "Add Post",
+    "profile": "Profile",
+    "login": "Login",
+    "register": "Register",
+    "notifications": "Notifications",
+    "markAllRead": "Mark all read",
+    "noNotifications": "No notifications",
+    "viewAll": "View all"
   },
   "addPost": {
     "rewrite": "Rewrite with AI",
@@ -88,10 +100,43 @@
     "postLiked": "Post liked successfully.",
     "postUnliked": "Post unliked successfully.",
     "postBookmarked": "Post bookmarked successfully.",
-    "postUnbookmarked": "Post unbookmarked successfully."
+    "postUnbookmarked": "Post unbookmarked successfully.",
+    "replyingTo": "Replying to"
   },
   "pagination": {
     "previous": "Previous",
     "next": "Next"
+  },
+  "notification": {
+    "liked_your_post": "liked your post",
+    "commented_on_your_post": "commented on your post",
+    "followed_you": "followed you",
+    "interacted_with_you": "interacted with you"
+  },
+  "profile": {
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "profileDetails": "Profile Details",
+    "manageAccount": "Manage your account",
+    "yourAvatar": "Your Avatar",
+    "avatarHelp": "Upload image < 2MB",
+    "badges": "Badges",
+    "personalDetails": "Personal Details",
+    "editPersonalInfo": "Edit your personal info",
+    "fullName": "Full Name",
+    "enterFullName": "Enter full name",
+    "bio": "Bio",
+    "enterBio": "Enter bio",
+    "aboutMe": "About Me",
+    "enterAboutMe": "Write something about yourself",
+    "country": "Country",
+    "enterCountry": "Enter country",
+    "chooseCountry": "Choose country",
+    "updateProfile": "Update Profile",
+    "profileUpdated": "Profile updated successfully"
+  },
+  "common": {
+    "someone": "Someone",
+    "sortBy": "Sort by"
   }
 }

@@ -4,7 +4,19 @@
   "header": {
     "search": "Tìm kiếm...",
     "english": "Tiếng Anh",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "home": "Trang chủ",
+    "category": "Danh mục",
+    "dashboard": "Bảng điều khiển",
+    "posts": "Bài viết",
+    "addPost": "Thêm bài viết",
+    "profile": "Hồ sơ",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "notifications": "Thông báo",
+    "markAllRead": "Đánh dấu tất cả là đã đọc",
+    "noNotifications": "Không có thông báo nào",
+    "viewAll": "Xem tất cả"
   },
   "addPost": {
     "rewrite": "Viết lại bằng AI",
@@ -88,10 +100,43 @@
     "postLiked": "Đã thích bài viết.",
     "postUnliked": "Đã bỏ thích bài viết.",
     "postBookmarked": "Đã lưu bài viết.",
-    "postUnbookmarked": "Đã bỏ lưu bài viết."
+    "postUnbookmarked": "Đã bỏ lưu bài viết.",
+    "replyingTo": "Đang trả lời"
   },
   "pagination": {
     "previous": "Trước",
     "next": "Tiếp theo"
+  },
+  "notification": {
+    "liked_your_post": "đã thích bài viết của bạn",
+    "commented_on_your_post": "đã bình luận về bài viết của bạn",
+    "followed_you": "đã theo dõi bạn",
+    "interacted_with_you": "đã tương tác với bạn"
+  },
+  "profile": {
+    "follow": "Theo dõi",
+    "unfollow": "Hủy theo dõi",
+    "profileDetails": "Chi tiết hồ sơ",
+    "manageAccount": "Quản lý tài khoản của bạn",
+    "yourAvatar": "Ảnh đại diện của bạn",
+    "avatarHelp": "Tải lên ảnh kích thước < 2MB",
+    "badges": "Danh hiệu",
+    "personalDetails": "Thông tin cá nhân",
+    "editPersonalInfo": "Chỉnh sửa thông tin cá nhân của bạn",
+    "fullName": "Họ và tên",
+    "enterFullName": "Nhập họ và tên",
+    "bio": "Tiểu sử",
+    "enterBio": "Nhập tiểu sử",
+    "aboutMe": "Giới thiệu bản thân",
+    "enterAboutMe": "Viết gì đó về bạn",
+    "country": "Quốc gia",
+    "enterCountry": "Nhập quốc gia",
+    "chooseCountry": "Chọn quốc gia",
+    "updateProfile": "Cập nhật hồ sơ",
+    "profileUpdated": "Cập nhật hồ sơ thành công"
+  },
+  "common": {
+    "someone": "Ai đó",
+    "sortBy": "Sắp xếp theo"
   }
 }

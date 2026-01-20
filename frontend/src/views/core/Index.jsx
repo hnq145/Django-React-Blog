@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
 import { Link } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 import Moment from "../../plugin/Moment";
 import { useTranslation } from "react-i18next";
+import { useAuthStore } from "../../store/auth";
 
 const TruncatedTitle = ({
   title,
@@ -32,32 +33,42 @@ function Index() {
   const [sortedPosts, setSortedPosts] = useState([]);
   const [trendingPosts, setTrendingPosts] = useState([]);
   const [category, setCategory] = useState([]);
+  const [feedType, setFeedType] = useState("latest");
   const { t, i18n } = useTranslation();
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const response_post = await apiInstance.get("post/lists/");
+      let endpoint = "post/lists/";
+      if (feedType === "following") {
+        endpoint = "post/lists/following/";
+      }
+
+      const response_post = await apiInstance.get(endpoint);
       const response_category = await apiInstance.get("post/category/list/");
 
-      const sortedPosts = [...response_post.data].sort(
-        (a, b) => b.view + b.likes - (a.view + a.likes)
+      let postData = response_post.data;
+
+      const sortedPosts = [...postData].sort(
+        (a, b) => b.view + b.likes - (a.view + a.likes),
       );
 
-      setPosts(response_post.data);
-      setSortedPosts(response_post.data);
+      setPosts(postData);
+      setSortedPosts(postData);
       setTrendingPosts(sortedPosts);
       setCategory(response_category.data);
     } catch (error) {
       console.error(error);
+      setPosts([]); // clear posts on error or empty
+      setSortedPosts([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [feedType]);
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [fetchPosts]);
 
   const handleSortChange = (e) => {
     const order = e.target.value;
@@ -83,13 +94,13 @@ function Index() {
 
   const latestPostItems = sortedPosts?.slice(
     indexOfFirstLatestItem,
-    indexOfLastLatestItem
+    indexOfLastLatestItem,
   );
 
   const totalLatestPages = Math.ceil(sortedPosts?.length / latestItemsPerPage);
   const latestPageNumbers = Array.from(
     { length: totalLatestPages },
-    (_, index) => index + 1
+    (_, index) => index + 1,
   );
 
   // Trending Section Helpers
@@ -306,7 +317,7 @@ function Index() {
                   <h6 className="fw-bold text-dark m-0">
                     {t(
                       `category.${c?.title?.toLowerCase().replace(" ", "_")}`,
-                      { defaultValue: c?.title }
+                      { defaultValue: c?.title },
                     )}
                   </h6>
                   <small className="text-muted">
@@ -323,8 +334,26 @@ function Index() {
       {/* LATEST POSTS */}
       <section className="py-5">
         <div className="container">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h3 className="fw-bold m-0">{t("index.latest")}</h3>
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+            <div className="d-flex align-items-center mb-3 mb-md-0 gap-4">
+              <h3
+                className={`fw-bold m-0 cursor-pointer ${feedType === "latest" ? "text-primary" : "text-muted"}`}
+                onClick={() => setFeedType("latest")}
+                style={{ cursor: "pointer" }}
+              >
+                {t("index.latest")}
+              </h3>
+              {useAuthStore.getState().isLoggedIn() && (
+                <h3
+                  className={`fw-bold m-0 cursor-pointer ${feedType === "following" ? "text-primary" : "text-muted"}`}
+                  onClick={() => setFeedType("following")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Following
+                </h3>
+              )}
+            </div>
+
             <div className="d-flex align-items-center">
               <span className="me-2 text-muted fw-medium d-none d-md-block">
                 {t("common.sortBy", { defaultValue: "Sort By" })}:
@@ -342,115 +371,149 @@ function Index() {
             </div>
           </div>
 
-          <div className="row g-4">
-            {latestPostItems?.map((post) => (
-              <div className="col-sm-6 col-lg-3" key={post?.id}>
-                <div className="card h-100 border-0 shadow-sm hover-float transition-all">
-                  <div className="card-img-top position-relative overflow-hidden">
-                    <img
-                      className="img-fluid w-100 object-fit-cover"
-                      style={{ height: "200px" }}
-                      src={post.image}
-                      alt={post.title}
-                    />
-                    <div className="position-absolute top-0 end-0 p-2">
-                      <span className="badge bg-white text-dark shadow-sm">
-                        <i className="fas fa-eye text-primary"></i> {post.view}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="card-body d-flex flex-column">
-                    <div className="mb-2">
-                      <span className="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">
-                        {post.category?.title
-                          ? t(`category.${post.category.title.toLowerCase()}`, {
-                              defaultValue: post.category.title,
-                            })
-                          : t("index.article_badge", {
-                              defaultValue: "Article",
-                            })}
-                      </span>
-                    </div>
-                    <TruncatedTitle
-                      title={post.title}
-                      slug={post.slug}
-                      className="card-title fw-bold h5 mb-3"
-                    />
-
-                    <div className="mt-auto d-flex justify-content-between align-items-center pt-3 border-top border-light">
-                      <div className="d-flex align-items-center">
-                        <div
-                          className="bg-light rounded-circle d-flex align-items-center justify-content-center text-secondary me-2 overflow-hidden"
-                          style={{ width: "32px", height: "32px" }}
-                        >
-                          {post.user?.image ? (
-                            <img
-                              src={post.user.image}
-                              style={{ width: "100%", height: "100%" }}
-                            />
-                          ) : (
-                            <i className="fas fa-user"></i>
-                          )}
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          ) : latestPostItems?.length > 0 ? (
+            <div className="row g-4">
+              {latestPostItems?.map((post) => (
+                <div className="col-sm-6 col-lg-3" key={post?.id}>
+                  <div className="card h-100 border-0 shadow-sm hover-float transition-all">
+                    <Link
+                      to={`/post/${post.slug}/`}
+                      className="text-decoration-none text-dark"
+                    >
+                      <div className="card-img-top position-relative overflow-hidden">
+                        <img
+                          className="img-fluid w-100 object-fit-cover"
+                          style={{ height: "200px" }}
+                          src={post.image}
+                          alt={post.title}
+                        />
+                        <div className="position-absolute top-0 end-0 p-2">
+                          <span className="badge bg-white text-dark shadow-sm">
+                            <i className="fas fa-eye text-primary"></i>{" "}
+                            {post.view}
+                          </span>
                         </div>
-                        <small
-                          className="text-muted fw-medium text-truncate"
-                          style={{ maxWidth: "80px" }}
+                      </div>
+                    </Link>
+                    <div className="card-body d-flex flex-column">
+                      <div className="mb-2">
+                        <Link
+                          to={`/category/${post.category?.slug}/`}
+                          className="text-decoration-none"
                         >
-                          {post?.user?.username || "Admin"}
+                          <span className="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">
+                            {post.category?.title
+                              ? t(
+                                  `category.${post.category.title.toLowerCase()}`,
+                                  {
+                                    defaultValue: post.category.title,
+                                  },
+                                )
+                              : t("index.article_badge", {
+                                  defaultValue: "Article",
+                                })}
+                          </span>
+                        </Link>
+                      </div>
+                      <TruncatedTitle
+                        title={post.title}
+                        slug={post.slug}
+                        className="card-title fw-bold h5 mb-3"
+                      />
+
+                      <div className="mt-auto d-flex justify-content-between align-items-center pt-3 border-top border-light">
+                        <Link
+                          to={`/profile/${post.user?.id}/`}
+                          className="text-decoration-none"
+                        >
+                          <div className="d-flex align-items-center">
+                            <div
+                              className="bg-light rounded-circle d-flex align-items-center justify-content-center text-secondary me-2 overflow-hidden"
+                              style={{ width: "32px", height: "32px" }}
+                            >
+                              {post.user?.image ? (
+                                <img
+                                  src={post.user.image}
+                                  style={{ width: "100%", height: "100%" }}
+                                />
+                              ) : (
+                                <i className="fas fa-user"></i>
+                              )}
+                            </div>
+                            <small
+                              className="text-muted fw-medium text-truncate"
+                              style={{ maxWidth: "80px" }}
+                            >
+                              {post?.user?.username || "Admin"}
+                            </small>
+                          </div>
+                        </Link>
+                        <small className="text-muted">
+                          {Moment(post.date, i18n.language)}
                         </small>
                       </div>
-                      <small className="text-muted">
-                        {Moment(post.date, i18n.language)}
-                      </small>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-5">
+              <h4 className="text-muted">No posts found in this feed.</h4>
+              {feedType === "following" && <p>Try following some authors!</p>}
+            </div>
+          )}
 
-          <nav className="d-flex justify-content-center mt-5">
-            <ul className="pagination mb-0 gap-2">
-              <li
-                className={`page-item ${latestCurrentPage === 1 ? "disabled" : ""}`}
-              >
-                <button
-                  className="page-link rounded-circle border-0 shadow-sm d-flex align-items-center justify-content-center"
-                  onClick={() => setLatestCurrentPage(latestCurrentPage - 1)}
-                  style={{ width: "45px", height: "45px" }}
-                >
-                  <i className="fas fa-chevron-left" />
-                </button>
-              </li>
-
-              {latestPageNumbers.map((number) => (
+          {latestPostItems?.length > 0 && (
+            <nav className="d-flex justify-content-center mt-5">
+              <ul className="pagination mb-0 gap-2">
                 <li
-                  key={number}
-                  className={`page-item ${latestCurrentPage === number ? "active" : ""}`}
+                  className={`page-item ${latestCurrentPage === 1 ? "disabled" : ""}`}
                 >
                   <button
-                    className={`page-link rounded-circle border-0 shadow-sm d-flex align-items-center justify-content-center fw-bold ${latestCurrentPage === number ? "bg-primary text-white" : "text-dark bg-white"}`}
-                    onClick={() => setLatestCurrentPage(number)}
+                    className="page-link rounded-circle border-0 shadow-sm d-flex align-items-center justify-content-center"
+                    onClick={() => setLatestCurrentPage(latestCurrentPage - 1)}
                     style={{ width: "45px", height: "45px" }}
                   >
-                    {number}
+                    <i className="fas fa-chevron-left" />
                   </button>
                 </li>
-              ))}
 
-              <li
-                className={`page-item ${latestCurrentPage === totalLatestPages ? "disabled" : ""}`}
-              >
-                <button
-                  className="page-link rounded-circle border-0 shadow-sm d-flex align-items-center justify-content-center"
-                  onClick={() => setLatestCurrentPage(latestCurrentPage + 1)}
-                  style={{ width: "45px", height: "45px" }}
+                {latestPageNumbers.map((number) => (
+                  <li
+                    key={number}
+                    className={`page-item ${latestCurrentPage === number ? "active" : ""}`}
+                  >
+                    <button
+                      className={`page-link rounded-circle border-0 shadow-sm d-flex align-items-center justify-content-center fw-bold ${latestCurrentPage === number ? "bg-primary text-white" : "text-dark bg-white"}`}
+                      onClick={() => setLatestCurrentPage(number)}
+                      style={{ width: "45px", height: "45px" }}
+                    >
+                      {number}
+                    </button>
+                  </li>
+                ))}
+
+                <li
+                  className={`page-item ${latestCurrentPage === totalLatestPages ? "disabled" : ""}`}
                 >
-                  <i className="fas fa-chevron-right" />
-                </button>
-              </li>
-            </ul>
-          </nav>
+                  <button
+                    className="page-link rounded-circle border-0 shadow-sm d-flex align-items-center justify-content-center"
+                    onClick={() => setLatestCurrentPage(latestCurrentPage + 1)}
+                    style={{ width: "45px", height: "45px" }}
+                  >
+                    <i className="fas fa-chevron-right" />
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          )}
         </div>
       </section>
 
