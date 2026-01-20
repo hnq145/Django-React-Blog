@@ -52,36 +52,30 @@ function Profile() {
   };
 
   const handleFormSubmit = async () => {
-    // Basic check if user is logged in
-    // However, apiInstance interceptors usually handle auth headers
-    const res = await apiInstance.get(`user/profile/`);
     const formdata = new FormData();
-    console.log(profileData.image);
-    console.log(imagePreview);
 
-    // Only append image if it's a file (newly uploaded) or explicitly changed if logic requires
-    // But basic logic: check if it's the same string as fetched url, if so don't upload
-    if (profileData.image && profileData.image !== res.data.image) {
-      // If profileData.image is a File object, append it
-      if (profileData.image instanceof File) {
-        formdata.append("image", profileData.image);
-      }
+    // Only append image if it's a File object (newly uploaded)
+    if (profileData.image instanceof File) {
+      formdata.append("image", profileData.image);
     }
 
-    formdata.append("full_name", profileData.full_name);
-    formdata.append("about", profileData.about);
-    formdata.append("country", profileData.country);
-    formdata.append("bio", profileData.bio);
+    // Sanitize data before appending
+    formdata.append("full_name", profileData.full_name || "");
+    formdata.append("about", profileData.about || "");
+    formdata.append("country", profileData.country || "");
+    formdata.append("bio", profileData.bio || "");
 
     try {
-      await apiInstance.patch(`user/profile/`, formdata, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await apiInstance.patch(`user/profile/`, formdata);
+      fetchProfile();
       Toast("success", t("profile.profileUpdated"));
     } catch (error) {
       console.error(error);
+      if (error.response?.status === 401) {
+        Toast("error", "Session expired. Please login again.");
+      } else {
+        Toast("error", "Failed to update profile.");
+      }
     }
   };
 
@@ -109,7 +103,18 @@ function Profile() {
                   <div className="d-lg-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center mb-4 mb-lg-0">
                       <img
-                        src={imagePreview || profileData.image}
+                        src={
+                          imagePreview ||
+                          (typeof profileData.image === "string" &&
+                          profileData.image &&
+                          !profileData.image.includes("default-user")
+                            ? profileData.image
+                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                profileData.fullName ||
+                                  profileData.full_name ||
+                                  "User",
+                              )}&background=random&color=fff&size=128`)
+                        }
                         id="img-uploaded"
                         className="avatar-xl rounded-circle"
                         alt="avatar"
@@ -118,6 +123,14 @@ function Profile() {
                           height: "100px",
                           borderRadius: "50%",
                           objectFit: "cover",
+                        }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            profileData.fullName ||
+                              profileData.full_name ||
+                              "User",
+                          )}&background=random&color=fff&size=128`;
                         }}
                       />
                       <div className="ms-3">

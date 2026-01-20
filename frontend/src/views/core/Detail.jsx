@@ -14,7 +14,7 @@ import remarkGfm from "remark-gfm";
 
 const baseURL = apiInstance.defaults.baseURL.replace("/api/v1", "");
 
-const CommentItem = ({ comment, t, i18n, handleReply }) => {
+const CommentItem = ({ comment, t, i18n, handleReply, postAuthorEmail }) => {
   const [translatedText, setTranslatedText] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslated, setIsTranslated] = useState(false);
@@ -49,83 +49,124 @@ const CommentItem = ({ comment, t, i18n, handleReply }) => {
     }
   };
 
+  const isAuthor = postAuthorEmail && comment.email === postAuthorEmail;
+
   return (
     <div
-      className={`d-flex ${comment.parent ? "ms-5 border-start ps-3" : ""} bg-light p-3 mb-3 rounded flex-column`}
+      className={`d-flex ${comment.parent ? "ms-5 border-start ps-3" : ""} bg-light p-3 mb-3 rounded`}
     >
-      <div className="d-flex justify-content-between">
-        <div className="mb-2">
-          <h5 className="m-0">{comment?.name}</h5>
-          <span className="me-3 small text-muted">
-            {Moment(comment?.date, i18n.language)}
-          </span>
-        </div>
-        <button
-          onClick={() => handleReply(comment.id, comment.name)}
-          className="btn btn-sm btn-link text-decoration-none small"
-        >
-          <i className="fas fa-reply me-1"></i>{" "}
-          {t("detail.reply", { defaultValue: "Reply" })}
-        </button>
+      {/* Avatar Column */}
+      <div className="flex-shrink-0 me-3">
+        <img
+          className="rounded-circle"
+          src={
+            comment.profile_image
+              ? comment.profile_image
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  comment.name || "User",
+                )}&background=random&color=fff&size=128`
+          }
+          alt={comment.name}
+          style={{ width: "40px", height: "40px", objectFit: "cover" }}
+          title={comment.name} // Simple tooltip
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              comment.name || "User",
+            )}&background=random&color=fff&size=128`;
+          }}
+        />
       </div>
 
-      <div className={`fw-bold mb-2 ${isExpanded ? "" : "line-clamp-5"}`}>
-        {isTranslated ? (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {translatedText}
-          </ReactMarkdown>
-        ) : (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {comment?.comment}
-          </ReactMarkdown>
+      {/* Content Column */}
+      <div className="flex-grow-1">
+        <div className="d-flex justify-content-between">
+          <div className="mb-2">
+            <h5 className="m-0 d-flex align-items-center">
+              {comment?.name}
+              {isAuthor && (
+                <span
+                  className="badge bg-primary ms-2"
+                  style={{ fontSize: "0.65rem", padding: "0.35em 0.65em" }}
+                  title="Author"
+                >
+                  <i className="fas fa-pen-nib me-1"></i>
+                  {t("detail.author", "Tác giả")}
+                </span>
+              )}
+            </h5>
+            <span className="me-3 small text-muted">
+              {Moment(comment?.date, i18n.language)}
+            </span>
+          </div>
+          <button
+            onClick={() => handleReply(comment.id, comment.name)}
+            className="btn btn-sm btn-link text-decoration-none small"
+          >
+            <i className="fas fa-reply me-1"></i>{" "}
+            {t("detail.reply", { defaultValue: "Reply" })}
+          </button>
+        </div>
+
+        <div className={`fw-bold mb-2 ${isExpanded ? "" : "line-clamp-5"}`}>
+          {isTranslated ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {translatedText}
+            </ReactMarkdown>
+          ) : (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {comment?.comment}
+            </ReactMarkdown>
+          )}
+        </div>
+        {((isTranslated && translatedText?.length > 300) ||
+          (!isTranslated && comment?.comment?.length > 300)) && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="btn btn-link p-0 mb-2 text-decoration-none small"
+            style={{ fontSize: "0.9rem" }}
+          >
+            {isExpanded
+              ? t("dashboard.showLess", "Rút gọn")
+              : t("dashboard.showMore", "Xem thêm")}
+          </button>
+        )}
+
+        {/* Translation Button */}
+        <button
+          onClick={handleTranslateComment}
+          className="btn btn-sm btn-link text-decoration-none p-0 mb-2 text-start"
+          style={{ fontSize: "0.85rem", color: "#6c757d" }}
+          disabled={isTranslating}
+        >
+          {isTranslating ? (
+            <span>
+              <i className="fas fa-spinner fa-spin me-1"></i>{" "}
+              {t("detail.translating", "Translating...")}
+            </span>
+          ) : isTranslated ? (
+            t("detail.seeOriginal", "See Original")
+          ) : (
+            t("detail.seeTranslation", "See Translation")
+          )}
+        </button>
+
+        {/* Nested Replies */}
+        {comment.reply_set && comment.reply_set.length > 0 && (
+          <div className="mt-3">
+            {comment.reply_set.map((reply) => (
+              <CommentItem
+                key={reply.id}
+                comment={reply}
+                t={t}
+                i18n={i18n}
+                handleReply={handleReply}
+                postAuthorEmail={postAuthorEmail}
+              />
+            ))}
+          </div>
         )}
       </div>
-      {((isTranslated && translatedText?.length > 300) ||
-        (!isTranslated && comment?.comment?.length > 300)) && (
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="btn btn-link p-0 mb-2 text-decoration-none small"
-          style={{ fontSize: "0.9rem" }}
-        >
-          {isExpanded
-            ? t("dashboard.showLess", "Rút gọn")
-            : t("dashboard.showMore", "Xem thêm")}
-        </button>
-      )}
-
-      {/* Translation Button */}
-      <button
-        onClick={handleTranslateComment}
-        className="btn btn-sm btn-link text-decoration-none p-0 mb-2 text-start"
-        style={{ fontSize: "0.85rem", color: "#6c757d" }}
-        disabled={isTranslating}
-      >
-        {isTranslating ? (
-          <span>
-            <i className="fas fa-spinner fa-spin me-1"></i>{" "}
-            {t("detail.translating", "Translating...")}
-          </span>
-        ) : isTranslated ? (
-          t("detail.seeOriginal", "See Original")
-        ) : (
-          t("detail.seeTranslation", "See Translation")
-        )}
-      </button>
-
-      {/* Nested Replies */}
-      {comment.reply_set && comment.reply_set.length > 0 && (
-        <div className="mt-3">
-          {comment.reply_set.map((reply) => (
-            <CommentItem
-              key={reply.id}
-              comment={reply}
-              t={t}
-              i18n={i18n}
-              handleReply={handleReply}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 };
@@ -737,6 +778,7 @@ function Detail() {
                     t={t}
                     i18n={i18n}
                     handleReply={handleReply}
+                    postAuthorEmail={post?.user?.email}
                   />
                 ))}
               </div>

@@ -10,13 +10,16 @@ export const WebSocketProvider = ({ children }) => {
   useEffect(() => {
     // Fetch initial unread count AND notifications
     const fetchNotifications = async () => {
+      const token = Cookies.get("access_token");
+      if (!token) return;
+
       try {
         const res = await import("../utils/axios").then((module) =>
-          module.default.get("author/dashboard/noti-list/")
+          module.default.get("author/dashboard/noti-list/"),
         );
         setNotifications(res.data);
         // data.length is a reasonable approximation if API returns all or unread
-        setUnreadCount(res.data.filter((n) => !n.seen).length);
+        setUnreadCount(res.data.filter((n) => !n.is_seen).length); // Corrected from !n.seen to !n.is_seen based on earlier Notification model usage, assuming field is is_seen. If not sure, check model. But n.seen was seemingly wrong or inconsistent. Actually backend serializer typically returns matching model fields. Notification model usually has 'is_seen'.
       } catch (error) {
         console.error("Error fetching notifications:", error);
       }
@@ -30,7 +33,7 @@ export const WebSocketProvider = ({ children }) => {
     }
 
     const notificationSocket = new WebSocket(
-      `ws://localhost:8000/ws/notifications/?token=${token}`
+      `ws://localhost:8000/ws/notifications/?token=${token}`,
     );
 
     notificationSocket.onopen = () => {

@@ -17,6 +17,7 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -125,6 +126,7 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = api_serializer.RegisterSerializer
 
 class ProfileView(generics.RetrieveUpdateAPIView):
+    parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated]
     serializer_class = api_serializer.ProfileSerializer
     def get_object(self):

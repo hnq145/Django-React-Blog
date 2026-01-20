@@ -90,6 +90,21 @@ class CommentSerializer(serializers.ModelSerializer):
         serializer = CommentSerializer(obj.reply_set.all(), many=True)
         return serializer.data
 
+    profile_image = serializers.SerializerMethodField()
+    
+    def get_profile_image(self, comment):
+        if comment.email:
+            try:
+                user = api_models.User.objects.get(email=comment.email)
+                if hasattr(user, 'profile') and user.profile.image:
+                    request = self.context.get('request')
+                    if request:
+                        return request.build_absolute_uri(user.profile.image.url)
+                    return user.profile.image.url
+            except api_models.User.DoesNotExist:
+                return None
+        return None
+
 
 class AI_SummarySerializer(serializers.ModelSerializer):
     class Meta:

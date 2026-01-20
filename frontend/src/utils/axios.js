@@ -21,11 +21,15 @@ apiInstance.interceptors.request.use(
     if (access_token) {
       config.headers.Authorization = `Bearer ${access_token}`;
     }
+    // If data is FormData, let browser set Content-Type with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
     return config;
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 apiInstance.interceptors.response.use(
@@ -52,7 +56,7 @@ apiInstance.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiInstance;

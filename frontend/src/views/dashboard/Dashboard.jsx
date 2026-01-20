@@ -45,7 +45,9 @@ const DashboardCommentItem = ({ c, t, i18n }) => {
           <div className="avatar avatar-lg flex-shrink-0">
             <img
               className="avatar-img"
-              src="https://media.istockphoto.com/id/1337144146/vector/default-avatar-profile-icon-vector.jpg?s=612x612&w=0&k=20&c=BIbFwuv7FxTWbv5S3vJ6bkwyBfeD8oVl8Q98Xrmof50="
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                c.name || "User",
+              )}&background=random&color=fff&size=128`}
               style={{
                 width: "50px",
                 height: "50px",
@@ -53,6 +55,12 @@ const DashboardCommentItem = ({ c, t, i18n }) => {
                 borderRadius: "50%",
               }}
               alt="avatar"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  c.name || "User",
+                )}&background=random&color=fff&size=128`;
+              }}
             />
           </div>
           <div className="ms-3 w-100">
