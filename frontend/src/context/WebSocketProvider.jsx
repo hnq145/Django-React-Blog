@@ -45,9 +45,27 @@ export const WebSocketProvider = ({ children }) => {
       console.log("Notification received:", data);
 
       if (data.type === "notification") {
-        setNotifications((prev) => [data.message, ...prev]);
+        const noti = data.message;
+        let title = "Thông báo mới";
+        let message = "Bạn có thông báo mới!";
+
+        if (noti.sender) {
+          const senderName = noti.sender.full_name || noti.sender.username;
+          if (noti.type === "Like") {
+            title = "Lượt thích mới";
+            message = `${senderName} đã thích bài viết: ${noti.post?.title}`;
+          } else if (noti.type === "Comment") {
+            title = "Bình luận mới";
+            message = `${senderName} đã bình luận bài viết: ${noti.post?.title}`;
+          } else if (noti.type === "Follow") {
+            title = "Người theo dõi mới";
+            message = `${senderName} đã bắt đầu theo dõi bạn.`;
+          }
+        }
+
+        setNotifications((prev) => [noti, ...prev]);
         setUnreadCount((prev) => prev + 1);
-        Toast("info", "Bạn có thông báo mới!", "New notification!");
+        Toast("info", message, title);
       }
     };
 

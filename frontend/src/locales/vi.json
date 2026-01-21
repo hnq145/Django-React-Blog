@@ -72,7 +72,8 @@
     "oldest": "Cũ nhất",
     "aToZ": "A-Z",
     "zToA": "Z-A",
-    "sortBy": "Sắp xếp theo"
+    "sortBy": "Sắp xếp theo",
+    "noUsersFound": "Không tìm thấy người dùng nào."
   },
   "login": {
     "signIn": "Đăng nhập",
@@ -271,11 +272,13 @@
     "notifications": "Thông báo",
     "manageNotifications": "Quản lý tất cả các thông báo của bạn từ đây",
     "newLike": "Lượt thích mới",
-    "likedPost": "Ai đó vừa thích bài viết của bạn",
+    "likedPost": "Đã thích bài viết của bạn",
     "newComment": "Bình luận mới",
-    "commentedPost": "Ai đó vừa bình luận về bài viết của bạn",
-    "newBookmark": "Dấu trang mới",
-    "bookmarkedPost": "Ai đó vừa đánh dấu bài viết của bạn",
+    "commentedPost": "Đã bình luận bài viết của bạn",
+    "newBookmark": "Đã lưu bài viết",
+    "bookmarkedPost": "Đã lưu bài viết của bạn",
+    "newFollower": "Người theo dõi mới",
+    "startedFollowing": "đã bắt đầu theo dõi bạn.",
     "date": "Ngày",
     "markAsSeen": "Đánh dấu là đã xem",
     "noNotifications": "Chưa có thông báo nào",
@@ -313,7 +316,8 @@
     "passwordsDoNotMatch": "Mật khẩu không khớp.",
     "passwordChangedSuccess": "Đổi mật khẩu thành công.",
     "wrongOldPassword": "Mật khẩu cũ không đúng.",
-    "passwordChangeFailed": "Đổi mật khẩu thất bại."
+    "passwordChangeFailed": "Đổi mật khẩu thất bại.",
+    "changeCover": "Thay đổi ảnh bìa"
   },
   "detail": {
     "lifestyle": "Phong cách sống",
@@ -390,5 +394,20 @@
     "profile": "Hồ sơ",
     "logout": "Đăng xuất",
     "author": "Tác giả"
+  },
+  "search": {
+    "placeholder": "Nhập để tìm kiếm...",
+    "noResults": "Không tìm thấy kết quả cho \"{{query}}\"",
+    "startTyping": "Nhập từ khóa để tìm kiếm...",
+    "articles": "Bài viết",
+    "people": "Mọi người"
+  },
+  "chat": {
+    "messages": "Tin nhắn",
+    "you": "Bạn",
+    "noContacts": "Chưa có cuộc trò chuyện nào.",
+    "welcome": "Chào mừng đến với Tin nhắn",
+    "selectContact": "Chọn một cuộc trò chuyện từ danh sách để bắt đầu nhắn tin.",
+    "typeMessage": "Nhập tin nhắn..."
   }
 }

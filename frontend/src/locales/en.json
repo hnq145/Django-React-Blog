@@ -69,7 +69,8 @@
     "oldest": "Oldest",
     "aToZ": "A-Z",
     "zToA": "Z-A",
-    "sortBy": "Sort By"
+    "sortBy": "Sort By",
+    "noUsersFound": "No users found."
   },
   "login": {
     "signIn": "Sign in",
@@ -247,7 +248,8 @@
     "profileUpdated": "Profile Updated Successfully",
     "enterFirstName": "Please enter first name.",
     "enterLastName": "Please enter last name.",
-    "chooseCountry": "Please choose country."
+    "chooseCountry": "Please choose country.",
+    "changeCover": "Change Cover"
   },
   "comments": {
     "comments": "Comments",
@@ -271,7 +273,9 @@
     "date": "Date",
     "markAsSeen": "Mark as Seen",
     "noNotifications": "No notifications yet",
-    "notificationSeen": "Notification seen"
+    "notificationSeen": "Notification seen",
+    "newFollower": "New Follower",
+    "startedFollowing": "started following you."
   },
   "detail": {
     "lifestyle": "Lifestyle",
@@ -337,5 +341,20 @@
     "profile": "Profile",
     "logout": "Logout",
     "author": "Author"
+  },
+  "search": {
+    "placeholder": "Type to search...",
+    "noResults": "No results found for \"{{query}}\"",
+    "startTyping": "Start typing to search...",
+    "articles": "Articles",
+    "people": "People"
+  },
+  "chat": {
+    "messages": "Messages",
+    "you": "You",
+    "noContacts": "No conversations yet.",
+    "welcome": "Welcome to Messages",
+    "selectContact": "Select a conversation from the sidebar to all start chatting.",
+    "typeMessage": "Type a message..."
   }
 }

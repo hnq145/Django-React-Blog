@@ -7,7 +7,9 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 from rest_framework import status
 from rest_framework.decorators import api_view, APIView
@@ -443,3 +445,133 @@ class DashboardCategoryUpdateDeleteAPIView(generics.RetrieveUpdateDestroyAPIView
     serializer_class = api_serializer.CategorySerializer
     permission_classes = [IsAuthenticated]
     queryset = api_models.Category.objects.all()
+
+class UserFollowersListAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.UserSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        user = get_object_or_404(api_models.User, id=user_id)
+        followers_ids = api_models.Follow.objects.filter(following=user).values_list('follower_id', flat=True)
+        return api_models.User.objects.filter(id__in=followers_ids)
+
+class UserFollowingListAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.UserSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        user = get_object_or_404(api_models.User, id=user_id)
+        following_ids = api_models.Follow.objects.filter(follower=user).values_list('following_id', flat=True)
+        return api_models.User.objects.filter(id__in=following_ids)
+
+class UserSearchAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.UserSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        query = self.request.query_params.get("q")
+        if query:
+            return api_models.User.objects.filter(
+                Q(username__icontains=query) | 
+                Q(full_name__icontains=query) | 
+                Q(email__icontains=query)
+            )
+        return api_models.User.objects.none()
+
+class SendMessageAPIView(generics.CreateAPIView):
+    permission_classes = [AllowAny] 
+    serializer_class = api_serializer.ChatMessageSerializer
+
+    def create(self, request, *args, **kwargs):
+        sender_id = request.data.get('sender_id')
+        receiver_id = request.data.get('receiver_id')
+        message = request.data.get('message')
+
+        sender = api_models.User.objects.get(id=sender_id)
+        receiver = api_models.User.objects.get(id=receiver_id)
+
+        chat_message = api_models.ChatMessage.objects.create(
+            sender=sender,
+            receiver=receiver,
+            message=message,
+            is_read=False
+        )
+        
+        # Realtime Notification via Channels
+        channel_layer = get_channel_layer()
+        # Message to receiver
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{receiver.id}",
+            {
+                "type": "chat_message",
+                "message": api_serializer.ChatMessageSerializer(chat_message).data
+            }
+        )
+        # Message to sender
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{sender.id}",
+            {
+                "type": "chat_message",
+                "message": api_serializer.ChatMessageSerializer(chat_message).data
+            }
+        )
+        
+        return Response(api_serializer.ChatMessageSerializer(chat_message).data, status=status.HTTP_201_CREATED)
+
+class GetMessagesAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.ChatMessageSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        sender_id = self.kwargs['sender_id']
+        receiver_id = self.kwargs['receiver_id']
+        
+        messages = api_models.ChatMessage.objects.filter(
+            sender__id=sender_id, receiver__id=receiver_id
+        ) | api_models.ChatMessage.objects.filter(
+            sender__id=receiver_id, receiver__id=sender_id
+        )
+        
+        return messages.order_by('date')
+
+class InboxAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.ChatMessageSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        messages = api_models.ChatMessage.objects.filter(
+            Q(sender__id=user_id) | Q(receiver__id=user_id)
+        )
+        return messages.order_by("-date")
+        
+    def list(self, request, *args, **kwargs):
+        user_id = self.kwargs['user_id']
+        messages = self.get_queryset()
+        
+        partners = []
+        conversation_map = {}
+        
+        for msg in messages:
+            if msg.sender.id == int(user_id):
+                partner = msg.receiver
+            else:
+                partner = msg.sender
+                
+            if partner.id not in conversation_map:
+                conversation_map[partner.id] = {
+                    'partner': partner,
+                    'latest_message': msg
+                }
+        
+        data = []
+        for partner_id, item in conversation_map.items():
+            partner_profile = api_serializer.ProfileSerializer(item['partner'].profile, context={'request': request}).data
+            data.append({
+                'partner': partner_profile,
+                'latest_message': api_serializer.ChatMessageSerializer(item['latest_message']).data
+            })
+            
+        return Response(data)

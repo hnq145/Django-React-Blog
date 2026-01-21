@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
 import { useParams } from "react-router-dom";
@@ -12,6 +12,7 @@ import "moment/locale/en-gb";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuthStore } from "../../store/auth";
+import { useImageContext } from "../../context/ImageContext";
 
 const baseURL = apiInstance.defaults.baseURL.replace("/api/v1", "");
 
@@ -95,6 +96,19 @@ const CommentItem = ({ comment, t, i18n, handleReply, postAuthorEmail }) => {
                   {t("detail.author", "Tác giả")}
                 </span>
               )}
+              {comment?.badges?.map((badge, idx) => (
+                <span
+                  key={idx}
+                  className="badge bg-secondary ms-1"
+                  style={{ fontSize: "0.65rem", padding: "0.35em 0.65em" }}
+                  title={badge.description || badge.name}
+                >
+                  {badge.icon && badge.icon.startsWith("fa") ? (
+                    <i className={`${badge.icon} me-1`}></i>
+                  ) : null}
+                  {badge.name}
+                </span>
+              ))}
             </h5>
             <span className="me-3 small text-muted">
               {Moment(comment?.date, i18n.language)}
@@ -174,7 +188,8 @@ const CommentItem = ({ comment, t, i18n, handleReply, postAuthorEmail }) => {
 
 function Detail() {
   const { t, i18n } = useTranslation();
-  const [post, setPost] = useState({});
+  const { openImageViewer } = useImageContext();
+  const [post, setPost] = useState(null);
   const [tags, setTags] = useState([]);
   const [allComments, setAllComments] = useState([]);
   const [commentPagination, setCommentPagination] = useState({
@@ -293,9 +308,7 @@ function Detail() {
   }, [fetchPost, commentSortOrder]);
 
   useEffect(() => {
-    if (!post.id) {
-      return;
-    }
+    if (!post?.id) return;
 
     const commentSocket = new WebSocket(
       `ws://localhost:8000/ws/posts/${post.id}/comments/`,
@@ -324,7 +337,7 @@ function Detail() {
     return () => {
       commentSocket.close();
     };
-  }, [post.id, commentSortOrder, fetchPost]);
+  }, [post?.id, commentSortOrder, fetchPost]);
 
   const fetchUserSuggestions = useCallback(async (query) => {
     if (!query) {
@@ -401,6 +414,7 @@ function Detail() {
   // Reading Progress Logic
   const [readingProgress, setReadingProgress] = useState(0);
   const [showAiChat, setShowAiChat] = useState(false);
+  const replyFormRef = React.useRef(null);
 
   const scrollListener = () => {
     const totalHeight =
@@ -420,9 +434,16 @@ function Detail() {
       parent: commentId,
       comment: `@${name} `,
     });
-    // Scroll to comment form
-    const form = document.querySelector("form");
-    if (form) form.scrollIntoView({ behavior: "smooth" });
+    // Scroll to reply form
+    if (replyFormRef.current) {
+      replyFormRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      // Optional: Focus textarea
+      const textarea = replyFormRef.current.querySelector("textarea");
+      if (textarea) textarea.focus();
+    }
   };
 
   // ... (CommentItem removed from here)
@@ -559,6 +580,20 @@ function Detail() {
     fetchPost(commentSortOrder, page);
   };
 
+  if (!post) {
+    return (
+      <div className="container mt-5">
+        <div className="row justify-content-center">
+          <div className="col-12 text-center py-5">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Header />
@@ -587,7 +622,9 @@ function Detail() {
                 {post.category?.title || post.category?.name
                   ? t(
                       `category.${(
-                        post.category?.title || post.category?.name
+                        post.category?.title ||
+                        post.category?.name ||
+                        ""
                       ).toLowerCase()}`,
                       post.category?.title || post.category?.name,
                     )
@@ -648,6 +685,7 @@ function Detail() {
                         height: "100px",
                         objectFit: "cover",
                         borderRadius: "50%",
+                        cursor: "pointer",
                       }}
                       src={
                         post?.profile?.image &&
@@ -670,6 +708,16 @@ function Detail() {
                             "User",
                         )}&background=random&color=fff&size=128`;
                       }}
+                      onClick={() =>
+                        openImageViewer(
+                          post?.profile?.image &&
+                            !post?.profile?.image.includes("default-user")
+                            ? post?.profile?.image?.startsWith("http")
+                              ? post?.profile?.image
+                              : `${baseURL}${post?.profile?.image}`
+                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(post?.user?.full_name || post?.user?.username || "User")}&background=random&color=fff&size=128`,
+                        )
+                      }
                     />
                   </div>
                   <a
@@ -698,13 +746,10 @@ function Detail() {
                                 : t("profile.unfollow", "Unfollowed"),
                             );
                             // Optimistic Update or Refresh
-                            setPost((prev) => ({
-                              ...prev,
-                              is_following: !prev.is_following,
-                            }));
+                            fetchPost(commentSortOrder);
                           } catch (error) {
                             console.error(error);
-                            Toast("error", "Error following user");
+                            Toast("error", "Error updating follow status");
                           }
                         }}
                       >
@@ -716,7 +761,7 @@ function Detail() {
                         ) : (
                           <>
                             <i className="fas fa-user-plus me-1"></i>{" "}
-                            {t("profile.follow", "Follow")}
+                            {t("notification.followed_you", "Follow")}
                           </>
                         )}
                       </button>
@@ -725,17 +770,16 @@ function Detail() {
                   <p>{post?.profile?.bio || ""}</p>
                 </div>
 
-                <hr className="d-none d-lg-block " />
-
-                <ul className="list-inline list-unstyled">
+                <hr />
+                <ul className="list-inline list-unstyled text-center">
                   <li className="list-inline-item d-lg-flex align-items-center my-lg-2 text-start">
                     <div
                       className="d-inline-flex justify-content-center align-items-center me-2"
                       style={{ width: "30px" }}
                     >
-                      <i className="fas fa-calendar fa-fw"></i>
+                      <i className="fas fa-calendar-alt fa-fw" />
                     </div>
-                    {Moment(post?.date, i18n.language)}
+                    {Moment(post.date, i18n.language)}
                   </li>
                   <li className="list-inline-item d-lg-flex align-items-center my-lg-2 text-start">
                     <div
@@ -745,7 +789,7 @@ function Detail() {
                       <i className="fas fa-heart fa-fw" />
                     </div>
                     <span>
-                      {post?.likes?.length} {t("detail.likes")}
+                      {post.likes?.length || 0} {t("detail.likes")}
                     </span>
                   </li>
                   <li className="list-inline-item d-lg-flex align-items-center my-lg-2 text-start">
@@ -909,6 +953,8 @@ function Detail() {
                     src={post.image}
                     alt={displayPost.title}
                     className="img-fluid rounded"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => openImageViewer(post.image)}
                   />
                 </div>
               )}
@@ -917,6 +963,11 @@ function Detail() {
                 className="content-body"
                 style={{ fontSize: "1.1rem", lineHeight: "1.8" }}
                 dangerouslySetInnerHTML={{ __html: displayPost.description }}
+                onClick={(e) => {
+                  if (e.target.tagName === "IMG") {
+                    openImageViewer(e.target.src);
+                  }
+                }}
               />
 
               {/* AI Summary Section */}
@@ -1120,6 +1171,7 @@ function Detail() {
                   </div>
                 )}
                 <form
+                  ref={replyFormRef}
                   className="row g-3 mt-2"
                   onSubmit={handleCreateCommentSubmit}
                 >

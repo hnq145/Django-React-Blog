@@ -9,10 +9,13 @@ import Moment from "../../plugin/Moment";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
+import UserListModal from "../partials/UserListModal";
+import { useImageContext } from "../../context/ImageContext";
 
 function Profile() {
   const [profileData, setProfileData] = useState({
     image: null,
+    cover_image: null,
     full_name: "",
     about: "",
     bio: "",
@@ -24,8 +27,10 @@ function Profile() {
   const loggedInUserId = useUserData()?.user_id; // Rename to avoid confusion with param
   // If no userId param, or it matches logged in user, it is own profile
   const isOwnProfile = !userId || (loggedInUserId && userId == loggedInUserId);
+  const { openImageViewer } = useImageContext();
 
   const [imagePreview, setImagePreview] = useState("");
+  const [coverPreview, setCoverPreview] = useState("");
   const { t } = useTranslation();
 
   const fetchProfile = useCallback(async () => {
@@ -38,6 +43,9 @@ function Profile() {
       setProfileData(response.data);
       if (response.data.image) {
         setImagePreview(response.data.image);
+      }
+      if (response.data.cover_image) {
+        setCoverPreview(response.data.cover_image);
       }
 
       // Fetch Author Posts
@@ -56,14 +64,16 @@ function Profile() {
   const handleFileChange = (event) => {
     if (!isOwnProfile) return;
     const selectedFile = event.target.files[0];
+    const name = event.target.name;
     setProfileData({
       ...profileData,
-      [event.target.name]: selectedFile,
+      [name]: selectedFile,
     });
 
     const reader = new FileReader();
     reader.onload = () => {
-      setImagePreview(reader.result);
+      if (name === "image") setImagePreview(reader.result);
+      if (name === "cover_image") setCoverPreview(reader.result);
     };
     if (selectedFile) {
       reader.readAsDataURL(selectedFile);
@@ -83,6 +93,9 @@ function Profile() {
     const formdata = new FormData();
     if (profileData.image instanceof File) {
       formdata.append("image", profileData.image);
+    }
+    if (profileData.cover_image instanceof File) {
+      formdata.append("cover_image", profileData.cover_image);
     }
     formdata.append("full_name", profileData.full_name || "");
     formdata.append("about", profileData.about || "");
@@ -117,6 +130,37 @@ function Profile() {
     new_password: "",
     confirm_new_password: "",
   });
+
+  const [modalConfig, setModalConfig] = useState({
+    show: false,
+    title: "",
+    fetchUrl: "",
+  });
+
+  const handleCloseModal = () =>
+    setModalConfig({ ...modalConfig, show: false });
+
+  const openFollowers = () => {
+    const targetUserId = !isOwnProfile && userId ? userId : loggedInUserId;
+    if (targetUserId) {
+      setModalConfig({
+        show: true,
+        title: t("profile.followers", "Followers"),
+        fetchUrl: `user/followers/${targetUserId}/`,
+      });
+    }
+  };
+
+  const openFollowing = () => {
+    const targetUserId = !isOwnProfile && userId ? userId : loggedInUserId;
+    if (targetUserId) {
+      setModalConfig({
+        show: true,
+        title: t("profile.following", "Following"),
+        fetchUrl: `user/following/${targetUserId}/`,
+      });
+    }
+  };
 
   const handlePasswordChange = (event) => {
     setPasswordData({
@@ -185,26 +229,38 @@ function Profile() {
                     </p>
                   </div>
                   {!isOwnProfile && (
-                    <button
-                      className={`btn ${profileData.is_following ? "btn-outline-danger" : "btn-primary"}`}
-                      onClick={handleFollow}
-                    >
-                      {profileData.is_following ? (
-                        <>
-                          <i className="fas fa-user-minus me-1"></i>{" "}
-                          {t("profile.unfollow", "Hủy theo dõi")}
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-user-plus me-1"></i>{" "}
-                          {t("profile.follow", "Theo dõi")}
-                        </>
-                      )}
-                    </button>
+                    <div className="d-flex gap-2">
+                      <Link
+                        to="/chat/"
+                        state={{ partnerId: profileData?.user?.id }}
+                        className="btn btn-outline-primary"
+                      >
+                        <i className="fas fa-comment"></i>{" "}
+                        {t("profile.message", "Nhắn tin")}
+                      </Link>
+
+                      <button
+                        className={`btn ${profileData.is_following ? "btn-outline-danger" : "btn-primary"}`}
+                        onClick={handleFollow}
+                      >
+                        {profileData.is_following ? (
+                          <>
+                            <i className="fas fa-user-minus me-1"></i>{" "}
+                            {t("profile.unfollow", "Hủy theo dõi")}
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-user-plus me-1"></i>{" "}
+                            {t("profile.follow", "Theo dõi")}
+                          </>
+                        )}
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div className="card-body">
                   {/* Stats Section */}
+
                   <div className="row text-center mb-4">
                     <div className="col-4">
                       <h4 className="fw-bold">{profileData.post_count || 0}</h4>
@@ -212,7 +268,11 @@ function Profile() {
                         {t("profile.posts", "Bài viết")}
                       </span>
                     </div>
-                    <div className="col-4">
+                    <div
+                      className="col-4"
+                      onClick={openFollowers}
+                      style={{ cursor: "pointer" }}
+                    >
                       <h4 className="fw-bold">
                         {profileData.followers_count || 0}
                       </h4>
@@ -220,7 +280,11 @@ function Profile() {
                         {t("profile.followers", "Người theo dõi")}
                       </span>
                     </div>
-                    <div className="col-4">
+                    <div
+                      className="col-4"
+                      onClick={openFollowing}
+                      style={{ cursor: "pointer" }}
+                    >
                       <h4 className="fw-bold">
                         {profileData.following_count || 0}
                       </h4>
@@ -229,37 +293,112 @@ function Profile() {
                       </span>
                     </div>
                   </div>
-                  <div className="d-lg-flex align-items-center justify-content-between">
-                    <div className="d-flex align-items-center mb-4 mb-lg-0">
-                      <img
-                        src={
-                          imagePreview ||
-                          profileData.image ||
-                          `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.full_name || "User")}&background=random&color=fff&size=128`
-                        }
-                        className="avatar-xl rounded-circle"
-                        alt="avatar"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                        }}
-                      />
-                      {isOwnProfile && (
-                        <div className="ms-3">
-                          <h4 className="mb-0">{t("profile.yourAvatar")}</h4>
-                          <p className="mb-0">{t("profile.avatarHelp")}</p>
+                  <div
+                    className="position-relative mb-4 rounded overflow-hidden"
+                    style={{ height: "200px" }}
+                  >
+                    <img
+                      src={
+                        coverPreview ||
+                        profileData.cover_image ||
+                        "https://via.placeholder.com/1200x300?text=Cover+Image"
+                      }
+                      className="w-100 h-100 object-fit-cover"
+                      alt="cover"
+                      style={{ cursor: "pointer" }}
+                      onClick={() =>
+                        openImageViewer(
+                          coverPreview ||
+                            profileData.cover_image ||
+                            "https://via.placeholder.com/1200x300?text=Cover+Image",
+                        )
+                      }
+                    />
+                    {isOwnProfile && (
+                      <div className="position-absolute top-0 end-0 p-3">
+                        <label
+                          className="btn btn-light btn-sm shadow-sm"
+                          style={{ cursor: "pointer" }}
+                        >
+                          <i className="fas fa-camera me-2"></i>
+                          {t("profile.changeCover", "Thay đổi ảnh bìa")}
                           <input
                             type="file"
-                            className="form-control mt-3"
-                            name="image"
+                            name="cover_image"
+                            className="d-none"
                             onChange={handleFileChange}
+                            accept="image/*"
                           />
-                        </div>
-                      )}
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    className="d-lg-flex align-items-center justify-content-between mb-4 mt-n5 position-relative px-4"
+                    style={{ zIndex: 10 }}
+                  >
+                    <div className="d-flex align-items-end">
+                      <div className="position-relative">
+                        <img
+                          src={
+                            imagePreview ||
+                            profileData.image ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.full_name || "User")}&background=random&color=fff&size=128`
+                          }
+                          className="rounded-circle border border-4 border-white shadow bg-white"
+                          alt="avatar"
+                          style={{
+                            width: "120px",
+                            height: "120px",
+                            objectFit: "cover",
+                            cursor: "pointer",
+                          }}
+                          onClick={() =>
+                            openImageViewer(
+                              imagePreview ||
+                                profileData.image ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.full_name || "User")}&background=random&color=fff&size=128`,
+                            )
+                          }
+                        />
+                        {isOwnProfile && (
+                          <label
+                            className="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow-sm border border-light"
+                            style={{
+                              cursor: "pointer",
+                              width: "32px",
+                              height: "32px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <i className="fas fa-camera text-muted small"></i>
+                            <input
+                              type="file"
+                              className="d-none"
+                              name="image"
+                              onChange={handleFileChange}
+                              accept="image/*"
+                            />
+                          </label>
+                        )}
+                      </div>
+
+                      <div className="ms-3 mb-2 text-white text-shadow-sm d-none">
+                        {/* Optional text or name over cover if needed, currently hiding */}
+                      </div>
                     </div>
                   </div>
+
+                  {isOwnProfile && (
+                    <div className="mb-4 px-4">
+                      <small className="text-muted">
+                        {t("profile.avatarHelp")}
+                      </small>
+                    </div>
+                  )}
                   <hr className="my-5" />
 
                   {/* Badges Section */}
@@ -498,6 +637,12 @@ function Profile() {
       </section>
 
       <Footer />
+      <UserListModal
+        show={modalConfig.show}
+        onHide={handleCloseModal}
+        title={modalConfig.title}
+        fetchUrl={modalConfig.fetchUrl}
+      />
     </>
   );
 }

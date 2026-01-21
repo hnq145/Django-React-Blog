@@ -60,6 +60,7 @@ class BadgeSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     image = serializers.FileField(required=False)
+    cover_image = serializers.FileField(required=False)
     badges = BadgeSerializer(many=True, read_only=True)
     followers_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
@@ -68,13 +69,16 @@ class ProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = api_models.Profile
-        fields = ['full_name', 'bio', 'about', 'country', 'facebook', 'twitter', 'image', 'badges', 'followers_count', 'following_count', 'is_following', 'post_count', 'date']
+        fields = ['full_name', 'bio', 'about', 'country', 'facebook', 'twitter', 'image', 'cover_image', 'badges', 'followers_count', 'following_count', 'is_following', 'post_count', 'date']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if instance.image:
             request = self.context.get('request')
             representation['image'] = request.build_absolute_uri(instance.image.url)
+        if instance.cover_image:
+            request = self.context.get('request')
+            representation['cover_image'] = request.build_absolute_uri(instance.cover_image.url)
         return representation
 
     def get_followers_count(self, obj):
@@ -110,9 +114,10 @@ class CategorySerializer(serializers.ModelSerializer):
         return representation
 
 class UserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(read_only=True)
     class Meta:
         model = api_models.User
-        fields = ['id', 'username', 'email', 'full_name']
+        fields = ['id', 'username', 'email', 'full_name', 'profile']
 
 class CommentSerializer(serializers.ModelSerializer):
     reply_set = serializers.SerializerMethodField()
@@ -144,6 +149,21 @@ class CommentSerializer(serializers.ModelSerializer):
                  return request.build_absolute_uri(user.profile.image.url)
              return user.profile.image.url
         return None
+
+    badges = serializers.SerializerMethodField()
+
+    def get_badges(self, comment):
+        user = comment.user
+        # If 'user' is None, try fallback lookup by email (legacy)
+        if not user and comment.email:
+             try:
+                 user = api_models.User.objects.get(email=comment.email)
+             except api_models.User.DoesNotExist:
+                 pass
+        
+        if user and hasattr(user, 'profile'):
+            return BadgeSerializer(user.profile.badges.all(), many=True).data
+        return []
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -260,3 +280,18 @@ class AuthorSerializer(serializers.Serializer):
     def get_is_following(self, obj):
         # obj is assumed to be dict or similar, this might need refinement depending on usage View
         return False
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    receiver_profile = ProfileSerializer(read_only=True, source='receiver.profile')
+    sender_profile = ProfileSerializer(read_only=True, source='sender.profile')
+
+    class Meta:
+        model = api_models.ChatMessage
+        fields = ['id', 'user', 'sender', 'sender_profile', 'receiver', 'receiver_profile', 'message', 'is_read', 'date']
+
+    def __init__(self, *args, **kwargs):
+        super(ChatMessageSerializer, self).__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if request:
+            self.fields['sender_profile'].context['request'] = request
+            self.fields['receiver_profile'].context['request'] = request

@@ -130,6 +130,28 @@ function Notifications() {
                                       </p>
                                     </>
                                   )}
+
+                                  {n.type == "Follow" && (
+                                    <>
+                                      <h4>
+                                        <i className="fas fa-user-plus text-info"></i>{" "}
+                                        {t(
+                                          "notifications.newFollower",
+                                          "Người theo dõi mới",
+                                        )}
+                                      </h4>
+                                      <p className="mt-3">
+                                        <b>
+                                          {n.sender?.full_name ||
+                                            n.sender?.username}
+                                        </b>{" "}
+                                        {t(
+                                          "notifications.startedFollowing",
+                                          "đã bắt đầu theo dõi bạn.",
+                                        )}
+                                      </p>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>

@@ -90,3 +90,39 @@ class CommentConsumer(AsyncWebsocketConsumer):
             'type': 'new_comment',
             'comment': comment
         }))
+
+class ChatConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.room_group_name = None
+
+    async def connect(self):
+        self.user = self.scope.get("user")
+        if not self.user or not self.user.is_authenticated:
+            await self.close()
+            return
+            
+        self.room_group_name = f'chat_{self.user.id}'
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        if self.room_group_name:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
+
+    async def receive(self, text_data):
+        # We handle sending via API, so this might be used for 'typing' status later
+        pass
+
+    async def chat_message(self, event):
+        message = event['message']
+        await self.send(text_data=json.dumps({
+            'type': 'chat_message',
+            'message': message
+        }))
