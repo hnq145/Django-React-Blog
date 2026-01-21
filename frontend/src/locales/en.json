@@ -173,7 +173,8 @@
     "enterTextFirst": "Please enter text first",
     "selectStatus": "Please select a post status",
     "errorCreating": "Error creating post",
-    "postCreatedSuccess": "Post created successfully."
+    "postCreatedSuccess": "Post created successfully.",
+    "enterTags": "Enter tags..."
   },
   "editPost": {
     "editPost": "Edit Blog Post",
@@ -314,6 +315,27 @@
     "entertainment": "Entertainment",
     "lifestyle": "Lifestyle",
     "technology": "Technology",
-    "culture": "Culture"
+    "culture": "Culture",
+    "automotive": "Automotive",
+    "education": "Education",
+    "science": "Science",
+    "politics": "Politics",
+    "business": "Business",
+    "travel": "Travel",
+    "food": "Food",
+    "fashion": "Fashion",
+    "gaming": "Gaming",
+    "music": "Music",
+    "world": "World"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "posts": "Posts",
+    "addPost": "Add Post",
+    "comments": "Comments",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "logout": "Logout",
+    "author": "Author"
   }
 }

@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
+import Sidebar from "../partials/Sidebar";
 import useUserData from "../../plugin/useUserData";
 import apiInstance from "../../utils/axios";
 import Toast from "../../plugin/Toast";
+import Moment from "../../plugin/Moment";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
@@ -16,6 +19,7 @@ function Profile() {
     country: "",
     stats: { posts: 0, followers: 0, following: 0 },
   });
+  const [userPosts, setUserPosts] = useState([]);
   const { userId } = useParams();
   const loggedInUserId = useUserData()?.user_id; // Rename to avoid confusion with param
   // If no userId param, or it matches logged in user, it is own profile
@@ -35,10 +39,19 @@ function Profile() {
       if (response.data.image) {
         setImagePreview(response.data.image);
       }
+
+      // Fetch Author Posts
+      const targetUserId = !isOwnProfile && userId ? userId : loggedInUserId;
+      if (targetUserId) {
+        const postRes = await apiInstance.get(
+          `post/lists/author/${targetUserId}/`,
+        );
+        setUserPosts(postRes.data);
+      }
     } catch (error) {
       console.error(error);
     }
-  }, [isOwnProfile, userId]);
+  }, [isOwnProfile, userId, loggedInUserId]);
 
   const handleFileChange = (event) => {
     if (!isOwnProfile) return;
@@ -99,6 +112,50 @@ function Profile() {
     }
   };
 
+  const [passwordData, setPasswordData] = useState({
+    old_password: "",
+    new_password: "",
+    confirm_new_password: "",
+  });
+
+  const handlePasswordChange = (event) => {
+    setPasswordData({
+      ...passwordData,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  const handlePasswordSubmit = async () => {
+    if (passwordData.new_password !== passwordData.confirm_new_password) {
+      Toast("error", t("profile.passwordsDoNotMatch", "Mật khẩu không khớp"));
+      return;
+    }
+    try {
+      await apiInstance.post(`user/change-password/`, passwordData);
+      Toast(
+        "success",
+        t("profile.passwordChangedSuccess", "Đổi mật khẩu thành công"),
+      );
+      setPasswordData({
+        old_password: "",
+        new_password: "",
+        confirm_new_password: "",
+      });
+    } catch (error) {
+      console.error(error);
+      if (error.response?.data?.old_password) {
+        Toast("error", t("profile.wrongOldPassword", "Mật khẩu cũ không đúng"));
+      } else if (error.response?.data?.new_password) {
+        Toast("error", error.response.data.new_password[0]);
+      } else {
+        Toast(
+          "error",
+          t("profile.passwordChangeFailed", "Đổi mật khẩu thất bại"),
+        );
+      }
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
@@ -109,7 +166,10 @@ function Profile() {
       <section className="pt-5 pb-5">
         <div className="container">
           <div className="row mt-0 mt-md-4">
-            <div className="col-lg-12 col-md-8 col-12">
+            {isOwnProfile && <Sidebar />}
+            <div
+              className={`col-md-8 col-12 ${isOwnProfile ? "col-lg-9" : "col-lg-12"}`}
+            >
               <div className="card">
                 <div className="card-header d-flex justify-content-between align-items-center">
                   <div>
@@ -131,11 +191,13 @@ function Profile() {
                     >
                       {profileData.is_following ? (
                         <>
-                          <i className="fas fa-user-minus me-1"></i> Unfollow
+                          <i className="fas fa-user-minus me-1"></i>{" "}
+                          {t("profile.unfollow", "Hủy theo dõi")}
                         </>
                       ) : (
                         <>
-                          <i className="fas fa-user-plus me-1"></i> Follow
+                          <i className="fas fa-user-plus me-1"></i>{" "}
+                          {t("profile.follow", "Theo dõi")}
                         </>
                       )}
                     </button>
@@ -146,19 +208,25 @@ function Profile() {
                   <div className="row text-center mb-4">
                     <div className="col-4">
                       <h4 className="fw-bold">{profileData.post_count || 0}</h4>
-                      <span className="text-muted">Posts</span>
+                      <span className="text-muted">
+                        {t("profile.posts", "Bài viết")}
+                      </span>
                     </div>
                     <div className="col-4">
                       <h4 className="fw-bold">
                         {profileData.followers_count || 0}
                       </h4>
-                      <span className="text-muted">Followers</span>
+                      <span className="text-muted">
+                        {t("profile.followers", "Người theo dõi")}
+                      </span>
                     </div>
                     <div className="col-4">
                       <h4 className="fw-bold">
                         {profileData.following_count || 0}
                       </h4>
-                      <span className="text-muted">Following</span>
+                      <span className="text-muted">
+                        {t("profile.following", "Đang theo dõi")}
+                      </span>
                     </div>
                   </div>
                   <div className="d-lg-flex align-items-center justify-content-between">
@@ -312,12 +380,123 @@ function Profile() {
                       )}
                     </div>
                   </div>
+
+                  {isOwnProfile && (
+                    <div className="mt-5">
+                      <h4 className="mb-0 fw-bold">
+                        <i className="fas fa-lock me-2"></i>
+                        {t("profile.changePassword", "Đổi mật khẩu")}
+                      </h4>
+                      <p className="mb-4 mt-2">
+                        {t(
+                          "profile.changePasswordDesc",
+                          "Thay đổi mật khẩu tài khoản của bạn.",
+                        )}
+                      </p>
+                      <div className="row gx-3">
+                        <div className="mb-3 col-12 col-md-12">
+                          <label className="form-label">
+                            {t("profile.oldPassword", "Mật khẩu cũ")}
+                          </label>
+                          <input
+                            onChange={handlePasswordChange}
+                            name="old_password"
+                            type="password"
+                            className="form-control"
+                            value={passwordData.old_password}
+                          />
+                        </div>
+                        <div className="mb-3 col-12 col-md-12">
+                          <label className="form-label">
+                            {t("profile.newPassword", "Mật khẩu mới")}
+                          </label>
+                          <input
+                            onChange={handlePasswordChange}
+                            name="new_password"
+                            type="password"
+                            className="form-control"
+                            value={passwordData.new_password}
+                          />
+                        </div>
+                        <div className="mb-3 col-12 col-md-12">
+                          <label className="form-label">
+                            {t(
+                              "profile.confirmPassword",
+                              "Xác nhận mật khẩu mới",
+                            )}
+                          </label>
+                          <input
+                            onChange={handlePasswordChange}
+                            name="confirm_new_password"
+                            type="password"
+                            className="form-control"
+                            value={passwordData.confirm_new_password}
+                          />
+                        </div>
+                        <div className="col-12 mt-4">
+                          <button
+                            onClick={handlePasswordSubmit}
+                            className="btn btn-secondary"
+                            type="button"
+                          >
+                            {t("profile.changePasswordBtn", "Đổi mật khẩu")}{" "}
+                            <i className="fas fa-key"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
+              </div>
+              {/* User Posts Section */}
+              <div className="mt-5">
+                <h3 className="mb-4 fw-bold">
+                  {t("profile.posts", "Bài viết")}
+                </h3>
+                {userPosts?.length > 0 ? (
+                  <div className="row g-4">
+                    {userPosts.map((p) => (
+                      <div className="col-sm-6 col-lg-4" key={p.id}>
+                        <div className="card h-100 border-0 shadow-sm hover-up">
+                          <Link
+                            to={`/post/${p.slug}/`}
+                            className="text-decoration-none text-dark"
+                          >
+                            <img
+                              src={p.image}
+                              className="card-img-top object-fit-cover"
+                              style={{ height: "200px" }}
+                              alt={p.title}
+                            />
+                          </Link>
+                          <div className="card-body">
+                            <h5 className="card-title fw-bold">
+                              <Link
+                                to={`/post/${p.slug}/`}
+                                className="text-decoration-none text-dark"
+                              >
+                                {p.title}
+                              </Link>
+                            </h5>
+                            <p className="card-text text-muted small">
+                              {Moment(p.date)} • {p.view} {t("dashboard.views")}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted">
+                    {t("profile.noPosts", "Chưa có bài viết nào.")}
+                  </p>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
+
       <Footer />
     </>
   );

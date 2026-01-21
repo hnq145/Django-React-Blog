@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
+import Sidebar from "../partials/Sidebar";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -8,6 +9,7 @@ import apiInstance from "../../utils/axios";
 
 import Moment from "../../plugin/Moment";
 import Swal from "sweetalert2";
+import Toast from "../../plugin/Toast";
 
 function Posts() {
   const [allPosts, setAllPosts] = useState([]);
@@ -76,6 +78,22 @@ function Posts() {
     setStatusFilter(e.target.value);
   };
 
+  const handleQuickStatusUpdate = async (postId, newStatus) => {
+    try {
+      await apiInstance.patch(`author/dashboard/post-detail/${postId}/`, {
+        status: newStatus,
+      });
+      Toast("success", t("dashboard.statusUpdated", "Trạng thái đã cập nhật"));
+      fetchPosts();
+    } catch (error) {
+      console.error(error);
+      Toast(
+        "error",
+        t("dashboard.statusUpdateFailed", "Cập nhật trạng thái thất bại"),
+      );
+    }
+  };
+
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
@@ -87,7 +105,8 @@ function Posts() {
       <section className="py-4">
         <div className="container">
           <div className="row g-4">
-            <div className="col-12">
+            <Sidebar />
+            <div className="col-lg-9 col-md-8 col-12">
               <div className="card border bg-transparent rounded-3">
                 <div className="card-header bg-transparent border-bottom p-3">
                   <div className="d-sm-flex justify-content-between align-items-center">
@@ -232,22 +251,69 @@ function Posts() {
                                 )}
                               </td>
                               <td>
-                                <span
-                                  className={`badge bg-opacity-10 ${
-                                    p.status === "Active"
-                                      ? "bg-success text-success"
-                                      : p.status === "Draft"
-                                        ? "bg-warning text-warning"
-                                        : "bg-danger text-danger"
-                                  }`}
-                                >
-                                  {t(
-                                    `status.${p.status
-                                      ?.toLowerCase()
-                                      .replace(" ", "_")}`,
-                                    { defaultValue: p.status },
-                                  )}
-                                </span>
+                                <div className="dropdown">
+                                  <button
+                                    className={`btn btn-sm btn-light dropdown-toggle badge bg-opacity-10 ${
+                                      p.status === "Active"
+                                        ? "bg-success text-success"
+                                        : p.status === "Draft"
+                                          ? "bg-warning text-warning"
+                                          : "bg-danger text-danger"
+                                    }`}
+                                    type="button"
+                                    id={`dropdownMenuButton-${p.id}`}
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                  >
+                                    {t(
+                                      `status.${p.status
+                                        ?.toLowerCase()
+                                        .replace(" ", "_")}`,
+                                      { defaultValue: p.status },
+                                    )}
+                                  </button>
+                                  <ul
+                                    className="dropdown-menu"
+                                    aria-labelledby={`dropdownMenuButton-${p.id}`}
+                                  >
+                                    <li>
+                                      <button
+                                        className="dropdown-item"
+                                        onClick={() =>
+                                          handleQuickStatusUpdate(
+                                            p.id,
+                                            "Active",
+                                          )
+                                        }
+                                      >
+                                        Active
+                                      </button>
+                                    </li>
+                                    <li>
+                                      <button
+                                        className="dropdown-item"
+                                        onClick={() =>
+                                          handleQuickStatusUpdate(p.id, "Draft")
+                                        }
+                                      >
+                                        Draft
+                                      </button>
+                                    </li>
+                                    <li>
+                                      <button
+                                        className="dropdown-item"
+                                        onClick={() =>
+                                          handleQuickStatusUpdate(
+                                            p.id,
+                                            "Disabled",
+                                          )
+                                        }
+                                      >
+                                        Disabled
+                                      </button>
+                                    </li>
+                                  </ul>
+                                </div>
                               </td>
                               <td>
                                 <div className="d-flex gap-2">

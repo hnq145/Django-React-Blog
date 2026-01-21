@@ -144,7 +144,32 @@
     "markAllAsRead": "Đánh dấu tất cả là đã đọc",
     "allNotiSeen": "Đã xem tất cả thông báo",
     "analytics_overview": "Tổng quan phân tích",
-    "counts": "Số lượng"
+    "counts": "Số lượng",
+    "statusUpdated": "Trạng thái đã cập nhật.",
+    "statusUpdateFailed": "Cập nhật trạng thái thất bại.",
+    "confirmDelete": "Bạn có chắc chắn không?",
+    "deleteWarning": "Hành động này không thể hoàn tác!",
+    "deleteConfirm": "Vâng, xóa nó!",
+    "cancel": "Hủy bỏ",
+    "postDeleted": "Bài viết đã được xóa thành công.",
+    "deleteFailed": "Xóa bài viết thất bại.",
+    "topViewedPosts": "Top 5 bài viết xem nhiều nhất",
+    "showLess": "Rút gọn",
+    "showMore": "Xem thêm",
+    "by": "Bởi",
+    "categories": "Danh mục",
+    "addCategory": "Thêm danh mục",
+    "editCategory": "Chỉnh sửa danh mục",
+    "categoryName": "Tên danh mục",
+    "categoryImage": "Hình ảnh",
+    "categoryCreated": "Danh mục mới đã được tạo.",
+    "categoryUpdated": "Danh mục đã được cập nhật.",
+    "postCount": "Số bài viết",
+    "save": "Lưu",
+    "close": "Đóng",
+    "name": "Tên",
+    "error": "Có lỗi xảy ra.",
+    "deleted": "Đã xóa!"
   },
   "addPost": {
     "rewrite": "Viết lại bằng AI",
@@ -178,7 +203,8 @@
     "enterTextFirst": "Vui lòng nhập văn bản trước",
     "selectStatus": "Vui lòng chọn trạng thái bài viết.",
     "errorCreating": "Lỗi khi tạo bài viết",
-    "postCreatedSuccess": "Tạo bài viết thành công."
+    "postCreatedSuccess": "Tạo bài viết thành công.",
+    "enterTags": "Nhập thẻ..."
   },
   "editPost": {
     "editPost": "Chỉnh sửa bài viết Blog",
@@ -277,7 +303,17 @@
     "profileUpdated": "Cập nhật hồ sơ thành công",
     "enterFirstName": "Vui lòng nhập họ và tên.",
     "enterLastName": "Vui lòng nhập họ.",
-    "chooseCountry": "Vui lòng chọn quốc gia."
+    "chooseCountry": "Vui lòng chọn quốc gia.",
+    "changePassword": "Đổi mật khẩu",
+    "changePasswordDesc": "Thay đổi mật khẩu tài khoản của bạn.",
+    "oldPassword": "Mật khẩu cũ",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu mới",
+    "changePasswordBtn": "Đổi mật khẩu",
+    "passwordsDoNotMatch": "Mật khẩu không khớp.",
+    "passwordChangedSuccess": "Đổi mật khẩu thành công.",
+    "wrongOldPassword": "Mật khẩu cũ không đúng.",
+    "passwordChangeFailed": "Đổi mật khẩu thất bại."
   },
   "detail": {
     "lifestyle": "Phong cách sống",
@@ -332,6 +368,27 @@
     "entertainment": "Giải trí",
     "lifestyle": "Lối sống",
     "technology": "Công nghệ",
-    "culture": "Văn hóa"
+    "culture": "Văn hóa",
+    "automotive": "Xe cộ",
+    "education": "Giáo dục",
+    "science": "Khoa học",
+    "politics": "Chính trị",
+    "business": "Kinh doanh",
+    "travel": "Du lịch",
+    "food": "Ẩm thực",
+    "fashion": "Thời trang",
+    "gaming": "Trò chơi",
+    "music": "Âm nhạc",
+    "world": "Thế giới"
+  },
+  "sidebar": {
+    "dashboard": "Bảng điều khiển",
+    "posts": "Bài viết",
+    "addPost": "Thêm bài viết",
+    "comments": "Bình luận",
+    "notifications": "Thông báo",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất",
+    "author": "Tác giả"
   }
 }

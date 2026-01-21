@@ -7,6 +7,7 @@ import Index from "./views/core/Index";
 import Detail from "./views/core/Detail";
 import Search from "./views/core/Search";
 import Category from "./views/core/Category";
+import DashboardCategory from "./views/dashboard/Category";
 import CategoryDetail from "./views/category/CategoryDetail";
 import About from "./views/pages/About";
 import Contact from "./views/pages/Contact";
@@ -65,6 +66,7 @@ function App() {
               <Route path="/edit-post/:id/" element={<EditPost />} />
               <Route path="/comments/" element={<Comments />} />
               <Route path="/notifications/" element={<Notifications />} />
+              <Route path="/categories/" element={<DashboardCategory />} />
               <Route path="/profile/" element={<Profile />} />
               <Route path="/profile/:userId/" element={<Profile />} />
 

@@ -138,5 +138,15 @@
   "common": {
     "someone": "Someone",
     "sortBy": "Sort by"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "posts": "Posts",
+    "addPost": "Add Post",
+    "comments": "Comments",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "logout": "Logout",
+    "author": "Author"
   }
 }

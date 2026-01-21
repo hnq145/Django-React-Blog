@@ -584,10 +584,12 @@ function Detail() {
                 href="#"
                 className="badge bg-primary mb-2 text-decoration-none"
               >
-                {post.category?.title
+                {post.category?.title || post.category?.name
                   ? t(
-                      `category.${post.category.title.toLowerCase()}`,
-                      post.category.title,
+                      `category.${(
+                        post.category?.title || post.category?.name
+                      ).toLowerCase()}`,
+                      post.category?.title || post.category?.name,
                     )
                   : t("category.uncategorized", "Chưa phân loại")}
               </a>

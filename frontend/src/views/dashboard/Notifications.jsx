@@ -12,9 +12,7 @@ function Notifications() {
 
   const fetchNoti = React.useCallback(async () => {
     try {
-      const noti_res = await apiInstance.get(
-        `author/dashboard/noti-list/`
-      );
+      const noti_res = await apiInstance.get(`author/dashboard/noti-list/`);
       setNoti(noti_res.data);
     } catch (error) {
       console.log(error);
@@ -27,10 +25,9 @@ function Notifications() {
 
   const hanleMarkNotiAsSeen = async (notiId) => {
     try {
-      await apiInstance.post(
-        `author/dashboard/noti-mark-seen/`,
-        { noti_id: notiId }
-      );
+      await apiInstance.post(`author/dashboard/noti-mark-seen/`, {
+        noti_id: notiId,
+      });
       fetchNoti();
     } catch (error) {
       console.error(error);
@@ -55,6 +52,33 @@ function Notifications() {
                     </h3>
                     <span>{t("notifications.manageNotifications")}</span>
                   </div>
+                  {noti?.length > 0 && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await apiInstance.post(
+                            `author/dashboard/noti-mark-all-seen/`,
+                          );
+                          fetchNoti();
+                          Toast(
+                            "success",
+                            t(
+                              "dashboard.allNotiSeen",
+                              "Đã xem tất cả thông báo",
+                            ),
+                          );
+                        } catch (e) {
+                          console.error(e);
+                        }
+                      }}
+                      className="btn btn-outline-primary btn-sm"
+                    >
+                      {t(
+                        "notifications.markAllRead",
+                        "Đánh dấu tất cả là đã đọc",
+                      )}
+                    </button>
+                  )}
                 </div>
                 <div className="card-body">
                   <ul className="list-group list-group-flush">
@@ -124,7 +148,8 @@ function Notifications() {
                                   type="button"
                                   onClick={() => hanleMarkNotiAsSeen(n.id)}
                                 >
-                                  {t("notifications.markAsSeen")} <i className="fas fa-check"></i>
+                                  {t("notifications.markAsSeen")}{" "}
+                                  <i className="fas fa-check"></i>
                                 </button>
                               </p>
                             </div>
@@ -133,7 +158,9 @@ function Notifications() {
                       </li>
                     ))}
 
-                    {noti.length < 1 && <p>{t("notifications.noNotifications")}</p>}
+                    {noti.length < 1 && (
+                      <p>{t("notifications.noNotifications")}</p>
+                    )}
                   </ul>
                 </div>
               </div>

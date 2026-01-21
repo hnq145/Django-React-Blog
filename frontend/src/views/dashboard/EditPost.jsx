@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Header from "../partials/Header";
@@ -11,6 +12,7 @@ import useUserData from "../../plugin/useUserData";
 import Toast from "../../plugin/Toast";
 import Swal from "sweetalert2";
 import AIChatAssistant from "../partials/AIChatAssistant";
+import TagInput from "../partials/TagInput";
 import { useAIService } from "../../utils/useAIService";
 
 const Quill = ReactQuill.Quill;
@@ -50,7 +52,7 @@ function EditPost() {
   const navigate = useNavigate();
   const param = useParams();
 
-  const fetchPost = async () => {
+  const fetchPost = useCallback(async () => {
     try {
       const response = await apiInstance.get(
         `author/dashboard/post-detail/${userId}/${param?.id}/`,
@@ -60,7 +62,7 @@ function EditPost() {
     } catch (error) {
       console.error("Failed to fetch post:", error);
     }
-  };
+  }, [userId, param.id]);
 
   const fetchCategory = async () => {
     try {
@@ -76,7 +78,7 @@ function EditPost() {
     if (userId && param.id) {
       fetchPost();
     }
-  }, [userId, param.id]);
+  }, [fetchPost, userId, param.id]);
 
   const handleCreatePostChange = (event) => {
     setEditPost({
@@ -317,7 +319,10 @@ function EditPost() {
                           <option value="">-------------</option>
                           {categoryList?.map((c, index) => (
                             <option key={index} value={c?.id}>
-                              {c?.title}
+                              {t(
+                                `category.${c?.title?.toLowerCase()}`,
+                                c?.title,
+                              )}
                             </option>
                           ))}
                         </select>
@@ -407,19 +412,23 @@ function EditPost() {
                           id=""
                           onChange={handleCreatePostChange}
                         >
-                          <option value="Active">Active</option>
-                          <option value="Draft">Draft</option>
-                          <option value="Disabled">Disabled</option>
+                          <option value="Active">
+                            {t("status.active", "Active")}
+                          </option>
+                          <option value="Draft">
+                            {t("status.draft", "Draft")}
+                          </option>
+                          <option value="Disabled">
+                            {t("status.disabled", "Disabled")}
+                          </option>
                         </select>
                       </div>
                       <label className="form-label">{t("editPost.tag")}</label>
-                      <input
+                      <TagInput
                         value={post?.tags || ""}
-                        onChange={handleCreatePostChange}
-                        name="tags"
-                        className="form-control"
-                        type="text"
-                        placeholder="health, medicine, fitness"
+                        onChange={(newTags) =>
+                          setEditPost({ ...post, tags: newTags })
+                        }
                       />
                     </div>
                   </div>

@@ -3,12 +3,14 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
+import Sidebar from "../partials/Sidebar";
 import { Link, useNavigate } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 import useUserData from "../../plugin/useUserData";
 import Toast from "../../plugin/Toast";
 import Swal from "sweetalert2";
 import AIChatAssistant from "../partials/AIChatAssistant";
+import TagInput from "../partials/TagInput";
 import { useTranslation } from "react-i18next";
 import { useAIService } from "../../utils/useAIService";
 
@@ -123,7 +125,7 @@ function AddPost() {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
       console.log(response.data);
       setIsLoading(false);
@@ -137,7 +139,7 @@ function AddPost() {
       setIsLoading(false);
       Toast(
         "error",
-        error.response?.data?.detail || t("addPost.errorCreating")
+        error.response?.data?.detail || t("addPost.errorCreating"),
       );
     }
   };
@@ -188,7 +190,8 @@ function AddPost() {
       <section className="pt-5 pb-5">
         <div className="container">
           <div className="row mt-0 mt-md-4">
-            <div className="col-lg-12 col-md-8 col-12">
+            <Sidebar />
+            <div className="col-lg-9 col-md-8 col-12">
               <>
                 <section className="py-4 py-lg-6 bg-primary rounded-3">
                   <div className="container">
@@ -251,7 +254,7 @@ function AddPost() {
                               "addPost.generateImagePlaceholder",
                               {
                                 defaultValue: "A futuristic city...",
-                              }
+                              },
                             ),
                             showCancelButton: true,
                             cancelButtonText: t("dashboard.cancel", {
@@ -268,7 +271,7 @@ function AddPost() {
                               const result = await generateContent(
                                 prompt,
                                 "image",
-                                ""
+                                "",
                               );
                               if (result && result.content) {
                                 const base64Response = `data:image/jpeg;base64,${result.content}`;
@@ -280,7 +283,7 @@ function AddPost() {
                                 const file = new File(
                                   [blob],
                                   "ai_generated_thumbnail.jpg",
-                                  { type: "image/jpeg" }
+                                  { type: "image/jpeg" },
                                 );
 
                                 setCreatePost({
@@ -295,7 +298,7 @@ function AddPost() {
                                   t("addPost.thumbnailGenerated", {
                                     defaultValue:
                                       "Thumbnail generated successfully!",
-                                  })
+                                  }),
                                 );
                               }
                             } catch (error) {
@@ -303,7 +306,7 @@ function AddPost() {
                                 "error",
                                 t("addPost.imageGenerationFailed", {
                                   defaultValue: "Failed to generate image",
-                                })
+                                }),
                               );
                             } finally {
                               setIsLoading(false);
@@ -368,7 +371,10 @@ function AddPost() {
                           <option value="">-------------</option>
                           {categoryList?.map((c) => (
                             <option key={c?.id} value={c?.id}>
-                              {c?.title}
+                              {t(
+                                `category.${c?.title?.toLowerCase()}`,
+                                c?.title,
+                              )}
                             </option>
                           ))}
                         </select>
@@ -400,7 +406,7 @@ function AddPost() {
                                 Toast(
                                   "error",
                                   t("addPost.enterTextFirst") ||
-                                    "Please enter text"
+                                    "Please enter text",
                                 );
                                 return;
                               }
@@ -414,7 +420,7 @@ function AddPost() {
                                 const result = await generateContent(
                                   prompt,
                                   "text",
-                                  post.description
+                                  post.description,
                                 );
 
                                 if (result && result.content) {
@@ -427,7 +433,7 @@ function AddPost() {
                                     t("addPost.contentRewritten", {
                                       defaultValue:
                                         "Content rewritten successfully!",
-                                    })
+                                    }),
                                   );
                                 }
                               } catch (error) {
@@ -447,12 +453,11 @@ function AddPost() {
                         <small>{t("addPost.descriptionHelp")}</small>
                       </div>
                       <label className="form-label">{t("addPost.tags")}</label>
-                      <input
-                        onChange={handleCreatePostChange}
-                        name="tags"
-                        className="form-control"
-                        type="text"
-                        placeholder="health, medicine, fitness"
+                      <TagInput
+                        value={post.tags}
+                        onChange={(newTags) =>
+                          setCreatePost({ ...post, tags: newTags })
+                        }
                       />
 
                       <div className="mb-3">
@@ -464,9 +469,15 @@ function AddPost() {
                           name="status"
                           className="form-select"
                         >
-                          <option value="Active">Active</option>
-                          <option value="Draft">Draft</option>
-                          <option value="Disabled">Disabled</option>
+                          <option value="Active">
+                            {t("status.active", "Active")}
+                          </option>
+                          <option value="Draft">
+                            {t("status.draft", "Draft")}
+                          </option>
+                          <option value="Disabled">
+                            {t("status.disabled", "Disabled")}
+                          </option>
                         </select>
                         <small>{t("addPost.categoryHelp")}</small>
                       </div>

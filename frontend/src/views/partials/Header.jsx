@@ -116,6 +116,11 @@ function Header() {
                   </Link>
                 </li>
                 <li>
+                  <Link className="dropdown-item" to="/categories/">
+                    {t("header.categories", "Danh mục")}
+                  </Link>
+                </li>
+                <li>
                   <Link className="dropdown-item" to="/profile/">
                     {t("header.profile")}
                   </Link>

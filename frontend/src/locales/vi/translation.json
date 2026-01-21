@@ -138,5 +138,15 @@
   "common": {
     "someone": "Ai đó",
     "sortBy": "Sắp xếp theo"
+  },
+  "sidebar": {
+    "dashboard": "Bảng điều khiển",
+    "posts": "Bài viết",
+    "addPost": "Thêm bài viết",
+    "comments": "Bình luận",
+    "notifications": "Thông báo",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất",
+    "author": "Tác giả"
   }
 }

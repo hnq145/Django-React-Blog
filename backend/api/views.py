@@ -55,6 +55,23 @@ class UserSearchAPIView(generics.ListAPIView):
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = api_serializer.MyTokenObtainPairSerializer
 
+class ChangePasswordAPIView(generics.GenericAPIView):
+    serializer_class = api_serializer.ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        if not user.check_password(serializer.data.get("old_password")):
+            return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(serializer.data.get("new_password"))
+        user.save()
+
+        return Response({"message": "Password changed successfully."}, status=status.HTTP_200_OK)
+
 # ... (omitted lines) ...
 
 @method_decorator(csrf_exempt, name='dispatch') 
@@ -167,6 +184,13 @@ class PostListAPIView(generics.ListAPIView):
     permission_classes = [AllowAny]
     def get_queryset(self):
         return api_models.Post.objects.filter(status='Active')
+
+class AuthorPostListAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.PostSerializer
+    permission_classes = [AllowAny]
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return api_models.Post.objects.filter(user_id=user_id, status='Active')
 
 class PostDetailAPIView(generics.RetrieveAPIView):
     serializer_class = api_serializer.PostSerializer
@@ -335,6 +359,12 @@ class DashboardMarkNotificationAsSeen(APIView):
          noti.save()
          return Response({'message': 'Notification marked as seen'}, status=status.HTTP_200_OK)
 
+class DashboardMarkAllNotificationsAsSeen(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+         api_models.Notification.objects.filter(user=request.user, seen=False).update(seen=True)
+         return Response({'message': 'All notifications marked as seen'}, status=status.HTTP_200_OK)
+
 class DashboardReplyCommentAPIView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
@@ -403,3 +433,13 @@ class DashboardCommentDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = api_serializer.CommentSerializer
     permission_classes = [IsAuthenticated]
     queryset = api_models.Comment.objects.all()
+
+class DashboardCategoryListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = api_serializer.CategorySerializer
+    permission_classes = [IsAuthenticated]
+    queryset = api_models.Category.objects.all()
+
+class DashboardCategoryUpdateDeleteAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = api_serializer.CategorySerializer
+    permission_classes = [IsAuthenticated]
+    queryset = api_models.Category.objects.all()

@@ -43,6 +43,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return user
 
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, validators=[validate_password])
+    confirm_new_password = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['confirm_new_password']:
+            raise serializers.ValidationError({"new_password": "Password fields didn't match."})
+        return attrs
+
 class BadgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.Badge

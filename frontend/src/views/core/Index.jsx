@@ -349,7 +349,7 @@ function Index() {
                   onClick={() => setFeedType("following")}
                   style={{ cursor: "pointer" }}
                 >
-                  Following
+                  {t("index.following", { defaultValue: "Following" })}
                 </h3>
               )}
             </div>
