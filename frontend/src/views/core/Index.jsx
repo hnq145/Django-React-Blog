@@ -4,6 +4,7 @@ import Footer from "../partials/Footer";
 import { Link } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 import Moment from "../../plugin/Moment";
+import UserHoverCard from "../partials/UserHoverCard";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/auth";
 
@@ -343,15 +344,6 @@ function Index() {
               >
                 {t("index.latest")}
               </h3>
-              {useAuthStore.getState().isLoggedIn() && (
-                <h3
-                  className={`fw-bold m-0 cursor-pointer ${feedType === "following" ? "text-primary" : "text-muted"}`}
-                  onClick={() => setFeedType("following")}
-                  style={{ cursor: "pointer" }}
-                >
-                  {t("index.following", { defaultValue: "Following" })}
-                </h3>
-              )}
             </div>
 
             <div className="d-flex align-items-center">
@@ -556,28 +548,37 @@ function Index() {
                   className="col-md-6 col-lg-3"
                   key={author.id || author.username}
                 >
-                  <div className="card h-100 border-0 shadow-sm p-3 text-center hover-up">
-                    <div
-                      className="position-relative mx-auto mb-3"
-                      style={{ width: "80px", height: "80px" }}
-                    >
-                      {author.image ? (
-                        <img
-                          src={author.image}
-                          className="rounded-circle object-fit-cover w-100 h-100 border border-3 border-light shadow-sm"
-                          alt={author.username}
-                        />
-                      ) : (
-                        <div className="w-100 h-100 rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center border border-3 border-light shadow-sm">
-                          <span className="fs-3 fw-bold text-primary">
-                            {author.username?.[0]?.toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <span className="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-white">
-                        <i className="fas fa-check-circle fa-xs"></i>
-                      </span>
-                    </div>
+                  <div
+                    className="card h-100 border-0 shadow-sm p-3 text-center hover-up"
+                    style={{ overflow: "visible" }}
+                  >
+                    <UserHoverCard userId={author.id}>
+                      <div
+                        className="position-relative mx-auto mb-3"
+                        style={{
+                          width: "80px",
+                          height: "80px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {author.image ? (
+                          <img
+                            src={author.image}
+                            className="rounded-circle object-fit-cover w-100 h-100 border border-3 border-light shadow-sm"
+                            alt={author.username}
+                          />
+                        ) : (
+                          <div className="w-100 h-100 rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center border border-3 border-light shadow-sm">
+                            <span className="fs-3 fw-bold text-primary">
+                              {author.username?.[0]?.toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <span className="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-white">
+                          <i className="fas fa-check-circle fa-xs"></i>
+                        </span>
+                      </div>
+                    </UserHoverCard>
                     <h6 className="fw-bold text-dark mb-1">
                       {author.username}
                     </h6>

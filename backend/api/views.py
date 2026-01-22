@@ -480,6 +480,41 @@ class UserSearchAPIView(generics.ListAPIView):
             )
         return api_models.User.objects.none()
 
+class GlobalSearchAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        query = request.query_params.get("q")
+        if not query:
+             return Response({"posts": [], "users": [], "categories": []}, status=status.HTTP_200_OK)
+
+        posts = api_models.Post.objects.filter(
+            Q(title__icontains=query) | 
+            Q(description__icontains=query) |
+            Q(tags__name__icontains=query) |
+            Q(category__title__icontains=query)
+        , status="Active").distinct()[:10]
+
+        users = api_models.User.objects.filter(
+            Q(username__icontains=query) | 
+            Q(full_name__icontains=query) |
+            Q(email__icontains=query)
+        ).distinct()[:10]
+
+        # Ensure Category model has 'title' or 'name' field. 
+        # Checking serializer: CategorySerializer usually has 'title'.
+        # Let's check Category model. It likely has 'title'. 
+        categories = api_models.Category.objects.filter(
+             title__icontains=query
+        )[:10]
+
+        return Response({
+            "posts": api_serializer.PostSerializer(posts, many=True).data,
+            "users": api_serializer.UserSerializer(users, many=True).data,
+            "categories": api_serializer.CategorySerializer(categories, many=True).data
+        }, status=status.HTTP_200_OK)
+        return api_models.User.objects.none()
+
 class SendMessageAPIView(generics.CreateAPIView):
     permission_classes = [AllowAny] 
     serializer_class = api_serializer.ChatMessageSerializer
@@ -535,6 +570,26 @@ class GetMessagesAPIView(generics.ListAPIView):
         )
         
         return messages.order_by('date')
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        
+        # Mark messages as read
+        # Assumption: The first param in URL (sender_id) is the 'viewer' or 'me', 
+        # and we want to mark messages sent BY the other person (receiver_id) TO me as read.
+        sender_id = self.kwargs['sender_id']
+        receiver_id = self.kwargs['receiver_id']
+        
+        # Messages sent by 'receiver_id' (Partner) to 'sender_id' (Me) that are unread
+        unread_msgs = api_models.ChatMessage.objects.filter(
+            sender__id=receiver_id, 
+            receiver__id=sender_id, 
+            is_read=False
+        )
+        unread_msgs.update(is_read=True)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class InboxAPIView(generics.ListAPIView):
     serializer_class = api_serializer.ChatMessageSerializer

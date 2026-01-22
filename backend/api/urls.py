@@ -12,6 +12,7 @@ urlpatterns = [
   path('user/search/', api_views.UserSearchAPIView.as_view(), name='user_search'),
   path('user/profile/<int:user_id>/', api_views.UserProfileView.as_view(), name='user_public_profile'),
   path('user/follow/', api_views.FollowUserAPIView.as_view(), name='user_follow'),
+  path('global/search/', api_views.GlobalSearchAPIView.as_view(), name='global_search'),
   path('user/followers/<int:user_id>/', api_views.UserFollowersListAPIView.as_view(), name='user_followers'),
   path('user/following/<int:user_id>/', api_views.UserFollowingListAPIView.as_view(), name='user_following'),
 

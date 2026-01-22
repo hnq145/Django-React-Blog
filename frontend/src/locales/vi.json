@@ -32,7 +32,10 @@
     "vietnamese": "Tiếng Việt",
     "markAllRead": "Đánh dấu tất cả là đã đọc",
     "noNotifications": "Không có thông báo nào",
-    "viewAll": "Xem tất cả"
+    "viewAll": "Xem tất cả",
+    "messages": "Tin nhắn",
+    "chats": "Đoạn chat",
+    "seeAll": "Xem tất cả"
   },
   "footer": {
     "rights": "Đã đăng ký bản quyền",
@@ -63,6 +66,7 @@
     "privacy_policy": "chính sách quyền riêng tư",
     "article_badge": "Bài viết",
     "content_creator": "Người sáng tạo nội dung",
+    "following": "Đang theo dõi",
     "explore_topics": "Khám phá tất cả các chủ đề của chúng tôi và tìm những câu chuyện hay nhất dành cho bạn."
   },
   "common": {
@@ -408,6 +412,14 @@
     "noContacts": "Chưa có cuộc trò chuyện nào.",
     "welcome": "Chào mừng đến với Tin nhắn",
     "selectContact": "Chọn một cuộc trò chuyện từ danh sách để bắt đầu nhắn tin.",
-    "typeMessage": "Nhập tin nhắn..."
+    "typeMessage": "Nhập tin nhắn...",
+    "searchInChat": "Tìm trong cuộc hội thoại...",
+    "viewProfile": "Xem hồ sơ",
+    "search": "Tìm kiếm",
+    "refresh": "Làm mới",
+    "delete": "Xóa đoạn chat",
+    "featureComingSoon": "Tính năng đang phát triển!",
+    "deleteConfirmTitle": "Xóa cuộc trò chuyện?",
+    "deleteConfirmText": "Hành động này sẽ sớm được hỗ trợ!"
   }
 }

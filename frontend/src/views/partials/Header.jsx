@@ -8,16 +8,21 @@ import Moment from "../../plugin/Moment";
 import { useWebSocket } from "../../context/WebSocketContext";
 
 function Header() {
-  const [isLoggedIn] = useAuthStore((state) => [state.isLoggedIn]);
+  const [isLoggedIn, user] = useAuthStore((state) => [
+    state.isLoggedIn,
+    state.user,
+  ]);
   const { unreadCount, notifications, setNotifications, setUnreadCount } =
     useWebSocket() || {
       unreadCount: 0,
       notifications: [],
       setNotifications: () => {},
       setUnreadCount: () => {},
-    }; // Handle context not ready
+    };
   const [categories, setCategories] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState([]); // Search
+  const [messages, setMessages] = useState([]); // Chat Inbox
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
   const [darkMode, setDarkMode] = useState(false);
   const { t, i18n } = useTranslation();
 
@@ -36,6 +41,45 @@ function Header() {
     };
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (isLoggedIn() && user?.user_id) {
+        try {
+          const res = await apiInstance.get(`chat/inbox/${user.user_id}/`);
+          setMessages(res.data);
+
+          // Calculate unread count logic
+          // Assuming backend doesn't give a total count, we iterate.
+          // Or if 'is_read' is on 'latest_message'.
+          // If the latest message is NOT from me AND is_read is false, count it.
+          // NOTE: This is an approximation as it only counts UNREAD CONVERSATIONS based on latest message.
+          // A better backend 'unread_count' endpoint is ideal, but this works for now.
+          const count = res.data.filter(
+            (m) =>
+              !m.latest_message.is_read &&
+              m.latest_message.sender !== user.user_id,
+          ).length;
+          setUnreadMsgCount(count);
+        } catch (error) {
+          console.error("Error fetching header messages:", error);
+        }
+      }
+    };
+
+    fetchMessages();
+
+    // Listen for custom event to refresh immediately
+    const handleMessageRead = () => fetchMessages();
+    window.addEventListener("messagesRead", handleMessageRead);
+
+    // Optional: Refresh periodically or listen to websocket (if socket context provides chat events)
+    const interval = setInterval(fetchMessages, 30000); // Poll every 30s as backup
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("messagesRead", handleMessageRead);
+    };
+  }, [isLoggedIn, user]);
 
   return (
     <header className="header-static navbar navbar-expand-lg navbar-light bg-white border-bottom">
@@ -194,9 +238,121 @@ function Header() {
             </form>
           </div>
 
-          {/* Right Side: Actions */}
           <div className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex align-items-center gap-3">
-            {/* Notifications */}
+            {/* Messages (Facebook Style) */}
+            {isLoggedIn() && (
+              <div className="nav-item dropdown">
+                <a
+                  className="nav-link text-dark p-0 border-0 position-relative me-2"
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <i className="fab fa-facebook-messenger fs-4 text-primary"></i>
+                  {unreadMsgCount > 0 && (
+                    <span
+                      className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      style={{ fontSize: "0.6rem" }}
+                    >
+                      {unreadMsgCount}
+                    </span>
+                  )}
+                </a>
+                <ul
+                  className="dropdown-menu dropdown-menu-end border-0 shadow-lg p-0"
+                  style={{
+                    width: "360px",
+                    maxHeight: "500px",
+                    overflowY: "auto",
+                    borderRadius: "10px",
+                  }}
+                >
+                  <li className="p-3 border-bottom d-flex justify-content-between align-items-center bg-white rounded-top sticky-top">
+                    <h5 className="m-0 fw-bold">
+                      {t("header.messages", "Chats")}
+                    </h5>
+                    <div className="d-flex gap-2">
+                      <Link
+                        to="/chat/"
+                        className="text-decoration-none small fw-bold text-primary"
+                      >
+                        {t("header.seeAll", "See all")}
+                      </Link>
+                    </div>
+                  </li>
+
+                  {messages.length > 0 ? (
+                    messages.map((msg, index) => (
+                      <li key={index}>
+                        <Link
+                          to="/chat/"
+                          state={{ partnerId: msg.partner.user.id }}
+                          className="dropdown-item p-2 border-bottom d-flex align-items-center hover-bg-light position-relative"
+                        >
+                          <div className="position-relative me-3">
+                            <img
+                              src={msg.partner.image}
+                              alt={msg.partner.full_name}
+                              className="rounded-circle object-fit-cover"
+                              style={{ width: "50px", height: "50px" }}
+                            />
+                            {/* Simple online status indicator simulation (green dot) */}
+                            <span className="position-absolute bottom-0 end-0 p-1 bg-success border border-white rounded-circle"></span>
+                          </div>
+                          <div className="flex-grow-1 overflow-hidden">
+                            <h6 className="mb-0 fw-bold text-truncate">
+                              {msg.partner.full_name ||
+                                msg.partner.user.username}
+                            </h6>
+                            <div className="d-flex justify-content-between align-items-center small">
+                              <span
+                                className={`text-truncate ${!msg.latest_message.is_read && msg.latest_message.sender !== user?.user_id ? "fw-bold text-dark" : "text-muted"}`}
+                                style={{ maxWidth: "180px" }}
+                              >
+                                {msg.latest_message.sender === user?.user_id
+                                  ? "You: "
+                                  : ""}
+                                {msg.latest_message.message}
+                              </span>
+                              <span
+                                className="text-muted ms-2"
+                                style={{ fontSize: "0.75rem" }}
+                              >
+                                {Moment(msg.latest_message.date, i18n.language)}
+                              </span>
+                            </div>
+                          </div>
+                          {!msg.latest_message.is_read &&
+                            msg.latest_message.sender !== user?.user_id && (
+                              <div className="ms-2">
+                                <span
+                                  className="bg-primary rounded-circle d-inline-block"
+                                  style={{ width: "10px", height: "10px" }}
+                                ></span>
+                              </div>
+                            )}
+                        </Link>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="p-4 text-center text-muted">
+                      <i className="fab fa-facebook-messenger fs-1 mb-2 text-black-50"></i>
+                      <p className="mb-0">
+                        {t("header.noMessages", "No messages yet.")}
+                      </p>
+                      <Link
+                        to="/chat/"
+                        className="btn btn-sm btn-primary mt-2 rounded-pill"
+                      >
+                        {t("header.startChat", "Start a conversation")}
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+
             {/* Notifications */}
             {isLoggedIn() && (
               <div className="nav-item dropdown">

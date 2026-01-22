@@ -13,6 +13,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuthStore } from "../../store/auth";
 import { useImageContext } from "../../context/ImageContext";
+import UserHoverCard from "../partials/UserHoverCard";
+import EmojiPicker from "emoji-picker-react";
 
 const baseURL = apiInstance.defaults.baseURL.replace("/api/v1", "");
 
@@ -214,6 +216,7 @@ function Detail() {
   const [translating, setTranslating] = useState(false);
   const [translatedPost, setTranslatedPost] = useState(null);
   const [showTranslated, setShowTranslated] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const displayPost = showTranslated && translatedPost ? translatedPost : post;
 
@@ -476,6 +479,13 @@ function Detail() {
     }
   };
 
+  const handleEmojiClick = (emojiObject) => {
+    setCreateComment((prev) => ({
+      ...prev,
+      comment: prev.comment + emojiObject.emoji,
+    }));
+  };
+
   const handleReaction = async (type = "Like") => {
     try {
       const response = await apiInstance.post(`post/like-post/`, {
@@ -677,49 +687,51 @@ function Detail() {
                 data-sticky-for={991}
               >
                 <div className="position-relative">
-                  <div className="avatar avatar-xl">
-                    <img
-                      className="avatar-img"
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        objectFit: "cover",
-                        borderRadius: "50%",
-                        cursor: "pointer",
-                      }}
-                      src={
-                        post?.profile?.image &&
-                        !post?.profile?.image.includes("default-user")
-                          ? post?.profile?.image?.startsWith("http")
-                            ? post?.profile?.image
-                            : `${baseURL}${post?.profile?.image}`
-                          : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                              post?.user?.full_name ||
-                                post?.user?.username ||
-                                "User",
-                            )}&background=random&color=fff&size=128`
-                      }
-                      alt="avatar"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          post?.user?.full_name ||
-                            post?.user?.username ||
-                            "User",
-                        )}&background=random&color=fff&size=128`;
-                      }}
-                      onClick={() =>
-                        openImageViewer(
+                  <UserHoverCard userId={post?.user?.id}>
+                    <div className="avatar avatar-xl">
+                      <img
+                        className="avatar-img"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          objectFit: "cover",
+                          borderRadius: "50%",
+                          cursor: "pointer",
+                        }}
+                        src={
                           post?.profile?.image &&
-                            !post?.profile?.image.includes("default-user")
+                          !post?.profile?.image.includes("default-user")
                             ? post?.profile?.image?.startsWith("http")
                               ? post?.profile?.image
                               : `${baseURL}${post?.profile?.image}`
-                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(post?.user?.full_name || post?.user?.username || "User")}&background=random&color=fff&size=128`,
-                        )
-                      }
-                    />
-                  </div>
+                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                post?.user?.full_name ||
+                                  post?.user?.username ||
+                                  "User",
+                              )}&background=random&color=fff&size=128`
+                        }
+                        alt="avatar"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            post?.user?.full_name ||
+                              post?.user?.username ||
+                              "User",
+                          )}&background=random&color=fff&size=128`;
+                        }}
+                        onClick={() =>
+                          openImageViewer(
+                            post?.profile?.image &&
+                              !post?.profile?.image.includes("default-user")
+                              ? post?.profile?.image?.startsWith("http")
+                                ? post?.profile?.image
+                                : `${baseURL}${post?.profile?.image}`
+                              : `https://ui-avatars.com/api/?name=${encodeURIComponent(post?.user?.full_name || post?.user?.username || "User")}&background=random&color=fff&size=128`,
+                          )
+                        }
+                      />
+                    </div>
+                  </UserHoverCard>
                   <a
                     href="#"
                     className="h5 fw-bold text-dark text-decoration-none mt-2 mb-0 d-block"
@@ -1196,17 +1208,40 @@ function Detail() {
                       className="form-control"
                     />
                   </div>
+
                   <div className="col-12 position-relative">
                     <label className="form-label">
                       {t("detail.writeComment")}
                     </label>
-                    <textarea
-                      name="comment"
-                      value={createComment.comment}
-                      onChange={handleCreateCommentChange}
-                      className="form-control"
-                      rows={4}
-                    />
+                    <div className="position-relative">
+                      <textarea
+                        name="comment"
+                        value={createComment.comment}
+                        onChange={handleCreateCommentChange}
+                        className="form-control"
+                        rows={4}
+                        style={{ paddingRight: "40px" }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-link text-muted position-absolute top-0 end-0 mt-1 me-2 text-decoration-none"
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      >
+                        <i className="far fa-smile fa-lg"></i>
+                      </button>
+                      {showEmojiPicker && (
+                        <div
+                          className="position-absolute bottom-100 end-0 mb-2 shadow-lg"
+                          style={{ zIndex: 100 }}
+                        >
+                          <EmojiPicker
+                            onEmojiClick={handleEmojiClick}
+                            height={350}
+                            searchDisabled={true}
+                          />
+                        </div>
+                      )}
+                    </div>
 
                     {/* Mention Suggestions List */}
                     {showMentionList && mentionSuggestions.length > 0 && (

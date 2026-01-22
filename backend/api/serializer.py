@@ -58,6 +58,11 @@ class BadgeSerializer(serializers.ModelSerializer):
         model = api_models.Badge
         fields = ['name', 'description', 'icon', 'created_at']
 
+class UserSerializerForProfile(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.User
+        fields = ['id', 'username', 'email', 'full_name']
+
 class ProfileSerializer(serializers.ModelSerializer):
     image = serializers.FileField(required=False)
     cover_image = serializers.FileField(required=False)
@@ -66,19 +71,26 @@ class ProfileSerializer(serializers.ModelSerializer):
     following_count = serializers.SerializerMethodField()
     is_following = serializers.SerializerMethodField()
     post_count = serializers.SerializerMethodField()
+    user = UserSerializerForProfile(read_only=True)
     
     class Meta:
         model = api_models.Profile
-        fields = ['full_name', 'bio', 'about', 'country', 'facebook', 'twitter', 'image', 'cover_image', 'badges', 'followers_count', 'following_count', 'is_following', 'post_count', 'date']
+        fields = ['user', 'full_name', 'bio', 'about', 'country', 'facebook', 'twitter', 'image', 'cover_image', 'badges', 'followers_count', 'following_count', 'is_following', 'post_count', 'date']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if instance.image:
             request = self.context.get('request')
-            representation['image'] = request.build_absolute_uri(instance.image.url)
+            if request:
+                representation['image'] = request.build_absolute_uri(instance.image.url)
+            else:
+                representation['image'] = instance.image.url
         if instance.cover_image:
             request = self.context.get('request')
-            representation['cover_image'] = request.build_absolute_uri(instance.cover_image.url)
+            if request:
+                representation['cover_image'] = request.build_absolute_uri(instance.cover_image.url)
+            else:
+                representation['cover_image'] = instance.cover_image.url
         return representation
 
     def get_followers_count(self, obj):
