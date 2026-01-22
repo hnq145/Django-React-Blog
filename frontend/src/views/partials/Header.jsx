@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../../store/auth";
 import { useTranslation } from "react-i18next";
 import apiInstance from "../../utils/axios";
-import Moment from "../../plugin/Moment";
+import moment from "moment";
+import "moment/locale/vi";
 
 import { useWebSocket } from "../../context/WebSocketContext";
 
@@ -319,7 +320,9 @@ function Header() {
                                 className="text-muted ms-2"
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                {Moment(msg.latest_message.date, i18n.language)}
+                                {moment(msg.latest_message.date)
+                                  .locale(i18n.language)
+                                  .fromNow()}
                               </span>
                             </div>
                           </div>
@@ -438,12 +441,13 @@ function Header() {
                           <div className="d-flex align-items-start">
                             <div className="flex-grow-1">
                               <small className="d-block text-muted mb-1">
-                                {Moment(n.date)}
+                                {moment(n.date).locale(i18n.language).fromNow()}
                               </small>
                               <div className="small">
                                 <span className="fw-bold">
-                                  {n.sender?.username ||
-                                    t("common.someone", "Someone")}
+                                  {n.sender?.full_name ||
+                                    n.sender?.username ||
+                                    t("common.someone", "Người ẩn danh")}
                                 </span>{" "}
                                 {n.type === "Like"
                                   ? t(

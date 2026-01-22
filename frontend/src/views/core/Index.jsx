@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import Header from "../partials/Header";
 import Footer from "../partials/Footer";
+import RightSidebar from "../partials/RightSidebar";
 import { Link } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 import Moment from "../../plugin/Moment";
 import UserHoverCard from "../partials/UserHoverCard";
 import { useTranslation } from "react-i18next";
-import { useAuthStore } from "../../store/auth";
 
 const TruncatedTitle = ({
   title,
@@ -163,6 +163,7 @@ function Index() {
   return (
     <div>
       <Header />
+      <RightSidebar />
 
       {/* HERO SECTION - Featured Trending Post */}
       <section className="pb-4 pt-4">

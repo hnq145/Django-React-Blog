@@ -3,6 +3,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { WebSocketProvider } from "./context/WebSocketProvider";
 import { useAuthStore } from "./store/auth";
 import { ImageProvider } from "./context/ImageContext";
+import { ChatProvider } from "./context/ChatProvider";
 import ImageViewerModal from "./views/partials/ImageViewerModal";
 
 import Index from "./views/core/Index";
@@ -36,52 +37,110 @@ function App() {
     <>
       <LanguageProvider>
         <WebSocketProvider>
-          <ImageProvider>
-            <MainWrapper>
-              <ImageViewerModal />
-              <Routes>
-                {/* Route Protection Logic */}
-                <Route
-                  path="/"
-                  element={isLoggedIn ? <Index /> : <LandingPage />}
-                />
+          <ChatProvider>
+            <ImageProvider>
+              <MainWrapper>
+                <ImageViewerModal />
+                <Routes>
+                  {/* Route Protection Logic */}
+                  <Route
+                    path="/"
+                    element={isLoggedIn ? <Index /> : <LandingPage />}
+                  />
 
-                {/* Redirect Login to Home if already logged in */}
-                <Route
-                  path="/login/"
-                  element={isLoggedIn ? <Navigate to="/" /> : <Login />}
-                />
+                  {/* Redirect Login to Home if already logged in */}
+                  <Route
+                    path="/login/"
+                    element={isLoggedIn ? <Navigate to="/" /> : <Login />}
+                  />
 
-                <Route path="/post/:slug/" element={<Detail />} />
-                <Route path="/category/" element={<Category />} />
-                <Route path="/category/:slug/" element={<CategoryDetail />} />
-                <Route path="/search/" element={<Search />} />
+                  <Route path="/post/:slug/" element={<Detail />} />
+                  <Route path="/category/" element={<Category />} />
+                  <Route path="/category/:slug/" element={<CategoryDetail />} />
+                  <Route path="/search/" element={<Search />} />
 
-                {/* Authentication */}
-                <Route path="/register/" element={<Register />} />
-                {/* /login/ handled above */}
-                <Route path="/logout/" element={<Logout />} />
-                <Route path="/forgot-password/" element={<ForgotPassword />} />
-                <Route path="/create-password/" element={<CreatePassword />} />
+                  {/* Authentication */}
+                  <Route path="/register/" element={<Register />} />
+                  {/* /login/ handled above */}
+                  <Route path="/logout/" element={<Logout />} />
+                  <Route
+                    path="/forgot-password/"
+                    element={<ForgotPassword />}
+                  />
+                  <Route
+                    path="/create-password/"
+                    element={<CreatePassword />}
+                  />
 
-                {/* Dashboard */}
-                <Route path="/dashboard/" element={<Dashboard />} />
-                <Route path="/posts/" element={<Posts />} />
-                <Route path="/add-post/" element={<AddPost />} />
-                <Route path="/edit-post/:id/" element={<EditPost />} />
-                <Route path="/comments/" element={<Comments />} />
-                <Route path="/notifications/" element={<Notifications />} />
-                <Route path="/chat/" element={<Chat />} />
-                <Route path="/categories/" element={<DashboardCategory />} />
-                <Route path="/profile/" element={<Profile />} />
-                <Route path="/profile/:userId/" element={<Profile />} />
+                  {/* Dashboard - Protected Routes */}
+                  <Route
+                    path="/dashboard/"
+                    element={
+                      isLoggedIn ? <Dashboard /> : <Navigate to="/login" />
+                    }
+                  />
+                  <Route
+                    path="/posts/"
+                    element={isLoggedIn ? <Posts /> : <Navigate to="/login" />}
+                  />
+                  <Route
+                    path="/add-post/"
+                    element={
+                      isLoggedIn ? <AddPost /> : <Navigate to="/login" />
+                    }
+                  />
+                  <Route
+                    path="/edit-post/:id/"
+                    element={
+                      isLoggedIn ? <EditPost /> : <Navigate to="/login" />
+                    }
+                  />
+                  <Route
+                    path="/comments/"
+                    element={
+                      isLoggedIn ? <Comments /> : <Navigate to="/login" />
+                    }
+                  />
+                  <Route
+                    path="/notifications/"
+                    element={
+                      isLoggedIn ? <Notifications /> : <Navigate to="/login" />
+                    }
+                  />
+                  <Route
+                    path="/chat/"
+                    element={isLoggedIn ? <Chat /> : <Navigate to="/login" />}
+                  />
+                  <Route
+                    path="/categories/"
+                    element={
+                      isLoggedIn ? (
+                        <DashboardCategory />
+                      ) : (
+                        <Navigate to="/login" />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/profile/"
+                    element={
+                      isLoggedIn ? <Profile /> : <Navigate to="/login" />
+                    }
+                  />
+                  <Route
+                    path="/profile/:userId/"
+                    element={
+                      isLoggedIn ? <Profile /> : <Navigate to="/login" />
+                    }
+                  />
 
-                {/* Pages */}
-                <Route path="/about/" element={<About />} />
-                <Route path="/contact/" element={<Contact />} />
-              </Routes>
-            </MainWrapper>
-          </ImageProvider>
+                  {/* Pages */}
+                  <Route path="/about/" element={<About />} />
+                  <Route path="/contact/" element={<Contact />} />
+                </Routes>
+              </MainWrapper>
+            </ImageProvider>
+          </ChatProvider>
         </WebSocketProvider>
       </LanguageProvider>
     </>

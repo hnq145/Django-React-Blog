@@ -397,7 +397,8 @@
     "notifications": "Thông báo",
     "profile": "Hồ sơ",
     "logout": "Đăng xuất",
-    "author": "Tác giả"
+    "author": "Tác giả",
+    "contacts": "Danh sách liên hệ"
   },
   "search": {
     "placeholder": "Nhập để tìm kiếm...",

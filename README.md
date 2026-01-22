@@ -100,7 +100,6 @@ Dự án này là một nền tảng **Website Blog Full-stack** được xây d
 5. Chạy Migrations và khởi động Server:
 
    ```bash
-   Tôi muốn bạn phát triển cho tôi cái danh sách bạn bè như này giống Facebook khi người dùng ở trang chủ ở bên phải khung hình. Và có thể chat ở bất kì đâu trong website. Tôi cũng muốn có tin nhắn mới đến thì phải xuất hiện trong khung chat chứ tôi thấy giờ tôi phải ấn vào icon mới hiển thị tin nhắn mới bất tiện lắm. bạn hiểu ý tôi chứ
    python manage.py makemigrations
    python manage.py migrate
    python manage.py runserver

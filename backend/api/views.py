@@ -241,7 +241,7 @@ class LikePostAPIView(APIView):
             # Notification
             if user != post.user:
                 api_models.Notification.objects.create(
-                    user=post.user, post=post, type=reaction_type
+                    user=post.user, post=post, type=reaction_type, sender=user
                 )
             
             return Response({'message': 'Reaction Added', 'type': reaction_type}, status=status.HTTP_200_OK)
@@ -269,7 +269,7 @@ class PostCommentAPIView(APIView):
         
         if can_notify_author:
             api_models.Notification.objects.create(
-                user=post.user, post=post, type='Comment'
+                user=post.user, post=post, type='Comment', sender=user
             )
         
         # Detect & Notify Mentions
@@ -289,7 +289,7 @@ class PostCommentAPIView(APIView):
                     
                 # Create Notification
                 api_models.Notification.objects.create(
-                     user=mentioned_user, post=post, type='Mention'
+                     user=mentioned_user, post=post, type='Mention', sender=user
                 )
             except api_models.User.DoesNotExist:
                 pass # Ignore invalid usernames
@@ -315,7 +315,7 @@ class BookmarkPostAPIView(APIView):
         else:
              api_models.Bookmark.objects.create(post=post, user=user)
              api_models.Notification.objects.create(
-                 user=post.user, post=post, type='Bookmark'
+                 user=post.user, post=post, type='Bookmark', sender=user
              )
              return Response({'message': 'Post Bookmarked'}, status=status.HTTP_200_OK)
 
