@@ -3,7 +3,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { WebSocketProvider } from "./context/WebSocketProvider";
 import { useAuthStore } from "./store/auth";
 import { ImageProvider } from "./context/ImageContext";
-import { ChatProvider } from "./context/ChatProvider";
+import { ChatProvider } from "./context/ChatContext.jsx";
 import ImageViewerModal from "./views/partials/ImageViewerModal";
 
 import Index from "./views/core/Index";

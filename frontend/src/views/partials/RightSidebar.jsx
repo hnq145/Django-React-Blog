@@ -1,96 +1,172 @@
-import React from "react";
-import { useChat } from "../../context/ChatContext";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useChat } from "../../context/ChatContext.jsx";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 const RightSidebar = () => {
   const { contacts, openChat, onlineUsers } = useChat();
   const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Filter out contacts? Or show all conversations?
-  // Usually right sidebar shows "Friends" or "Recent Contacts".
-  // We'll show conversations found in inbox.
+  if (!contacts) return null;
 
-  if (!contacts || contacts.length === 0) {
-    return null;
-  }
+  const filteredContacts = contacts.filter((c) => {
+    const name = c.partner.full_name || c.partner.user.username;
+    return name.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   return (
-    <div
-      className="d-none d-xxl-block position-fixed end-0 top-0 h-100 bg-transparent py-5 pe-3"
-      style={{
-        width: "280px",
-        paddingTop: "80px", // Below header
-        zIndex: 100,
-        marginTop: "60px",
-      }}
-    >
-      <div className="h-100 overflow-y-auto custom-scrollbar">
-        <h6 className="text-secondary fw-bold px-2 mb-3">
-          {t("sidebar.contacts", "Danh bạ")}
-        </h6>
-        <ul className="list-unstyled">
-          {contacts.map((c, index) => {
-            const user = c.partner;
-            // Normalize user object for chat consistency (use User ID as 'id')
-            const chatUser = {
-              id: user.user.id,
-              username: user.user.username,
-              full_name: user.full_name,
-              image: user.image,
-            };
-            const isOnline = onlineUsers?.has(String(user.user.id));
+    <>
+      {/* Toggle Button (Floating Action Button) */}
+      <button
+        className="btn btn-primary rounded-circle shadow-lg position-fixed d-flex align-items-center justify-content-center"
+        style={{
+          bottom: "20px",
+          right: "20px",
+          width: "60px",
+          height: "60px",
+          zIndex: 1040,
+          transition: "transform 0.2s",
+        }}
+        onClick={() => setIsOpen(!isOpen)}
+        title={t("sidebar.contacts", "Danh bạ")}
+      >
+        <i
+          className={`fas ${isOpen ? "fa-times" : "fa-comment-alt"} fa-lg`}
+        ></i>
+      </button>
 
-            return (
-              <li key={index} className="mb-1">
-                <div
-                  className="d-flex align-items-center p-2 rounded-3 hover-bg-light cursor-pointer"
-                  onClick={() => openChat(chatUser)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div className="position-relative">
-                    <img
-                      src={user.image}
-                      alt={user.full_name}
-                      className="rounded-circle object-fit-cover border border-light shadow-sm"
-                      style={{ width: "36px", height: "36px" }}
-                    />
-                    {/* Green dot for online status */}
-                    {isOnline && (
-                      <span className="position-absolute bottom-0 end-0 bg-success p-1 rounded-circle border border-white"></span>
-                    )}
-                  </div>
-                  <div className="ms-3 text-truncate">
-                    <span
-                      className="fw-semibold text-dark d-block text-truncate"
-                      style={{ fontSize: "0.95rem" }}
-                    >
-                      {user.full_name || user.user?.username || "User"}
-                    </span>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+      {/* Floating Contact List Panel */}
+      <div
+        className={`card border-0 shadow-lg position-fixed bg-white ${isOpen ? "d-flex" : "d-none"}`}
+        style={{
+          bottom: "90px",
+          right: "20px",
+          width: "300px",
+          maxHeight: "70vh",
+          borderRadius: "15px",
+          zIndex: 1040,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {/* Header */}
+        <div className="card-header bg-primary text-white py-3">
+          <h6 className="mb-0 fw-bold">
+            <i className="fas fa-address-book me-2"></i>
+            {t("sidebar.contacts", "Danh bạ")}
+          </h6>
+        </div>
+
+        {/* Search */}
+        <div className="p-2 border-bottom">
+          <div className="input-group input-group-sm">
+            <span className="input-group-text bg-light border-0">
+              <i className="fas fa-search text-muted"></i>
+            </span>
+            <input
+              type="text"
+              className="form-control bg-light border-0 shadow-none"
+              placeholder={t("sidebar.search", "Tìm kiếm người dùng...")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* List */}
+        <div
+          className="card-body p-0 overflow-y-auto custom-scrollbar"
+          style={{ minHeight: "200px" }}
+        >
+          {filteredContacts.length === 0 ? (
+            <div className="text-center text-muted py-4">
+              <small>{t("sidebar.no_contacts", "Không tìm thấy ai")}</small>
+            </div>
+          ) : (
+            <ul className="list-group list-group-flush">
+              {filteredContacts.map((c, index) => {
+                const user = c.partner;
+                const chatUser = {
+                  id: user.user.id,
+                  username: user.user.username,
+                  full_name: user.full_name,
+                  image: user.image,
+                };
+                const isOnline = onlineUsers?.has(String(user.user.id));
+
+                return (
+                  <li
+                    key={index}
+                    className="list-group-item list-group-item-action border-0 px-3 py-2 cursor-pointer"
+                    onClick={() => {
+                      openChat(chatUser);
+                      if (window.innerWidth < 768) setIsOpen(false); // Close on mobile
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className="d-flex align-items-center">
+                      <div className="position-relative">
+                        <img
+                          src={user.image}
+                          alt={user.full_name}
+                          className="rounded-circle object-fit-cover shadow-sm bg-light"
+                          style={{ width: "40px", height: "40px" }}
+                        />
+                        {isOnline && (
+                          <span className="position-absolute bottom-0 end-0 bg-success p-1 rounded-circle border border-white"></span>
+                        )}
+                      </div>
+                      <div className="ms-3 flex-grow-1 overflow-hidden">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <span
+                            className="fw-semibold text-dark text-truncate"
+                            style={{ fontSize: "0.9rem" }}
+                          >
+                            {user.full_name || user.user?.username}
+                          </span>
+                          {/* Unread badge concept if implemented later */}
+                        </div>
+                        <small
+                          className="text-muted d-block text-truncate"
+                          style={{ fontSize: "0.75rem" }}
+                        >
+                          {isOnline ? (
+                            <span className="text-success">
+                              {t("status.online", "Đang hoạt động")}
+                            </span>
+                          ) : (
+                            t("status.offline", "Ngoại tuyến")
+                          )}
+                        </small>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </div>
 
       <style>{`
-        .hover-bg-light:hover {
-          background-color: rgba(0, 0, 0, 0.05);
-        }
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 5px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
+          background: #f1f1f1;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(0, 0, 0, 0.2);
-          border-radius: 10px;
+            background: #cbd5e0; 
+            border-radius: 10px;
+        }
+        .cursor-pointer {
+            cursor: pointer;
         }
       `}</style>
-    </div>
+    </>
   );
 };
 

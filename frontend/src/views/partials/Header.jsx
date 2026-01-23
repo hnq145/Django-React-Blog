@@ -56,11 +56,17 @@ function Header() {
           // If the latest message is NOT from me AND is_read is false, count it.
           // NOTE: This is an approximation as it only counts UNREAD CONVERSATIONS based on latest message.
           // A better backend 'unread_count' endpoint is ideal, but this works for now.
-          const count = res.data.filter(
-            (m) =>
+          const count = res.data.filter((m) => {
+            const senderId =
+              typeof m.latest_message.sender === "object"
+                ? m.latest_message.sender.id
+                : m.latest_message.sender;
+
+            return (
               !m.latest_message.is_read &&
-              m.latest_message.sender !== user.user_id,
-          ).length;
+              String(senderId) !== String(user.user_id)
+            );
+          }).length;
           setUnreadMsgCount(count);
         } catch (error) {
           console.error("Error fetching header messages:", error);
@@ -249,6 +255,7 @@ function Header() {
                   role="button"
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
+                  onClick={() => setUnreadMsgCount(0)}
                 >
                   <i className="fab fa-facebook-messenger fs-4 text-primary"></i>
                   {unreadMsgCount > 0 && (

@@ -22,19 +22,15 @@ class AIServiceClientFixed:
         if type == 'text':
             api_key = self.api_key
             
-            # List of models to try in order
+            # List of models to try in order (Updated for 2026)
             models_to_try = [
-                'gemini-2.0-flash-exp', 
-                'gemini-1.5-flash',
-                'gemini-1.5-flash-latest',
-                'gemini-1.5-flash-001',
-                'gemini-1.5-flash-002',
-                'gemini-1.5-flash-8b',
-                'gemini-exp-1206',
-                'gemini-exp-1121',
-                'gemini-1.5-pro',
-                'gemini-pro',
-                'gemini-1.0-pro'
+                'gemini-2.0-flash',          # Standard stable
+                'gemini-2.5-flash',          # Latest stable
+                'gemini-2.0-flash-lite',     # Efficient fallback
+                'gemini-2.0-flash-001',      # Specific version
+                'gemini-2.5-pro',            # High intelligence
+                'gemini-flash-latest',       # Generic alias
+                'gemini-pro-latest'          # Generic alias
             ]
 
             system_instruction = (

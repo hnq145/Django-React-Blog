@@ -970,18 +970,6 @@ function Detail() {
                   />
                 </div>
               )}
-              {/* Render HTML Content from Quill */}
-              <div
-                className="content-body"
-                style={{ fontSize: "1.1rem", lineHeight: "1.8" }}
-                dangerouslySetInnerHTML={{ __html: displayPost.description }}
-                onClick={(e) => {
-                  if (e.target.tagName === "IMG") {
-                    openImageViewer(e.target.src);
-                  }
-                }}
-              />
-
               {/* AI Summary Section */}
               {post.ai_summary && post.ai_summary.status === "Success" && (
                 <>
@@ -1031,6 +1019,18 @@ function Detail() {
                   </div>
                 </>
               )}
+
+              {/* Render HTML Content from Quill */}
+              <div
+                className="content-body"
+                style={{ fontSize: "1.1rem", lineHeight: "1.8" }}
+                dangerouslySetInnerHTML={{ __html: displayPost.description }}
+                onClick={(e) => {
+                  if (e.target.tagName === "IMG") {
+                    openImageViewer(e.target.src);
+                  }
+                }}
+              />
 
               <hr />
               {/* AIChatAssistant moved to floating panel */}

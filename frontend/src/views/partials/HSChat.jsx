@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useChat } from "../../context/ChatContext";
+import { useChat } from "../../context/ChatContext.jsx";
 import { useAuthStore } from "../../store/auth";
 import apiInstance from "../../utils/axios";
 import "moment/locale/vi";
@@ -56,7 +56,11 @@ const ChatPopup = ({ chatSession, onImageClick }) => {
         );
         setMessages(res.data);
         // Mark as seen immediately if we are fetching
-        sendSeen(user.id);
+        if (typeof sendSeen === "function") {
+          sendSeen(user.id);
+          // Trigger header update
+          window.dispatchEvent(new Event("messagesRead"));
+        }
       } catch (error) {
         console.error(error);
       }
@@ -74,7 +78,10 @@ const ChatPopup = ({ chatSession, onImageClick }) => {
           ? newMessage.sender.id
           : newMessage.sender;
       if (String(senderId) === String(user.id)) {
-        sendSeen(user.id);
+        if (typeof sendSeen === "function") {
+          sendSeen(user.id);
+          window.dispatchEvent(new Event("messagesRead"));
+        }
       }
     }
   }, [newMessage, isMinimized, user.id, sendSeen]);

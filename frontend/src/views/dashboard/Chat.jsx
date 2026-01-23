@@ -3,6 +3,7 @@ import Header from "../partials/Header";
 import Footer from "../partials/Footer";
 import apiInstance from "../../utils/axios";
 import { useAuthStore } from "../../store/auth";
+import { useChat } from "../../context/ChatContext.jsx";
 
 import Swal from "sweetalert2";
 import { Link, useLocation } from "react-router-dom";
@@ -24,7 +25,6 @@ function Chat() {
   const { t } = useTranslation();
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-  const socketRef = useRef(null);
   const location = useLocation();
 
   const userId = user?.user_id;
@@ -167,106 +167,63 @@ function Chat() {
 
   // Note: We removed the simple useEffect([userId]) call because logic is now in initChat
 
-  // 2. WebSocket Connection
+  // Use Global Chat Context
+  const { newMessage: incomingMessage, sendSeen } = useChat();
+
+  // Listen for global messages from Context
   useEffect(() => {
-    const token = Cookies.get("access_token");
-    if (!token || !userId) return;
+    if (incomingMessage) {
+      // Update contacts/sidebar list always
+      fetchContacts();
 
-    const wsUrl = `ws://localhost:8000/ws/chat/?token=${token}`;
-    socketRef.current = new WebSocket(wsUrl);
+      if (selectedUser) {
+        const partnerId = selectedUser.user.id;
+        // Check relevance
+        const isRelated =
+          (String(incomingMessage.sender) === String(partnerId) &&
+            String(incomingMessage.receiver) === String(userId)) ||
+          (String(incomingMessage.sender) === String(userId) &&
+            String(incomingMessage.receiver) === String(partnerId)) ||
+          (typeof incomingMessage.sender === "object" &&
+            String(incomingMessage.sender.id) === String(partnerId));
 
-    socketRef.current.onopen = () => {
-      console.log("Chat WebSocket connected");
-    };
+        if (isRelated) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === incomingMessage.id)) return prev;
 
-    socketRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "chat_message") {
-        const incomingMsg = data.message;
+            // If incoming message is from partner, mark as seen immediately if we are viewing this chat
+            if (
+              String(incomingMessage.sender) === String(partnerId) ||
+              (typeof incomingMessage.sender === "object" &&
+                String(incomingMessage.sender.id) === String(partnerId))
+            ) {
+              if (typeof sendSeen === "function") sendSeen(partnerId);
+              window.dispatchEvent(new Event("messagesRead"));
+            }
 
-        // If this message belongs to current selected conversation, append it
-        // Check if sender or receiver matches the selected user
-
-        // We need access to the CURRENT selectedUser state.
-        // Since this listener is defined once, it captures initial state?
-        // No, useEffect with dependency approach or ref approach needed.
-        // For simplicity, we just append to messages state if relevant logic matches.
-
-        setMessages((prevMessages) => {
-          // Check deduplication
-          if (prevMessages.some((m) => m.id === incomingMsg.id))
-            return prevMessages;
-
-          // Check if it belongs to current conversation
-          // The incomingMsg has sender and receiver objects (or IDs depending on serializer)
-          // Serializer returns ID as int, and objects for profile.
-
-          // Logic: If I am chatting with User A (selectedUser.user.id == A)
-          // Incoming message: Sender A -> Receiver Me OR Sender Me -> Receiver A
-
-          // We need to know who is selected.
-          // It's tricky inside closure. Let's use functional update but we still need selectedUser.
-          // BETTER: Allow appending ALL messages, but filter in render? No, performance.
-
-          // Instead of checking selectedUser here (which might be stale),
-          // we can trigger re-fetch or use a Ref for selectedUser.
-          return [...prevMessages, incomingMsg];
-        });
-
-        // Also update contacts list to show latest message preview
-        fetchContacts();
-      }
-    };
-
-    return () => {
-      socketRef.current?.close();
-    };
-  }, [userId, fetchContacts]);
-
-  // Filter messages logic moved to render? No, messages state implies "messages for selected user".
-  // The socket receives ALL messages for me.
-  // So I should only update `messages` if the incoming message is relevant to `selectedUser`.
-
-  // Ref for selectedUser to use inside socket callback
-  const selectedUserRef = useRef(selectedUser);
-  useEffect(() => {
-    selectedUserRef.current = selectedUser;
-  }, [selectedUser]);
-
-  // Re-define onmessage effectively when selectedUser changes?
-  // No, keep socket stable. Update handler.
-  useEffect(() => {
-    if (!socketRef.current) return;
-    socketRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "chat_message") {
-        const incomingMsg = data.message;
-        const currentSelected = selectedUserRef.current;
-
-        fetchContacts(); // Always update sidebar
-
-        if (currentSelected) {
-          const partnerId = currentSelected.user.id;
-          // Check if message relates to partnerId
-          const isRelated =
-            (incomingMsg.sender === partnerId &&
-              incomingMsg.receiver === userId) ||
-            (incomingMsg.sender === userId &&
-              incomingMsg.receiver === partnerId);
-
-          if (isRelated) {
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === incomingMsg.id)) return prev;
-              return [...prev, incomingMsg];
-            });
-            // Scroll will happen via messages changes
-          }
+            return [...prev, incomingMessage];
+          });
+          scrollToBottom();
         }
       }
-    };
-  }, [selectedUser, userId, fetchContacts]); // Re-bind when selectedUser changes, or just rely on Ref.
-  // Actually if we use Ref, we don't need to re-bind, but strict mode might require valid closure.
-  // Re-binding onmessage is fine.
+    }
+  }, [incomingMessage, selectedUser, userId, fetchContacts, sendSeen]);
+
+  // Mark seen when selecting user or loading messages
+  useEffect(() => {
+    if (selectedUser && messages.length > 0) {
+      // Check if last message is not read and from partner
+      const lastMsg = messages[messages.length - 1];
+      const senderId =
+        typeof lastMsg.sender === "object" ? lastMsg.sender.id : lastMsg.sender;
+      if (String(senderId) === String(selectedUser.user.id)) {
+        if (typeof sendSeen === "function") {
+          sendSeen(selectedUser.user.id);
+          window.dispatchEvent(new Event("messagesRead"));
+        }
+      }
+    }
+  }, [selectedUser, messages, sendSeen]);
 
   // 3. Fetch Messages not needed here (duplicate)
 
@@ -596,12 +553,52 @@ function Chat() {
                               borderTopLeftRadius: !isMe ? "5px" : "20px",
                             }}
                           >
-                            <p
-                              className="mb-1"
-                              style={{ whiteSpace: "pre-wrap" }}
-                            >
-                              {msg.message}
-                            </p>
+                            <div className="mb-1">
+                              {msg.file && (
+                                <div className="mb-2">
+                                  {/\.(jpg|jpeg|png|gif|webp)$/i.test(
+                                    msg.file,
+                                  ) ? (
+                                    <img
+                                      src={msg.file}
+                                      alt="attachment"
+                                      className="img-fluid rounded"
+                                      style={{
+                                        maxWidth: "200px",
+                                        maxHeight: "200px",
+                                        objectFit: "cover",
+                                      }}
+                                    />
+                                  ) : /\.(webm|mp3|wav|ogg)$/i.test(
+                                      msg.file,
+                                    ) ? (
+                                    <audio
+                                      controls
+                                      src={msg.file}
+                                      style={{ maxWidth: "100%" }}
+                                    />
+                                  ) : (
+                                    <a
+                                      href={msg.file}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={`text-decoration-underline ${isMe ? "text-white" : "text-dark"}`}
+                                    >
+                                      <i className="fas fa-file me-1"></i>
+                                      {t("chat.attachment", "Attachment")}
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                              {msg.message && (
+                                <p
+                                  className="mb-0"
+                                  style={{ whiteSpace: "pre-wrap" }}
+                                >
+                                  {msg.message}
+                                </p>
+                              )}
+                            </div>
                             <div
                               className={`small d-flex align-items-center justify-content-end ${isMe ? "text-white-50" : "text-muted"}`}
                               style={{ fontSize: "0.7rem" }}
