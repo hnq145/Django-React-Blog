@@ -8,24 +8,44 @@ import Moment from "moment";
 import EmojiPicker from "emoji-picker-react";
 import { useTranslation } from "react-i18next";
 
-const ChatPopup = ({ chatSession }) => {
-  const { closeChat, minimizeChat, newMessage, onlineUsers } = useChat();
+const ChatPopup = ({ chatSession, onImageClick }) => {
+  const {
+    closeChat,
+    minimizeChat,
+    newMessage,
+    onlineUsers,
+    typingUsers,
+    readReceipt,
+    sendTyping,
+    sendSeen,
+  } = useChat();
   const { user, isMinimized } = chatSession;
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const currentUser = useAuthStore((state) => state.user);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
   const { t } = useTranslation();
 
   // Set moment locale to Vietnamese
   Moment.locale("vi");
 
-  const isOnline = onlineUsers.has(String(user.id));
+  const isOnline = onlineUsers?.has(String(user.id));
+  const isTyping = typingUsers?.[user.id];
 
   // New features state
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Voice Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  // ... (Initial fetch and effects)
 
   // Initial fetch
   useEffect(() => {
@@ -35,6 +55,8 @@ const ChatPopup = ({ chatSession }) => {
           `chat/get/${currentUser?.user_id}/${user.id}/`,
         );
         setMessages(res.data);
+        // Mark as seen immediately if we are fetching
+        sendSeen(user.id);
       } catch (error) {
         console.error(error);
       }
@@ -42,7 +64,37 @@ const ChatPopup = ({ chatSession }) => {
     if (!isMinimized && currentUser?.user_id) {
       fetchMessages();
     }
-  }, [user.id, currentUser?.user_id, isMinimized]);
+  }, [user.id, currentUser?.user_id, isMinimized, sendSeen]);
+
+  // Mark incoming messages as seen if chat is open
+  useEffect(() => {
+    if (newMessage && !isMinimized) {
+      const senderId =
+        typeof newMessage.sender === "object"
+          ? newMessage.sender.id
+          : newMessage.sender;
+      if (String(senderId) === String(user.id)) {
+        sendSeen(user.id);
+      }
+    }
+  }, [newMessage, isMinimized, user.id, sendSeen]);
+
+  // Update messages when partner reads them
+  useEffect(() => {
+    if (readReceipt && String(readReceipt.userId) === String(user.id)) {
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (
+            String(msg.sender) === String(currentUser?.user_id) ||
+            String(msg.sender?.id) === String(currentUser?.user_id)
+          ) {
+            return { ...msg, is_read: true };
+          }
+          return msg;
+        }),
+      );
+    }
+  }, [readReceipt, user.id, currentUser?.user_id]);
 
   // Listen for new global messages
   useEffect(() => {
@@ -79,6 +131,69 @@ const ChatPopup = ({ chatSession }) => {
     }
   }, [messages, isMinimized]);
 
+  // Voice Recording Logic
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioBlob(audioBlob);
+        setAudioUrl(audioUrl);
+
+        // Stop all tracks
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      alert("Cannot access microphone. Please allow permission.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+    setAudioBlob(null);
+    setAudioUrl(null);
+    audioChunksRef.current = [];
+  };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    sendTyping(user.id, true);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTyping(user.id, false);
+    }, 2000);
+  };
+
   const handleEmojiClick = (emojiObject) => {
     setInput((prev) => prev + emojiObject.emoji);
   };
@@ -92,21 +207,37 @@ const ChatPopup = ({ chatSession }) => {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!input.trim() && !selectedFile) return;
+    if (!input.trim() && !selectedFile && !audioBlob) return;
 
-    // Mimic the main chat sending logic if file is present
     try {
-      const payload = {
-        sender_id: currentUser?.user_id,
-        receiver_id: user.id,
-        message: input,
-      };
+      const formData = new FormData();
+      formData.append("sender_id", currentUser?.user_id);
+      formData.append("receiver_id", user.id);
+      if (input.trim()) {
+        formData.append("message", input);
+      }
+      if (selectedFile) {
+        formData.append("file", selectedFile);
+      }
+      if (audioBlob) {
+        formData.append("file", audioBlob, "voice_message.webm");
+      }
 
-      const res = await apiInstance.post(`chat/send/`, payload);
+      const res = await apiInstance.post(`chat/send/`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       setMessages((prev) => [...prev, res.data]);
       setInput("");
       setSelectedFile(null);
+      setAudioBlob(null);
+      setAudioUrl(null);
       setShowEmojiPicker(false);
+
+      // Stop typing immediately
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      sendTyping(user.id, false);
     } catch (error) {
       console.error(error);
     }
@@ -236,17 +367,78 @@ const ChatPopup = ({ chatSession }) => {
                   borderTopLeftRadius: !isMe ? "0" : "15px",
                 }}
               >
+                {msg.file && (
+                  <div className="mb-2">
+                    {/\.(jpg|jpeg|png|gif|webp)$/i.test(msg.file) ? (
+                      <img
+                        src={msg.file}
+                        alt="attachment"
+                        className="img-fluid rounded cursor-pointer"
+                        style={{ maxWidth: "100%", maxHeight: "200px" }}
+                        onClick={() => {
+                          onImageClick(msg.file);
+                        }}
+                      />
+                    ) : /\.(webm|mp3|wav|ogg)$/i.test(msg.file) ? (
+                      <audio
+                        controls
+                        src={msg.file}
+                        style={{ maxWidth: "100%" }}
+                      />
+                    ) : (
+                      <a
+                        href={msg.file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-decoration-underline ${isMe ? "text-white" : "text-dark"}`}
+                      >
+                        <i className="fas fa-file me-1"></i>
+                        {t("chat.attachment", "File đính kèm")}
+                      </a>
+                    )}
+                  </div>
+                )}
                 {msg.message}
                 <div
                   className={`text-end mt-1 ${isMe ? "text-white-50" : "text-muted"}`}
                   style={{ fontSize: "0.65rem" }}
                 >
                   {Moment(msg.date).locale("vi").format("HH:mm")}
+                  {isMe && (
+                    <span className="ms-1">
+                      {msg.is_read ? (
+                        <i className="fas fa-check-double text-light"></i>
+                      ) : (
+                        <i className="fas fa-check text-white-50"></i>
+                      )}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
           );
         })}
+
+        {isTyping && (
+          <div className="d-flex mb-3 justify-content-start">
+            {/* Small avatar for typing */}
+            <img
+              src={user.image}
+              className="rounded-circle me-2 align-self-end mb-1 shadow-sm"
+              style={{ width: "24px", height: "24px", objectFit: "cover" }}
+            />
+            <div
+              className="bg-white text-muted rounded-top-left-0 p-2 px-3 shadow-sm"
+              style={{ borderRadius: "15px", borderTopLeftRadius: "0" }}
+            >
+              <small className="fw-bold animate-pulse">
+                {t("chat.typing", "Đang soạn tin...")}{" "}
+                <i className="fas fa-pen-fancy"></i>
+              </small>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -268,63 +460,132 @@ const ChatPopup = ({ chatSession }) => {
           </div>
         )}
 
-        <form
-          onSubmit={handleSend}
-          className="d-flex align-items-center position-relative"
-        >
-          {/* Emoji Button */}
-          <button
-            type="button"
-            className="btn btn-link text-muted p-0 me-2"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          >
-            <i className="far fa-smile fa-lg"></i>
-          </button>
-
-          {/* File input (Hidden) */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="d-none"
-            onChange={handleFileSelect}
-          />
-          <button
-            type="button"
-            className="btn btn-link text-muted p-0 me-2"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <i className="fas fa-paperclip fa-lg"></i>
-          </button>
-
-          <input
-            type="text"
-            className="form-control form-control-sm rounded-pill border-light bg-light shadow-none"
-            placeholder={t("chat.typeMessage")}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            style={{ paddingRight: "30px" }}
-          />
-
-          <button type="submit" className="btn btn-link text-primary p-0 ms-2">
-            <i className="fas fa-paper-plane fa-lg"></i>
-          </button>
-
-          {/* Emoji Picker Popup */}
-          {showEmojiPicker && (
-            <div
-              className="position-absolute bottom-100 start-0 mb-2 shadow-lg rounded"
-              style={{ zIndex: 1100 }}
+        {/* Audio Preview */}
+        {audioUrl && (
+          <div className="bg-light p-2 mb-2 rounded d-flex align-items-center gap-2">
+            <audio
+              controls
+              src={audioUrl}
+              className="flex-grow-1"
+              style={{ height: "30px" }}
+            />
+            <button
+              type="button"
+              className="btn btn-sm btn-link text-danger p-0"
+              onClick={cancelRecording}
             >
-              <EmojiPicker
-                onEmojiClick={handleEmojiClick}
-                height={300}
-                width={280}
-                searchDisabled={true}
-                previewConfig={{ showPreview: false }}
-              />
+              <i className="fas fa-trash"></i>
+            </button>
+          </div>
+        )}
+
+        {/* Recording UI */}
+        {isRecording ? (
+          <div className="d-flex align-items-center justify-content-between bg-light p-2 rounded">
+            <div className="d-flex align-items-center text-danger animate-pulse">
+              <i
+                className="fas fa-circle me-2"
+                style={{ fontSize: "0.5rem" }}
+              ></i>
+              <span className="fw-bold">Recording...</span>
             </div>
-          )}
-        </form>
+            <div>
+              <button
+                type="button"
+                className="btn btn-sm btn-danger rounded-circle me-2"
+                onClick={cancelRecording}
+                title="Cancel"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-success rounded-circle"
+                onClick={stopRecording}
+                title="Finish"
+              >
+                <i className="fas fa-check"></i>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSend}
+            className="d-flex align-items-center position-relative"
+          >
+            {/* Emoji Button */}
+            <button
+              type="button"
+              className="btn btn-link text-muted p-0 me-2"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
+              <i className="far fa-smile fa-lg"></i>
+            </button>
+
+            {/* File input (Hidden) */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="d-none"
+              onChange={handleFileSelect}
+            />
+            <button
+              type="button"
+              className="btn btn-link text-muted p-0 me-2"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <i className="fas fa-paperclip fa-lg"></i>
+            </button>
+
+            <input
+              type="text"
+              className="form-control form-control-sm rounded-pill border-light bg-light shadow-none"
+              placeholder={t("chat.typeMessage")}
+              value={input}
+              onChange={handleInputChange}
+              style={{ paddingRight: "30px" }}
+              disabled={!!audioUrl}
+            />
+
+            {input.trim() || selectedFile || audioUrl ? (
+              <button
+                type="submit"
+                className="btn btn-link text-primary p-0 ms-2"
+              >
+                <i className="fas fa-paper-plane fa-lg"></i>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-link text-muted p-0 ms-2"
+                onClick={startRecording}
+                title="Record Audio"
+              >
+                <i className="fas fa-microphone fa-lg"></i>
+              </button>
+            )}
+
+            {/* Emoji Picker Popup */}
+            {showEmojiPicker && (
+              <div
+                className="position-absolute bottom-100 start-0 mb-2 shadow-lg rounded"
+                style={{ zIndex: 1100 }}
+              >
+                <EmojiPicker
+                  onEmojiClick={handleEmojiClick}
+                  height={300}
+                  width={280}
+                  searchDisabled={false}
+                  searchPlaceholder={t(
+                    "chat.searchEmoji",
+                    "Tìm kiếm biểu tượng...",
+                  )}
+                  previewConfig={{ showPreview: false }}
+                />
+              </div>
+            )}
+          </form>
+        )}
       </div>
     </div>
   );
@@ -332,19 +593,118 @@ const ChatPopup = ({ chatSession }) => {
 
 export default function HSChat() {
   const { activeChats } = useChat();
+  const [previewImage, setPreviewImage] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
 
   if (activeChats.length === 0) return null;
 
   return (
-    <div
-      className="position-fixed bottom-0 end-0 mb-0 me-4 d-flex align-items-end"
-      style={{ zIndex: 1050, pointerEvents: "none" }}
-    >
-      <div className="d-flex" style={{ pointerEvents: "auto" }}>
-        {activeChats.map((session) => (
-          <ChatPopup key={session.user.id} chatSession={session} />
-        ))}
+    <>
+      <div
+        className="position-fixed bottom-0 end-0 mb-0 me-4 d-flex align-items-end"
+        style={{ zIndex: 1050, pointerEvents: "none" }}
+      >
+        <div className="d-flex" style={{ pointerEvents: "auto" }}>
+          {activeChats.map((session) => (
+            <ChatPopup
+              key={session.user.id}
+              chatSession={session}
+              onImageClick={(img) => {
+                setPreviewImage(img);
+                setZoom(1);
+                setRotation(0);
+              }}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Global Image Preview Modal */}
+      {previewImage && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
+          style={{ zIndex: 9999, backgroundColor: "rgba(0,0,0,0.9)" }}
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="position-relative d-flex align-items-center justify-content-center flex-grow-1 w-100"
+            style={{ overflow: "hidden" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="img-fluid"
+              style={{
+                maxHeight: "90vh",
+                maxWidth: "90vw",
+                objectFit: "contain",
+                transform: `scale(${zoom}) rotate(${rotation}deg)`,
+                transition: "transform 0.2s ease",
+                cursor: zoom > 1 ? "grab" : "default",
+              }}
+              draggable={false}
+            />
+            <button
+              className="position-absolute top-0 end-0 btn btn-link text-white m-3"
+              style={{ zIndex: 2010 }}
+              onClick={() => setPreviewImage(null)}
+            >
+              <i className="fas fa-times fa-2x"></i>
+            </button>
+          </div>
+
+          {/* Zoom Controls */}
+          <div
+            className="d-flex align-items-center gap-3 mb-4 rounded-pill px-3 py-2"
+            style={{ backgroundColor: "rgba(255,255,255,0.2)", zIndex: 2010 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="btn btn-sm btn-link text-white"
+              onClick={() => setZoom((prev) => Math.max(0.5, prev - 0.25))}
+              title="Zoom Out"
+            >
+              <i className="fas fa-minus"></i>
+            </button>
+            <span className="text-white small fw-bold">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              className="btn btn-sm btn-link text-white"
+              onClick={() => setZoom((prev) => Math.min(3, prev + 0.25))}
+              title="Zoom In"
+            >
+              <i className="fas fa-plus"></i>
+            </button>
+            <button
+              className="btn btn-sm btn-link text-white"
+              onClick={() => setZoom((prev) => Math.min(3, prev + 0.25))}
+              title="Zoom In"
+            >
+              <i className="fas fa-plus"></i>
+            </button>
+            <button
+              className="btn btn-sm btn-link text-white ms-2"
+              onClick={() => setRotation((prev) => prev + 90)}
+              title="Rotate"
+            >
+              <i className="fas fa-redo"></i>
+            </button>
+            <button
+              className="btn btn-sm btn-link text-white"
+              onClick={() => {
+                setZoom(1);
+                setRotation(0);
+              }}
+              title="Reset View"
+            >
+              <i className="fas fa-compress"></i>
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

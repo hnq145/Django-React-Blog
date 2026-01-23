@@ -153,13 +153,47 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
     async def receive(self, text_data):
-        pass
+        data = json.loads(text_data)
+        message_type = data.get('type')
+        
+        if message_type == 'typing' or message_type == 'stopped_typing':
+            receiver_id = data.get('receiver_id')
+            await self.channel_layer.group_send(
+                f'chat_{receiver_id}',
+                {
+                    'type': 'user_typing_status',
+                    'status': message_type,
+                    'sender_id': self.user.id
+                }
+            )
+            
+        elif message_type == 'seen':
+            sender_id = data.get('sender_id')
+            await self.channel_layer.group_send(
+                f'chat_{sender_id}',
+                {
+                    'type': 'user_seen_status',
+                    'sender_id': self.user.id
+                }
+            )
 
     async def chat_message(self, event):
         message = event['message']
         await self.send(text_data=json.dumps({
             'type': 'chat_message',
             'message': message
+        }))
+
+    async def user_typing_status(self, event):
+        await self.send(text_data=json.dumps({
+            'type': event['status'], # typing or stopped_typing
+            'sender_id': event['sender_id']
+        }))
+        
+    async def user_seen_status(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'seen',
+            'sender_id': event['sender_id'] # The person who saw the message
         }))
 
     async def user_status(self, event):

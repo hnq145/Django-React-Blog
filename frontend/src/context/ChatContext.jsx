@@ -66,6 +66,11 @@ export const ChatProvider = ({ children }) => {
     }
   }, []);
 
+  const [typingUsers, setTypingUsers] = useState({});
+  const [readReceipt, setReadReceipt] = useState(null);
+
+  // ... (existing code)
+
   // WebSocket Logic
   useEffect(() => {
     const token = Cookies.get("access_token");
@@ -84,22 +89,24 @@ export const ChatProvider = ({ children }) => {
         setNewMessage(msg); // Broadcast
         fetchContacts(); // Update sidebar "latest message" preview
 
-        // Auto-open chat if not open?
-        // Logic: If msg is from someone else, and we don't have chat open, should we open it?
-        // User said "appear in chat frame". Let's auto-open.
+        // Auto-open chat logic ... (keep existing)
         const currentUserId = useAuthStore.getState().user?.user_id;
         const senderId =
           typeof msg.sender === "object" ? msg.sender.id : msg.sender;
 
         if (String(senderId) !== String(currentUserId)) {
-          // Check if chat corresponds to sender
-          // We need sender info. `msg` usually has `sender_profile` or `sender` obj.
-          // Let's assume msg.sender_profile has info.
+          // Play notification sound
+          try {
+            const audio = new Audio(
+              "https://cdn.freesound.org/previews/573/573455_12886737-lq.mp3",
+            ); // Example sound
+            audio.play().catch((e) => console.log("Audio play failed", e));
+          } catch (e) {}
+
           const senderProfile = msg.sender_profile || {
             user: { id: senderId },
-          }; // Fallback
+          };
 
-          // Construct user object consistent with our app
           const userObj = {
             id: senderId,
             username: senderProfile.user?.username || "User",
@@ -107,10 +114,6 @@ export const ChatProvider = ({ children }) => {
             image: senderProfile.image,
           };
 
-          // We use functional update to access latest activeChats state if we were inside closure,
-          // but here we might need a ref or rely on the state updater.
-          // However, accessing activeChats directly here might be stale if not dependency.
-          // Let's use setActiveChats callback.
           setActiveChats((prev) => {
             const exists = prev.find((c) => c.user.id === senderId);
             if (!exists) {
@@ -122,6 +125,12 @@ export const ChatProvider = ({ children }) => {
             return prev;
           });
         }
+      } else if (data.type === "typing") {
+        setTypingUsers((prev) => ({ ...prev, [data.sender_id]: true }));
+      } else if (data.type === "stopped_typing") {
+        setTypingUsers((prev) => ({ ...prev, [data.sender_id]: false }));
+      } else if (data.type === "seen") {
+        setReadReceipt({ userId: data.sender_id, timestamp: Date.now() });
       }
     };
 
@@ -136,10 +145,33 @@ export const ChatProvider = ({ children }) => {
     };
   }, [fetchContacts]);
 
-  // Initial fetch of contacts
-  useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+  const sendTyping = useCallback(
+    (receiverId, isTyping) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            type: isTyping ? "typing" : "stopped_typing",
+            receiver_id: receiverId,
+          }),
+        );
+      }
+    },
+    [socket],
+  );
+
+  const sendSeen = useCallback(
+    (senderId) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            type: "seen",
+            sender_id: senderId,
+          }),
+        );
+      }
+    },
+    [socket],
+  );
 
   return (
     <ChatContext.Provider
@@ -152,6 +184,11 @@ export const ChatProvider = ({ children }) => {
         fetchContacts,
         newMessage,
         socket,
+        typingUsers,
+        readReceipt,
+        sendTyping,
+        sendSeen,
+        onlineUsers: new Set(), // Placeholder if not implemented yet, or remove from destructuring in consumers
       }}
     >
       {children}

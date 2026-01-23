@@ -523,6 +523,7 @@ class SendMessageAPIView(generics.CreateAPIView):
         sender_id = request.data.get('sender_id')
         receiver_id = request.data.get('receiver_id')
         message = request.data.get('message')
+        file = request.FILES.get('file')
 
         sender = api_models.User.objects.get(id=sender_id)
         receiver = api_models.User.objects.get(id=receiver_id)
@@ -531,6 +532,7 @@ class SendMessageAPIView(generics.CreateAPIView):
             sender=sender,
             receiver=receiver,
             message=message,
+            file=file,
             is_read=False
         )
         
@@ -541,7 +543,7 @@ class SendMessageAPIView(generics.CreateAPIView):
             f"chat_{receiver.id}",
             {
                 "type": "chat_message",
-                "message": api_serializer.ChatMessageSerializer(chat_message).data
+                "message": api_serializer.ChatMessageSerializer(chat_message, context={"request": request}).data
             }
         )
         # Message to sender
@@ -549,11 +551,11 @@ class SendMessageAPIView(generics.CreateAPIView):
             f"chat_{sender.id}",
             {
                 "type": "chat_message",
-                "message": api_serializer.ChatMessageSerializer(chat_message).data
+                "message": api_serializer.ChatMessageSerializer(chat_message, context={"request": request}).data
             }
         )
         
-        return Response(api_serializer.ChatMessageSerializer(chat_message).data, status=status.HTTP_201_CREATED)
+        return Response(api_serializer.ChatMessageSerializer(chat_message, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
 class GetMessagesAPIView(generics.ListAPIView):
     serializer_class = api_serializer.ChatMessageSerializer

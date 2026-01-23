@@ -3,11 +3,20 @@ import Cookies from "js-cookie";
 import WebSocketContext from "./WebSocketContext";
 import Toast from "../plugin/Toast";
 
+import { useAuthStore } from "../store/auth";
+
 export const WebSocketProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn());
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+
     // Fetch initial unread count AND notifications
     const fetchNotifications = async () => {
       const token = Cookies.get("access_token");
@@ -80,7 +89,7 @@ export const WebSocketProvider = ({ children }) => {
     return () => {
       notificationSocket.close();
     };
-  }, []);
+  }, [isLoggedIn]);
 
   const wsValue = {
     notifications,

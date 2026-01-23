@@ -260,7 +260,8 @@ class ChatMessage(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="chat_user")
     sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="sender")
     receiver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="receiver")
-    message = models.TextField(max_length=10000000000)
+    message = models.TextField(max_length=10000000000, null=True, blank=True)
+    file = models.FileField(upload_to="image", null=True, blank=True)
     is_read = models.BooleanField(default=False)
     date = models.DateTimeField(auto_now_add=True)
     

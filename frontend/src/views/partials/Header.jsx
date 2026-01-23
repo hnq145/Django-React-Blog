@@ -314,7 +314,18 @@ function Header() {
                                 {msg.latest_message.sender === user?.user_id
                                   ? "You: "
                                   : ""}
-                                {msg.latest_message.message}
+                                {msg.latest_message.message ||
+                                  (msg.latest_message.file ? (
+                                    <span>
+                                      <i className="fas fa-file me-1"></i>
+                                      {t(
+                                        "chat.sentAttachment",
+                                        "File đính kèm",
+                                      )}
+                                    </span>
+                                  ) : (
+                                    ""
+                                  ))}
                               </span>
                               <span
                                 className="text-muted ms-2"
