@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 
-class AIServiceClientFixed:
+class AIServiceClientV2:
     def __init__(self):
-        print("DEBUG: AIServiceClientFixed Initialized - VERSION 10.0 (RENAMED CLASS) - SDK ONLY")
+        print("DEBUG: AIServiceClientV2 Initialized - VERSION 12.0 (FORCE RELOAD UPDATE)")
         self.api_key = os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
             logger.error("GEMINI_API_KEY was not found in the environment variables.")
@@ -103,48 +103,113 @@ class AIServiceClientFixed:
             raise Exception(f"AI Service Unavailable: All models failed. Last error: {last_error}")
 
         elif type == 'image':
-            image_prompt = f"Create a featured image for the following blog topic: {prompt}. Background: {context}. Style: Minimalist, professional, 16:9 ratio."
+            image_prompt = f"featured blog post image for: {prompt}. Context: {context}. High quality, photorealistic, 16:9 aspect ratio."
             
-            # Using RAW REST API for Imagen 3.0 to allow explicit URL control
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key={self.api_key}"
-            headers = {'Content-Type': 'application/json'}
-            payload = {
-                "instances": [
-                    {
-                        "prompt": image_prompt
-                    }
-                ],
-                "parameters": {
-                    "sampleCount": 1,
-                    # "aspectRatio": "16:9" # Note: aspect ratio param might vary by exact model version, keeping simple for now
-                }
-            }
+            # List of Image Models to try (2026 Updated)
+            image_models = [
+                'imagen-3.0-generate-001',               # Legacy/Dedicated
+                'gemini-2.0-flash-exp-image-generation', # New Experimental
+                'gemini-2.5-flash-image'                 # New Stable
+            ]
 
-            print(f"DEBUG: Calling Image API URL: {url.replace(self.api_key, 'HIDDEN_KEY')}")
+            last_error = None
+
+            for model in image_models:
+                try:
+                    print(f"DEBUG: Trying Image Gen with model: {model}")
+                    
+                    is_gemini = 'gemini' in model
+                    
+                    if is_gemini:
+                        # GEMINI STRATEGY (:generateContent)
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.api_key}"
+                        payload = {
+                            "contents": [{
+                                "parts": [{"text": image_prompt}]
+                            }],
+                            "generationConfig": {
+                                "response_mime_type": "image/jpeg" # Explicitly ask for image if supported
+                            }
+                        }
+                    else:
+                        # IMAGEN STRATEGY (:predict)
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:predict?key={self.api_key}"
+                        payload = {
+                            "instances": [{"prompt": image_prompt}],
+                            "parameters": {"sampleCount": 1}
+                        }
+
+                    headers = {'Content-Type': 'application/json'}
+                    response = requests.post(url, headers=headers, json=payload)
+                    
+                    if response.status_code != 200:
+                        print(f"DEBUG: {model} Failed {response.status_code}: {response.text}")
+                        last_error = f"{model} Error {response.status_code}"
+                        continue
+                        
+                    result_json = response.json()
+                    
+                    # 1. Try Parsing IMAGEN Style
+                    if 'predictions' in result_json and len(result_json['predictions']) > 0:
+                        pred = result_json['predictions'][0]
+                        # Imagen can return 'bytesBase64Encoded' or nested 'image.imageBytes'
+                        base64_image = pred.get('bytesBase64Encoded') or pred.get('image', {}).get('imageBytes')
+                        
+                        if base64_image:
+                            print(f"DEBUG: Success generating image with {model} (Imagen Style)")
+                            return {'type': 'image', 'content': base64_image}
+
+                    # 2. Try Parsing GEMINI Style
+                    # Structure: candidates[0].content.parts[0].inlineData.data OR executableCode?
+                    try:
+                        candidates = result_json.get('candidates', [])
+                        if candidates:
+                            parts = candidates[0].get('content', {}).get('parts', [])
+                            for part in parts:
+                                # Start looking for image data
+                                if 'inlineData' in part:
+                                    base64_image = part['inlineData']['data']
+                                    print(f"DEBUG: Success generating image with {model} (Gemini Style)")
+                                    return {'type': 'image', 'content': base64_image}
+                                    
+                                # Sometimes it might return a file URI (less likely for sync call)
+                    except Exception as parse_err:
+                        print(f"DEBUG: Error parsing Gemini response: {parse_err}")
+
+                    # If we got here, response was 200 OK but we couldn't find the image
+                    print(f"DEBUG: {model} returned 200 but no recognizable image data found.")
+                    # Log response for debugging (truncated)
+                    print(str(result_json)[:200])
+                    last_error = f"{model} returned empty/unknown format"
+                    continue
+
+                except Exception as e:
+                    print(f"DEBUG: Exception with {model}: {e}")
+                    last_error = str(e)
+                    continue
             
+            # --- FINAL FALLBACK: Pollinations.ai (Free, No Key required) ---
+            print("DEBUG: All Google Models failed. Trying Pollinations.ai fallback...")
             try:
-                response = requests.post(url, headers=headers, json=payload)
-                # Check for 400/500 errors manually to log body
-                if response.status_code != 200:
-                    logger.error(f"Image API Failed: {response.status_code} - {response.text}")
-                    raise Exception(f"Image API Failed: {response.status_code} - {response.text}")
-
-                result_json = response.json()
-                # Parse predictions (base64)
-                # Structure: { "predictions": [ { "bytesBase64Encoded": "..." } ] }
-                if 'predictions' in result_json and len(result_json['predictions']) > 0:
-                     base64_image = result_json['predictions'][0].get('bytesBase64Encoded', '')
-                     if not base64_image:
-                         # Try 'mimeType' and 'bytesBase64Encoded' structure if different
-                         base64_image = result_json['predictions'][0].get('image', {}).get('imageBytes', '')
-                     
-                     if base64_image:
-                        return {'type': 'image', 'content': base64_image}
+                import urllib.parse
+                encoded_prompt = urllib.parse.quote(image_prompt[:1000]) # Limit length
+                pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
                 
-                raise Exception("No image data found in response.")
-
+                resp = requests.get(pollinations_url)
+                if resp.status_code == 200:
+                    import base64
+                    # Convert binary content to base64
+                    base64_image = base64.b64encode(resp.content).decode('utf-8')
+                    print("DEBUG: Success generating image with Pollinations.ai")
+                    return {'type': 'image', 'content': base64_image}
+                else:
+                     print(f"DEBUG: Pollinations.ai failed: {resp.status_code}")
             except Exception as e:
-                logger.error(f"Error calling Imagen API (Image REST): {e}")
-                raise Exception(f"Image Generation Failed: {str(e)}")
+                print(f"DEBUG: Pollinations.ai exception: {e}")
+            # -------------------------------------------------------------
+
+            # If all failed
+            logger.error(f"Image Generation Failed. Last error: {last_error}")
+            raise Exception(f"Image Generation Failed: {last_error}")
 
         raise ValueError("Invalid request type.")

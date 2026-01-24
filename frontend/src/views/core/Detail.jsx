@@ -1010,12 +1010,14 @@ function Detail() {
                           ? "Tóm tắt AI"
                           : "AI Summary"}
                     </h5>
-                    <p
+                    <div
                       className="mb-0"
                       style={{ lineHeight: "1.6", fontSize: "1.05rem" }}
                     >
-                      {post.ai_summary.summarized_content}
-                    </p>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {post.ai_summary.summarized_content}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </>
               )}

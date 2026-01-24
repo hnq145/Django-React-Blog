@@ -35,7 +35,7 @@ def notification_created_handler(sender, instance, created, **kwargs):
             print(f"Error in notification signal: {e}")
 
 from .models import Post, AI_Summary
-from .ai_services import AIServiceClientFixed
+from .ai_services import AIServiceClientV2
 
 import threading
 
@@ -71,7 +71,7 @@ def background_generate_summary(post_id):
             return
 
         print(f"Background: Generating summary for '{post.title}'...")
-        ai_client = AIServiceClientFixed()
+        ai_client = AIServiceClientV2()
         
         # Optimize context to avoid token limits (take first 5000 chars)
         context_text = post.description[:5000] if post.description else ""

@@ -23,7 +23,7 @@ const TagInput = ({ value, onChange, placeholder }) => {
     } else {
       setTags([]);
     }
-  }, [value, tags]); // Run when value prop or tags state matches
+  }, [value]); // Only run when prop value changes
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" || e.key === ",") {

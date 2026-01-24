@@ -1,145 +1,114 @@
-# 🚀 Website Blog Tích hợp Trí tuệ Nhân tạo (AI Integrated Blog Platform)
+# 🚀 Nền tảng Blog Tích hợp AI Thế hệ mới (Next-Gen AI Integrated Blog)
 
-Xây dựng hệ thống quản trị nội dung Blog hiện đại với kiến trúc Decoupled, tích hợp Gemini AI và thông báo thời gian thực.
+Dự án phát triển nền tảng Blog Full-stack hiện đại, kết hợp sức mạnh của **Generative AI** và **Real-time Communication** để nâng cao trải nghiệm người dùng và người sáng tạo nội dung.
 
 ## 📖 Giới thiệu (Overview)
 
-Dự án này là một nền tảng **Website Blog Full-stack** được xây dựng dựa trên kiến trúc tách biệt (**Decoupled Architecture**) giữa Backend và Frontend. Hệ thống không chỉ cung cấp các chức năng quản lý nội dung (CMS) tiêu chuẩn mà còn tích hợp sâu **Generative AI (Google Gemini)** để hỗ trợ tác giả sáng tạo nội dung và công nghệ **WebSocket** để tương tác thời gian thực.
+Đây không chỉ là một CMS thông thường. Hệ thống được xây dựng trên kiến trúc **Decoupled (Headless)**, tách biệt hoàn toàn giữa Backend và Frontend, mang lại hiệu năng cao và khả năng mở rộng linh hoạt. Điểm nhấn của dự án là việc tích hợp sâu **Google Gemini AI** để tự động hóa quy trình sáng tạo và tương tác thông minh.
 
-### 🎯 Điểm nhấn công nghệ
+### 🌟 Tính năng nổi bật (Highlights)
 
-- **Kiến trúc hiện đại:** Tách biệt hoàn toàn API (Django) và Giao diện (ReactJS).
-- **Trợ lý AI thông minh:** Tự động tóm tắt bài viết, gợi ý ý tưởng và tạo nội dung dựa trên ngữ cảnh (Contextual AI).
-- **Real-time:** Hệ thống thông báo đẩy (Push Notification) tức thì khi có tương tác mới.
-- **Bảo mật:** Xác thực người dùng bằng cơ chế JWT (JSON Web Token).
+- **🤖 Trợ lý AI Đa phương tiện:**
+  - **Tạo ảnh minh họa (Text-to-Image):** Tự động tạo ảnh thumbnail đẹp mắt từ mô tả bài viết (Sử dụng Google Imagen/Gemini & Pollinations.ai fallback).
+  - **Tóm tắt nội dung:** Tự động đọc và tóm tắt bài viết dài thành nội dung ngắn gọn, hiển thị ngay đầu trang.
+  - **Chatbot thông minh:** Trợ lý ảo hỗ trợ trả lời câu hỏi, gợi ý ý tưởng viết bài, và trò chuyện trực tiếp với người dùng.
+- **💬 Nhắn tin Real-time:** Hệ thống chat hỗ trợ gửi **Tin nhắn văn bản**, **Hình ảnh**, và **Video** (xem trực tiếp trong khung chat).
+- **📝 Trình soạn thảo Rich Text:** Soạn thảo bài viết chuyên nghiệp với định dạng văn bản, chèn ảnh/video dễ dàng.
+- **⚡ Thông báo tức thì:** Hệ thống Push Notification real-time qua WebSockets.
+- **🔐 Bảo mật:** Xác thực JWT (JSON Web Token) an toàn.
 
 ## 🛠️ Tech Stack (Công nghệ sử dụng)
 
-### Backend
+### Backend (Core)
 
-- **Ngôn ngữ:** Python 3.9+
-- **Framework:** Django 4.2, Django REST Framework (DRF)
-- **Real-time:** Django Channels, Daphne
-- **AI Integration:** Google Generative AI SDK (Gemini API)
+- **Framework:** Python / Django 4.2+ & Django REST Framework (DRF)
+- **Real-time:** Django Channels & Daphne (ASGI Server)
+- **AI Integration:** Google Generative AI SDK (`google-genai`), Requests
 - **Database:** SQLite (Dev) / PostgreSQL (Production ready)
-- **Message Broker:** Redis (cho WebSocket layer)
+- **Authentication:** SimpleJWT
 
-### Frontend
+### Frontend (User Interface)
 
-- **Library:** ReactJS 18+
-- **State Management:** Zustand
-- **HTTP Client:** Axios
-- **Routing:** React Router DOM
-- **Styling:** Bootstrap 5 / Tailwind CSS
-- **Form Handling:** React Hook Form
+- **Framework:** ReactJS 18+ (Vite Build Tool)
+- **State Management:** Zustand (Nhẹ và nhanh hơn Redux)
+- **HTTP Client:** Axios Interceptors (Tự động refresh token)
+- **UI Libraries:** React Bootstrap, SweetAlert2
+- **Editor:** React Quill
+- **Markdown:** React Markdown & Remark GFM
 
-## ✨ Tính năng chính (Key Features)
+## ✨ Chi tiết Tính năng (Detailed Features)
 
-### 1. Phân hệ Người dùng & Xác thực
+### 1. Phân hệ AI (AI Module)
 
-- Đăng ký / Đăng nhập / Đăng xuất.
-- Cơ chế xác thực bảo mật **JWT** (Access & Refresh Token).
-- Quản lý Hồ sơ cá nhân (Profile), thay đổi Avatar.
+- **Cơ chế Fallback thông minh:** Hệ thống tự động chuyển đổi giữa các model AI (Imagen 3 -> Gemini 2.0 -> Pollinations.ai) để đảm bảo dịch vụ luôn hoạt động dù API chính gặp sự cố.
+- **Xử lý nền (Background Processing):** Sử dụng Threading & Django Signals để xử lý các tác vụ AI nặng (tóm tắt, tạo ảnh) mà không làm lag giao diện người dùng.
 
-### 2. Quản lý Nội dung (Blog Core)
+### 2. Phân hệ Chat (Communication)
 
-- **CRUD Bài viết:** Tạo, Xem, Sửa, Xóa bài viết với trình soạn thảo trực quan.
-- **Phân loại:** Quản lý Danh mục (Categories) và Thẻ (Tags).
-- **Tương tác:** Bình luận (Comments), Thích (Likes), Lưu bài viết (Bookmarks).
-- **Tìm kiếm & Lọc:** Tìm kiếm theo từ khóa, lọc theo danh mục.
+- Gửi/Nhận tin nhắn thời gian thực.
+- Hỗ trợ kéo thả gửi ảnh và video.
+- Trình phát Video HTML5 tích hợp sẵn trong khung chat.
+- Trả lời tin nhắn bằng AI (Auto-reply Smart Assistant).
 
-### 3. 🤖 Trợ lý AI (AI Assistant)
+### 3. Quản lý Nội dung (CMS)
 
-- **Chatbot ngữ cảnh:** Widget chat tích hợp ngay trong trang soạn thảo.
-- **Tóm tắt tự động:** AI đọc và tóm tắt nội dung bài viết dài.
-- **Hỗ trợ viết:** Gợi ý tiêu đề, viết đoạn mở đầu, kiểm tra chính tả.
-
-### 4. ⚡ Thông báo thời gian thực (Real-time)
-
-- Nhận thông báo **ngay lập tức** khi có người Like hoặc Comment vào bài viết của bạn.
-- Cập nhật số lượng thông báo chưa đọc (Notification Badge).
+- Dashboard quản lý bài viết trực quan.
+- Thống kê lượt xem, lượt thích, bình luận.
+- Tương tác: Like (thả tim, haha, sad...), Comment, Bookmark.
 
 ## ⚙️ Cài đặt & Triển khai (Installation)
 
 ### Yêu cầu tiên quyết
 
-- Python 3.8+
-- Node.js 16+ & npm/yarn
-- Redis (Cần thiết cho tính năng Real-time)
-- API Key từ [Google AI Studio](https://aistudio.google.com/)
+- Python 3.9+
+- Node.js 16+
+- API Key từ Google AI Studio
 
-### Bước 1: Thiết lập Backend (Django)
+### Bước 1: Backend Setup
 
-1. Clone repository:
+```bash
+# Clone dự án
+git clone https://github.com/username/project-name.git
+cd backend
 
-   ```bash
-   git clone https://github.com/username/your-repo-name.git
-   cd your-repo-name/backend
-   ```
+# Tạo môi trường ảo
+python -m venv venv
+# Windows: venv\Scripts\activate
+# Linux/Mac: source venv/bin/activate
 
-2. Tạo và kích hoạt môi trường ảo:
+# Cài đặt thư viện
+pip install -r requirements.txt
 
-   ```bash
-   python -m venv venv
-   # Windows
-   venv\Scripts\activate
-   # macOS/Linux
-   source venv/bin/activate
-   ```
+# Tạo file .env và thêm GEMINI_API_KEY
+echo "GEMINI_API_KEY=your_key_here" > .env
 
-3. Cài đặt dependencies:
+# Chạy Migrations
+python manage.py migrate
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Khởi chạy server (Hỗ trợ WebSocket)
+daphne -p 8000 backend.asgi:application
+```
 
-4. Cấu hình biến môi trường:
-   - Tạo file `.env` trong thư mục gốc backend.
-   - Thêm: `GEMINI_API_KEY=your_api_key_here`
+### Bước 2: Frontend Setup
 
-5. Chạy Migrations và khởi động Server:
+```bash
+cd frontend
 
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   python manage.py runserver
-   # Hoặc chạy với Daphne cho WebSocket
-   # daphne -p 8000 backend.asgi:application
-   ```
+# Cài đặt packages
+npm install
 
-### Bước 2: Thiết lập Frontend (React)
+# Chạy development server
+npm run dev
+```
 
-1. Di chuyển vào thư mục frontend:
+Truy cập: `http://localhost:5173`
 
-   ```bash
-   cd ../frontend
-   ```
-
-2. Cài đặt packages:
-
-   ```bash
-   npm install
-   # hoặc
-   yarn install
-   ```
-
-3. Khởi động React App:
-
-   ```bash
-   npm start
-   # hoặc
-   yarn start
-   ```
-
-   Truy cập tại: `http://localhost:3000`
-
-## 🤝 Đóng góp (Contributing)
-
-Mọi đóng góp đều được hoan nghênh. Vui lòng mở Pull Request hoặc tạo Issue để thảo luận.
-
-## 📄 Bản quyền (License)
+## 🤝 Đóng góp & Tác giả
 
 Dự án này được thực hiện bởi **Hoàng Ngọc Quý**.
 
-Lời tạm biệt, có lẽ đây là dự án cuối cùng của mình với cương vị là một Full-stack Web Developer trước khi một chuyển sang làm BA/PM, còn làm SE thì mk chỉ làm Freelance thôi. Vì mk cảm thấy
-chuyển sang một role mới trong IT là 1 bước ngoặt của con đường sự nghiệp của mk, nó sẽ mở ra cho mk nhiều cơ hội đúng với chuyên môn hơn.
+> _"Lời tạm biệt: Có lẽ đây là dự án cá nhân cuối cùng của mình với cương vị là một Full-stack Web Developer chuyên sâu (Software Engineer). Mình đang chuyển hướng sang con đường Business Analyst (BA) / Product Manager (PM) để mở rộng cơ hội nghề nghiệp và phát huy thế mạnh tư duy sản phẩm. Tuy nhiên, đam mê code vẫn còn đó, và mình vẫn sẽ code freelance vì niềm vui! Cảm ơn GitHub và cộng đồng Open Source."_
+
+---
+
+© 2026 Hoang Ngoc Quy. Licensed under MIT.

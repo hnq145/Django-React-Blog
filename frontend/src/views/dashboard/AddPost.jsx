@@ -39,6 +39,7 @@ function AddPost() {
     tags: "",
     status: "",
   });
+  const [showAiChat, setShowAiChat] = useState(false);
 
   const [imagePreview, setImagePreview] = useState("");
   const [categoryList, setCategoryList] = useState([]);
@@ -382,10 +383,20 @@ function AddPost() {
                       </div>
 
                       <div className="mb-3">
-                        <label className="form-label">
-                          {t("addPost.description")}
-                        </label>
-                        <AIChatAssistant imageContext={imagePreview} />
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <label className="form-label mb-0">
+                            {t("addPost.description")}
+                          </label>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-light text-primary border fw-bold"
+                            onClick={() => setShowAiChat(!showAiChat)}
+                            title="Open AI Assistant"
+                          >
+                            <span className="me-2">✨</span>
+                            {showAiChat ? "Close AI" : "Ask AI"}
+                          </button>
+                        </div>
                         <ReactQuill
                           theme="snow"
                           value={post.description}
@@ -506,6 +517,40 @@ function AddPost() {
           </div>
         </div>
       </section>
+      {/* AI Assistant Side Panel */}
+      <div
+        style={{
+          position: "fixed",
+          top: "80px", // Below header
+          right: showAiChat ? "0" : "-400px", // Slide from RIGHT side for Editor (Left is for Detail)
+          width: "350px",
+          height: "calc(100vh - 80px)",
+          backgroundColor: "white",
+          boxShadow: "-4px 0 10px rgba(0,0,0,0.1)",
+          transition: "right 0.3s ease-in-out",
+          zIndex: 1050,
+          display: "flex",
+          flexDirection: "column",
+        }}
+        className="ai-side-panel"
+      >
+        <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+          <h5 className="m-0 fw-bold d-flex align-items-center text-primary">
+            <span className="me-2">✨</span> AI Copilot
+          </h5>
+          <button
+            type="button"
+            onClick={() => setShowAiChat(false)}
+            className="btn-close"
+          ></button>
+        </div>
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <AIChatAssistant
+            contextString={post.description}
+            imageContext={imagePreview}
+          />
+        </div>
+      </div>
       <Footer />
     </>
   );

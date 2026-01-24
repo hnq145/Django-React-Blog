@@ -30,7 +30,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import AI_Summary 
-from .ai_services import AIServiceClientFixed as AIServiceClient
+from .ai_services import AIServiceClientV2 as AIServiceClient
 from .models import Post 
 
 import json
@@ -81,6 +81,7 @@ class ContentGenerateView(APIView):
     permission_classes = [AllowAny] 
 
     def post(self, request, *args, **kwargs):
+        print("DEBUG: ContentGenerateView POST Called - RELOAD CHECK")
         try:
             # For APIView, data is already parsed in request.data
             prompt = request.data.get('prompt')
@@ -555,6 +556,80 @@ class SendMessageAPIView(generics.CreateAPIView):
             }
         )
         
+        # ------------------------------------------------------------------
+        # AI AGENT AUTO-REPLY LOGIC
+        # ------------------------------------------------------------------
+        if receiver.email == "ai@blog.com" or receiver.username == "ai_assistant":
+            try:
+                import threading
+                def ai_reply_task(user_msg, bot_user, target_user):
+                    try:
+                        from .ai_services import AIServiceClientV2
+                        ai_client = AIServiceClientV2()
+                        
+                        # System prompt for Chat Persona
+                        system_prompt = (
+                            "You are Meta AI, a smart virtual assistant on this Blog platform. "
+                            "You help users with writing, ideas, and general questions. "
+                            "Keep replies concise, friendly, and helpful."
+                        )
+                        
+                        # Call AI
+                        ai_res = ai_client.generate_content(user_msg, 'text', system_prompt)
+                        
+                        if ai_res and 'content' in ai_res:
+                             reply_text = ai_res['content']
+                             
+                             # Save Bot Reply to DB
+                             bot_msg = api_models.ChatMessage.objects.create(
+                                sender=bot_user,
+                                receiver=target_user, # Send back to user
+                                message=reply_text,
+                                is_read=False
+                             )
+                             
+                             # Broadcast via WebSocket so user sees it instantly
+                             # We need to serialize it exactly like the view does
+                             # Note: We need a request context mock or just pass None if serializer allows
+                             # But api_serializer is available here in scope? No, `api_serializer` is imported as module
+                             # We need to import it inside thread if needed, or pass the module.
+                             # Actually `api_serializer` is available in outer scope.
+                             
+                             # HACK: Using a simple dict or reconstructing serializer to avoid context issues in thread
+                             # Ideally we should use the serializer.
+                             
+                             # Let's import inside to be safe
+                             from api import serializers as thread_serializers
+                             
+                             # We can't pass 'request' context easily to thread, so image URLs might be relative?
+                             # ChatMessageSerializer usually handles this.
+                             # Let's try basic serialization.
+                             ser = thread_serializers.ChatMessageSerializer(bot_msg)
+                             
+                             from channels.layers import get_channel_layer
+                             from asgiref.sync import async_to_sync
+                             layer = get_channel_layer()
+                             
+                             async_to_sync(layer.group_send)(
+                                f"chat_{target_user.id}",
+                                {
+                                    "type": "chat_message",
+                                    "message": ser.data
+                                }
+                             )
+                             print(f"✅ AI Bot Sent Reply to {target_user.username}")
+                    except Exception as e:
+                        print(f"❌ AI Bot Thread Error: {e}")
+
+                # Start the thread
+                t = threading.Thread(target=ai_reply_task, args=(message, receiver, sender))
+                t.daemon = True
+                t.start()
+                
+            except Exception as e:
+                print(f"AI Logic Error: {e}")
+        # ------------------------------------------------------------------
+
         return Response(api_serializer.ChatMessageSerializer(chat_message, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
 class GetMessagesAPIView(generics.ListAPIView):

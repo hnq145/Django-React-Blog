@@ -10,6 +10,8 @@ import { Link, useLocation } from "react-router-dom";
 import Moment from "moment";
 import { useTranslation } from "react-i18next";
 import Cookies from "js-cookie";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import EmojiPicker from "emoji-picker-react";
 
 function Chat() {
@@ -569,13 +571,22 @@ function Chat() {
                                         objectFit: "cover",
                                       }}
                                     />
-                                  ) : /\.(webm|mp3|wav|ogg)$/i.test(
-                                      msg.file,
-                                    ) ? (
+                                  ) : /\.(mp3|wav|m4a)$/i.test(msg.file) ? (
                                     <audio
                                       controls
                                       src={msg.file}
                                       style={{ maxWidth: "100%" }}
+                                    />
+                                  ) : /\.(mp4|webm|ogg|mov|mkv)$/i.test(
+                                      msg.file,
+                                    ) ? (
+                                    <video
+                                      controls
+                                      src={msg.file}
+                                      style={{
+                                        maxWidth: "100%",
+                                        borderRadius: "10px",
+                                      }}
                                     />
                                   ) : (
                                     <a
@@ -591,12 +602,11 @@ function Chat() {
                                 </div>
                               )}
                               {msg.message && (
-                                <p
-                                  className="mb-0"
-                                  style={{ whiteSpace: "pre-wrap" }}
-                                >
-                                  {msg.message}
-                                </p>
+                                <div className="mb-0">
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {msg.message}
+                                  </ReactMarkdown>
+                                </div>
                               )}
                             </div>
                             <div

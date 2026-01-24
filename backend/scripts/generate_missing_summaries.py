@@ -12,7 +12,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
 from api.models import Post, AI_Summary
-from api.ai_services import AIServiceClientFixed
+from api.ai_services import AIServiceClientV2
 
 def generate_missing_summaries():
     print("--- STARTING BATCH AI SUMMARY GENERATION ---")
@@ -33,7 +33,7 @@ def generate_missing_summaries():
         print("✅ All posts already have AI summaries! Exiting.")
         return
 
-    client = AIServiceClientFixed()
+    client = AIServiceClientV2()
     
     print("\nProcessing... (This may take time due to Rate Limits)")
     

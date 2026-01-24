@@ -65,7 +65,7 @@ export const register = async (full_name, email, password, password2) => {
         errorMessage = Object.entries(errorData)
           .map(
             ([field, messages]) =>
-              `${field}: ${Array.isArray(messages) ? messages.join(" ") : messages}`
+              `${field}: ${Array.isArray(messages) ? messages.join(" ") : messages}`,
           )
           .join("; ");
       } else {
@@ -103,6 +103,9 @@ export const logout = () => {
     icon: "success",
     title: i18n.t("login.loggedOutSuccess"),
   });
+
+  // Force redirect to login
+  window.location.href = "/login";
 };
 
 export const setUser = async () => {
@@ -152,7 +155,7 @@ export const getRefreshToken = async (token) => {
     `${API_BASE_URL}user/token/refresh/`,
     {
       refresh: refresh_token,
-    }
+    },
   );
 
   return response.data;
